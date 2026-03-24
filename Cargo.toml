@@ -1,0 +1,9 @@
+[workspace]
+members = [
+  "proto",
+  "crates/merkle-server",
+]
+resolver = "2"
+
+# Default member for cargo run commands that expect a binary
+default-members = ["proto"]

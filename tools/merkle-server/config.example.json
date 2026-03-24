@@ -1,0 +1,7 @@
+{
+  "public_key": "02aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "data_dir": "./data",
+  "host": "127.0.0.1",
+  "port": 8765,
+  "timestamp_tolerance_s": 300
+}
