@@ -1,0 +1,195 @@
+---
+title: Building Apps
+description: How to build applications that consume cross-chain hash roots and ZK-verified state
+---
+
+# Building Apps with Hashmerchant
+
+The hashmerchant module makes foreign chain state roots available on Terp with validator-attested finality. This page covers the patterns for consuming that data.
+
+## The core idea
+
+Before hashmerchant, verifying foreign chain state on-chain required either:
+- A full light client (expensive, slow finality)
+- A trusted relayer (centralization risk)
+- Generating ZK proofs over raw Keccak/SHA state trees (computationally brutal)
+
+Hashmerchant solves this by having validators collectively attest to foreign roots via ABCI++ vote extensions. Once quorum is reached, the root is stored on-chain with the same trust assumptions as Terp consensus itself.
+
+The `HashPairTicket` then enables a second optimization: pairing a foreign hash (Keccak256 Ethereum state) with a ZK-friendly hash (Pallas curve), so circuits only need to prove over the reduced representation.
+
+## Pattern 1: Receive roots via sudo callback
+
+Register a CosmWasm contract to receive `HashRoot` updates for a specific chain. The module calls your contract's `sudo` entry point every time a new root reaches quorum.
+
+```rust
+// In your CosmWasm contract
+#[entry_point]
+pub fn sudo(deps: DepsMut, env: Env, msg: SudoMsg) -> Result<Response, ContractError> {
+    match msg {
+        SudoMsg::HashMerchant {
+            chain_uid,
+            algo,
+            height,
+            root,
+            attestation_count,
+            block_time,
+        } => {
+            // Store the root, trigger downstream logic
+            LATEST_ROOTS.save(
+                deps.storage,
+                &chain_uid,
+                &StoredRoot { algo, height, root, block_time },
+            )?;
+            Ok(Response::new().add_attribute("action", "hash_root_received"))
+        }
+    }
+}
+```
+
+**Registration** requires a governance proposal to register the chain, then an escrow deposit from the contract to activate callbacks:
+
+```bash
+# Register chain (governance)
+terpd tx hashmerchant register-chain \
+  --chain-uid "ethereum-mainnet" \
+  --name "Ethereum" \
+  --rpc-endpoints "https://eth.example.com" \
+  --hash-algos "keccak256"
+
+# Register contract + deposit escrow
+terpd tx hashmerchant register-contract \
+  --contract terp1abc... \
+  --chain-uid "ethereum-mainnet" \
+  --escrow 1000uterp
+```
+
+## Pattern 2: Query roots directly
+
+Any contract or client can query the latest `HashRoot` for a chain without registering for callbacks:
+
+```bash
+terpd query hashmerchant hash-root ethereum-mainnet keccak256
+```
+
+From CosmWasm via stargate query:
+
+```rust
+let root: HashRoot = deps.querier.query(&QueryRequest::Stargate {
+    path: "/terp.hashmerchant.v1.Query/HashRoot".to_string(),
+    data: Binary::from(encode_hash_root_request("ethereum-mainnet", "keccak256")),
+})?;
+```
+
+## Pattern 3: Hash pair tickets for ZK circuits
+
+This is where the design gets interesting. A `HashPairTicket` pairs:
+
+| Field | Purpose |
+|---|---|
+| `origin_hash` | The raw foreign hash (e.g., Keccak256 Ethereum state root) |
+| `destination_hash` | The ZK-friendly representation (e.g., Pallas Fp element) |
+| `zk_circuit_id` | Which circuit can verify this pairing |
+| `destination_chain_id` | Target chain for the proof |
+
+The sidecar's Pallas module performs the reduction:
+
+```
+Keccak256(data) → 32 bytes → mod Pallas_p → Pallas field element
+```
+
+Where `Pallas_p = 2^254 + 45560315531506369815346746415080538113`.
+
+This means a ZK circuit only needs to:
+1. Verify the Pallas field element matches the committed `destination_hash`
+2. Prove application-specific logic over the Pallas-friendly data
+
+Instead of:
+1. Re-implement Keccak256 inside the circuit (thousands of constraints)
+2. Verify the raw Ethereum state proof (even more constraints)
+
+## Supported tree types
+
+The module is hash-algorithm agnostic. The `algo` field in `RegisteredChain` and `VoteExtensionHashData` determines the hash function. The sidecar handles the actual proof fetching and transformation.
+
+### Currently implemented
+
+| Algo | Foreign Chain | Sidecar Module | Circuit-Friendly Form |
+|---|---|---|---|
+| `keccak256` | Ethereum, EVM L2s | `eth` module → `eth_getProof` | Pallas Fp reduction |
+
+### Adding a new tree type
+
+To support a new foreign chain hash:
+
+**1. Add a client module** in `src/` with the chain's RPC interface:
+
+```rust
+// src/cosmos_ibc/mod.rs (example for IBC/Cosmos chains)
+pub struct CosmosClient { rpc_url: String }
+
+impl CosmosClient {
+    pub async fn get_app_hash(&self, height: u64) -> Result<Vec<u8>> {
+        // Query /block?height=N, extract app_hash
+    }
+}
+```
+
+**2. Add a feature flag** in `Cargo.toml`:
+
+```toml
+cosmos_ibc = ["msg", "reqwest", "serde", "serde_json"]
+```
+
+**3. Wire it into the client binary** polling loop (or create a new binary).
+
+**4. Register the chain** on-chain with the appropriate `hash_algos`.
+
+### Hash algorithms you might add
+
+| Algo | Use Case | Reduction Target |
+|---|---|---|
+| `sha256` | Cosmos app hashes, Bitcoin | Pallas Fp or direct |
+| `poseidon` | ZK-native chains (Mina, Aleo) | Already ZK-friendly, no reduction needed |
+| `pedersen` | StarkNet | Convert to Pallas or use natively |
+| `blake2b` | Zcash, Polkadot | Pallas Fp reduction |
+
+## Application design patterns
+
+### Bridge verification
+
+Use `HashRoot` to verify that an asset was locked on a foreign chain before minting on Terp. The contract receives the root via sudo, then a relayer submits a Merkle proof against that root.
+
+```
+Ethereum deposit → Validator attests root → Contract receives HashRoot
+                                          → Relayer submits proof + root
+                                          → Contract verifies proof against stored root
+                                          → Mint on Terp
+```
+
+### Cross-chain oracle
+
+Subscribe to `HashRoot` updates for a chain that stores oracle prices in its state tree. Each new root lets you verify the latest price without trusting any single relayer.
+
+### ZK credential verification
+
+Combine `HashPairTicket` with the headstash privacy layer:
+
+1. User proves they hold an asset on Ethereum (Merkle proof against `origin_hash`)
+2. Proof is generated over the `destination_hash` (Pallas field element) — fast
+3. Contract verifies the ZK proof and the `HashPairTicket` linkage
+4. User receives an on-chain credential without revealing which specific asset
+
+### Private airdrops (headstash)
+
+The headstash-server + snap flow:
+
+1. Operator builds a BLAKE3 Merkle tree of eligible addresses
+2. Encrypted notes are stored on headstash-server
+3. User's snap fetches their note via PIR (server cannot see which note)
+4. User generates a ZK proof of inclusion
+5. Contract verifies the proof against the `HashRoot`
+
+## Gas costs
+
+The on-chain module adds zero gas for validators (extensions are off-chain). Contracts pay standard CosmWasm execution costs for receiving sudo callbacks. The escrow mechanism ensures only funded contracts receive updates.

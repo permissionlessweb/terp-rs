@@ -1,0 +1,22 @@
+# hash-market-client configuration
+
+# Ethereum JSON-RPC endpoint
+eth_rpc = "https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY"
+
+# hash-market-server URL
+sidecar_url = "http://localhost:9090"
+
+# Runtime identifier for this client instance
+runtime_id = "eth-poller-1"
+
+# Chain UID (must match a registered chain in the hashmerchant module)
+chain_uid = "ethereum-mainnet"
+
+# Polling interval in seconds
+interval_secs = 12
+
+# Ethereum account to prove state for (e.g. a bridge contract)
+account_address = "0x..."
+
+# Storage keys to include in eth_getProof (hex-encoded)
+storage_keys = []

@@ -1,0 +1,62 @@
+[workspace]
+
+[package]
+name = "hash-market"
+version = "0.1.0"
+edition = "2021"
+description = "Validator sidecar for terp-core hashmerchant module"
+
+[[bin]]
+name = "hash-market-server"
+path = "src/bin/server.rs"
+required-features = ["server"]
+
+[[bin]]
+name = "hash-market-client"
+path = "src/bin/client.rs"
+required-features = ["client"]
+
+[features]
+default = []
+msg      = ["anybuf"]
+custody  = ["msg", "k256", "ed25519-dalek", "rand_core", "async-trait", "tokio", "serde", "serde_json"]
+ve       = ["custody", "sha2"]
+eth      = ["msg", "reqwest", "serde", "serde_json"]
+pallas   = ["msg", "tiny-keccak"]
+transport = ["msg", "tokio/rt", "tokio/sync", "tokio/net", "tokio/io-util", "tokio/time", "tokio/signal", "tokio/macros"]
+server   = ["transport", "custody", "ve", "axum", "tower-http", "clap", "tracing", "tracing-subscriber", "toml", "serde", "serde_json", "tokio/full"]
+client   = ["eth", "pallas", "msg", "reqwest", "clap", "tracing", "tracing-subscriber", "toml", "serde", "serde_json", "tokio/full"]
+
+[dependencies]
+anyhow = "1"
+hex = "0.4"
+thiserror = "1"
+
+# msg
+anybuf = { version = "0.5", optional = true }
+
+# custody
+k256 = { version = "0.13", features = ["ecdsa"], optional = true }
+ed25519-dalek = { version = "2", features = ["rand_core"], optional = true }
+rand_core = { version = "0.6", features = ["getrandom"], optional = true }
+async-trait = { version = "0.1", optional = true }
+
+# ve
+sha2 = { version = "0.10", optional = true }
+
+# eth
+reqwest = { version = "0.12", features = ["json"], default-features = false, optional = true }
+serde = { version = "1", features = ["derive"], optional = true }
+serde_json = { version = "1", optional = true }
+
+# pallas
+tiny-keccak = { version = "2", features = ["keccak"], optional = true }
+
+# transport + server
+tokio = { version = "1", features = ["net", "io-util"], optional = true }
+axum = { version = "0.7", optional = true }
+tower-http = { version = "0.5", features = ["cors"], optional = true }
+clap = { version = "4", features = ["derive"], optional = true }
+tracing = { version = "0.1", optional = true }
+tracing-subscriber = { version = "0.3", features = ["env-filter"], optional = true }
+toml = { version = "0.8", optional = true }
