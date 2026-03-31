@@ -159,6 +159,15 @@ pub trait RuntimeBackend: Send + Sync {
     /// Remove a network.
     async fn remove_network(&self, id: &NetworkId) -> Result<()>;
 
+    /// Remove all networks whose name starts with `prefix`.
+    ///
+    /// Used to clean up orphaned networks from crashed previous test runs.
+    /// Default implementation is a no-op — backends that support listing
+    /// networks should override this.
+    async fn remove_networks_by_prefix(&self, _prefix: &str) -> Result<()> {
+        Ok(())
+    }
+
     /// Retrieve logs from a container.
     async fn container_logs(&self, id: &ContainerId) -> Result<String>;
 
@@ -167,4 +176,19 @@ pub trait RuntimeBackend: Send + Sync {
 
     /// Remove a named volume.
     async fn remove_volume(&self, name: &str) -> Result<()>;
+
+    /// Look up the host-mapped port for a given container port after the
+    /// container has been started.
+    ///
+    /// Returns `Ok(None)` if the port mapping cannot be determined (e.g. mock
+    /// runtimes or backends that don't support inspection).
+    async fn get_host_port(
+        &self,
+        id: &ContainerId,
+        container_port: u16,
+        protocol: &str,
+    ) -> Result<Option<u16>> {
+        let _ = (id, container_port, protocol);
+        Ok(None)
+    }
 }

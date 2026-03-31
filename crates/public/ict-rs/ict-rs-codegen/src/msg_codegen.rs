@@ -1,8 +1,8 @@
 //! Generate execute (Msg) trait code from parsed service definitions.
 //!
 //! Non-sender fields become **positional** CLI args (in proto field order).
-//! The sender/signer field is emitted as `--from key_name` at the end,
-//! before the TX_DEFAULT_FLAGS.
+//! The sender/signer field is emitted as `--from key_name` via [`TxOptions`],
+//! and canonical tx flags are appended by `chain_exec_tx_with`.
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -79,24 +79,15 @@ pub fn generate_msg_trait_with_path(service: &ParsedService, crate_path: &str) -
             async fn #method_name(
                 &self, key_name: &str, #(#param_decls),*
             ) -> #krate::error::Result<#krate::tx::Tx> {
-                let gas_prices = self.config().gas_prices.clone();
-                let chain_id = self.chain_id().to_string();
                 let mut args: Vec<String> = vec![
                     "tx".to_string(),
                     #module_str.to_string(),
                     #action_kebab.to_string(),
                 ];
                 #(#field_pushes)*
-                args.extend([
-                    "--from".to_string(), key_name.to_string(),
-                    "--gas-prices".to_string(), gas_prices,
-                    "--chain-id".to_string(), chain_id,
-                ]);
-                for flag in #krate::cli::TX_DEFAULT_FLAGS {
-                    args.push(flag.to_string());
-                }
+                let opts = self.default_tx_opts().from(key_name);
                 let arg_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
-                let output = self.exec(&arg_refs, &[]).await?;
+                let output = self.chain_exec_tx_with(&arg_refs, opts).await?;
                 #krate::cli::parse_tx_response(&output)
             }
         });

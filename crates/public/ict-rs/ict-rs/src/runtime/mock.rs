@@ -311,7 +311,12 @@ fn mock_command_response(cmd: &[&str]) -> String {
             }
         }
 
-        // `gaiad query bank balances <addr>`
+        // `gaiad query bank balance <addr> <denom>` (SDK v0.47+)
+        [_, "query", "bank", "balance", ..] => {
+            r#"{"balance":{"denom":"stake","amount":"1000000000"}}"#.to_string()
+        }
+
+        // `gaiad query bank balances <addr>` (older SDK format)
         [_, "query", "bank", "balances", ..] => {
             r#"{"balances":[{"denom":"stake","amount":"1000000000"}],"balance":{"denom":"stake","amount":"1000000000"},"amount":"1000000000"}"#.to_string()
         }

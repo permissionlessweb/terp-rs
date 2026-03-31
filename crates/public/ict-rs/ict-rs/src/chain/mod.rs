@@ -1,6 +1,10 @@
 pub mod cosmos;
 #[cfg(feature = "ethereum")]
 pub mod ethereum;
+#[cfg(feature = "akash")]
+pub mod akash;
+#[cfg(feature = "terp")]
+pub mod terp;
 pub mod penumbra;
 
 use std::collections::HashMap;
@@ -8,9 +12,11 @@ use std::collections::HashMap;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
+use crate::auth::Authenticator;
 use crate::error::{IctError, Result};
 use crate::runtime::DockerImage;
-use crate::tx::{ExecOutput, PacketAcknowledgement, PacketTimeout, Tx, TransferOptions, WalletAmount};
+use crate::tx::{ExecOutput, PacketAcknowledgement, PacketTimeout, Tx, TransferOptions, TxOptions, WalletAmount};
+use crate::tx_builder::TxBuilder;
 use crate::wallet::Wallet;
 
 /// Supported chain ecosystems.
@@ -31,6 +37,19 @@ pub enum SigningAlgorithm {
     #[default]
     Secp256k1,
     Ed25519,
+}
+
+/// How genesis commands are structured in the chain binary.
+///
+/// Cosmos SDK 0.50+ moved `init`, `add-genesis-account`, and `collect-gentxs`
+/// under the `genesis` subcommand and shortened some names.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum GenesisStyle {
+    /// Traditional: `init`, `add-genesis-account`, `collect-gentxs`
+    #[default]
+    Legacy,
+    /// Cosmos SDK 0.50+: `genesis init`, `genesis add-account`, `genesis collect`
+    Modern,
 }
 
 /// Sidecar process configuration (e.g., oracle, price feeder, hash-market).
@@ -63,6 +82,39 @@ pub struct SidecarConfig {
     pub ready_timeout_secs: u64,
 }
 
+/// Optional in-container faucet configuration.
+///
+/// When set, the framework creates a funded faucet key during genesis,
+/// exposes the faucet port from chain containers, and starts the faucet
+/// process after the chain begins producing blocks.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FaucetConfig {
+    /// Key name for the faucet account (created during genesis). Default: "faucet".
+    pub key_name: String,
+    /// Container port the faucet listens on. Default: 5000.
+    pub port: u16,
+    /// Command to start the faucet (run in background inside the container).
+    /// Default: ["node", "/code/faucet_server.js"]
+    pub start_cmd: Vec<String>,
+    /// Environment variables for the faucet process.
+    pub env: Vec<(String, String)>,
+}
+
+impl Default for FaucetConfig {
+    fn default() -> Self {
+        Self {
+            key_name: "faucet".to_string(),
+            port: 5000,
+            start_cmd: vec!["node".to_string(), "/code/faucet_server.js".to_string()],
+            env: vec![
+                ("FAUCET_WALLET_NAME".to_string(), "faucet".to_string()),
+                ("FAUCET_AMOUNT".to_string(), "1000000000".to_string()),
+                ("DENOMS".to_string(), "uterp".to_string()),
+            ],
+        }
+    }
+}
+
 /// Genesis-level configuration overrides.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct GenesisConfig {
@@ -93,6 +145,8 @@ pub struct ChainConfig {
     pub gas_prices: String,
     pub gas_adjustment: f64,
     pub trusting_period: String,
+    /// CometBFT block time (timeout_commit & timeout_propose). Default: "2s".
+    pub block_time: String,
     pub genesis: Option<GenesisConfig>,
     /// Modify raw genesis JSON after initial generation.
     pub modify_genesis: Option<Box<dyn Fn(&ChainConfig, Vec<u8>) -> Result<Vec<u8>> + Send + Sync>>,
@@ -102,6 +156,10 @@ pub struct ChainConfig {
     pub additional_start_args: Vec<String>,
     pub env: Vec<(String, String)>,
     pub sidecar_configs: Vec<SidecarConfig>,
+    /// Optional in-container faucet. See [`FaucetConfig`].
+    pub faucet: Option<FaucetConfig>,
+    /// Genesis command style. See [`GenesisStyle`].
+    pub genesis_style: GenesisStyle,
 }
 
 impl std::fmt::Debug for ChainConfig {
@@ -165,6 +223,37 @@ pub trait Chain: Send + Sync {
         cmd.push(home);
         let cmd_refs: Vec<&str> = cmd.iter().map(|s| s.as_str()).collect();
         self.exec(&cmd_refs, &[]).await
+    }
+
+    /// Build default [`TxOptions`] from this chain's config.
+    fn default_tx_opts(&self) -> TxOptions {
+        let cfg = self.config();
+        TxOptions::new(&cfg.chain_id, &cfg.gas_prices)
+            .gas_adjustment(cfg.gas_adjustment)
+    }
+
+    /// Execute a `tx` subcommand with default tx options appended.
+    ///
+    /// Convenience wrapper: `chain_exec(args ++ default_tx_opts().to_flags())`.
+    async fn chain_exec_tx(&self, args: &[&str]) -> Result<ExecOutput> {
+        self.chain_exec_tx_with(args, self.default_tx_opts()).await
+    }
+
+    /// Execute a `tx` subcommand with custom [`TxOptions`].
+    async fn chain_exec_tx_with(&self, args: &[&str], opts: TxOptions) -> Result<ExecOutput> {
+        let flags = opts.to_flags();
+        let mut full: Vec<String> = args.iter().map(|s| s.to_string()).collect();
+        full.extend(flags);
+        let refs: Vec<&str> = full.iter().map(|s| s.as_str()).collect();
+        self.chain_exec(&refs).await
+    }
+
+    /// Build a [`TxBuilder`] for programmatic transaction construction.
+    ///
+    /// Uses the provided [`Authenticator`] for signing and this chain's
+    /// host RPC endpoint for broadcasting.
+    fn tx_builder<'a>(&'a self, signer: &'a dyn Authenticator) -> TxBuilder<'a> {
+        TxBuilder::new(self.config(), signer, &self.host_rpc_address())
     }
 
     // -- Endpoints --

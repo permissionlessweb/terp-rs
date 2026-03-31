@@ -4,7 +4,7 @@
 //! A sidecar is an auxiliary container (oracle, price feeder, hash-market, etc.)
 //! that runs alongside a chain and shares its Docker network.
 
-pub mod docker_sidecar;
+
 
 use std::sync::Arc;
 

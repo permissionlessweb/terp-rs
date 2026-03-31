@@ -21,6 +21,7 @@ clock = []
 hashmerchant = []
 smartaccount = []
 globalfee = []
+akash = []
 
 [dependencies]
 # Async runtime
@@ -96,6 +97,7 @@ path = "../examples/ibc_transfer.rs"
 [[example]]
 name = "ibc_transfer_e2e"
 path = "../examples/ibc_transfer_e2e.rs"
+required-features = ["docker"]
 
 [[example]]
 name = "integration_test"
@@ -117,6 +119,7 @@ path = "../examples/pfm.rs"
 [[example]]
 name = "polytone"
 path = "../examples/polytone.rs"
+required-features = ["docker"]
 
 [[example]]
 name = "cosmos_upgrade"

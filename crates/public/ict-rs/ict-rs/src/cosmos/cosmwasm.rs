@@ -4,7 +4,7 @@
 //! `query_contract` as convenience methods on any type implementing [`Chain`].
 
 use crate::chain::Chain;
-use crate::cli::{parse_tx_response, TX_DEFAULT_FLAGS, QUERY_DEFAULT_FLAGS};
+use crate::cli::{parse_tx_response, QUERY_DEFAULT_FLAGS};
 use crate::error::{IctError, Result};
 use crate::tx::Tx;
 
@@ -18,29 +18,13 @@ use async_trait::async_trait;
 pub trait CosmWasmExt: Chain {
     /// Store a Wasm binary on-chain and return the code ID.
     async fn store_code(&self, key_name: &str, wasm_path: &str) -> Result<String> {
-        let gas_prices = self.config().gas_prices.clone();
-        let chain_id = self.chain_id().to_string();
-
-        let mut args: Vec<String> = vec![
-            "tx".to_string(),
-            "wasm".to_string(),
-            "store".to_string(),
-            wasm_path.to_string(),
-        ];
-        args.extend([
-            "--from".to_string(),
-            key_name.to_string(),
-            "--gas-prices".to_string(),
-            gas_prices,
-            "--chain-id".to_string(),
-            chain_id,
-        ]);
-        for flag in TX_DEFAULT_FLAGS {
-            args.push(flag.to_string());
-        }
-
-        let arg_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
-        let output = self.chain_exec(&arg_refs).await?;
+        let opts = self.default_tx_opts().from(key_name);
+        let output = self
+            .chain_exec_tx_with(
+                &["tx", "wasm", "store", wasm_path],
+                opts,
+            )
+            .await?;
         let json_str = output.stdout_str();
         let v: serde_json::Value = serde_json::from_str(json_str.trim())
             .map_err(|e| IctError::Config(format!("invalid store_code JSON: {e}")))?;
@@ -64,39 +48,20 @@ pub trait CosmWasmExt: Chain {
         label: &str,
         admin: Option<&str>,
     ) -> Result<String> {
-        let gas_prices = self.config().gas_prices.clone();
-        let chain_id = self.chain_id().to_string();
-
-        let mut args: Vec<String> = vec![
-            "tx".to_string(),
-            "wasm".to_string(),
-            "instantiate".to_string(),
-            code_id.to_string(),
-            msg.to_string(),
-            "--label".to_string(),
-            label.to_string(),
-        ];
+        let mut opts = self.default_tx_opts().from(key_name);
 
         if let Some(admin_addr) = admin {
-            args.extend(["--admin".to_string(), admin_addr.to_string()]);
+            opts = opts.flag("--admin", admin_addr);
         } else {
-            args.push("--no-admin".to_string());
+            opts = opts.flag("--no-admin", "");
         }
 
-        args.extend([
-            "--from".to_string(),
-            key_name.to_string(),
-            "--gas-prices".to_string(),
-            gas_prices,
-            "--chain-id".to_string(),
-            chain_id,
-        ]);
-        for flag in TX_DEFAULT_FLAGS {
-            args.push(flag.to_string());
-        }
-
-        let arg_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
-        let output = self.chain_exec(&arg_refs).await?;
+        let output = self
+            .chain_exec_tx_with(
+                &["tx", "wasm", "instantiate", code_id, msg, "--label", label],
+                opts,
+            )
+            .await?;
         let json_str = output.stdout_str();
         let v: serde_json::Value = serde_json::from_str(json_str.trim())
             .map_err(|e| IctError::Config(format!("invalid instantiate JSON: {e}")))?;
@@ -117,35 +82,17 @@ pub trait CosmWasmExt: Chain {
         msg: &str,
         funds: Option<&str>,
     ) -> Result<Tx> {
-        let gas_prices = self.config().gas_prices.clone();
-        let chain_id = self.chain_id().to_string();
-
-        let mut args: Vec<String> = vec![
-            "tx".to_string(),
-            "wasm".to_string(),
-            "execute".to_string(),
-            contract.to_string(),
-            msg.to_string(),
-        ];
-
+        let mut opts = self.default_tx_opts().from(key_name);
         if let Some(amount) = funds {
-            args.extend(["--amount".to_string(), amount.to_string()]);
+            opts = opts.flag("--amount", amount);
         }
 
-        args.extend([
-            "--from".to_string(),
-            key_name.to_string(),
-            "--gas-prices".to_string(),
-            gas_prices,
-            "--chain-id".to_string(),
-            chain_id,
-        ]);
-        for flag in TX_DEFAULT_FLAGS {
-            args.push(flag.to_string());
-        }
-
-        let arg_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
-        let output = self.chain_exec(&arg_refs).await?;
+        let output = self
+            .chain_exec_tx_with(
+                &["tx", "wasm", "execute", contract, msg],
+                opts,
+            )
+            .await?;
         parse_tx_response(&output)
     }
 

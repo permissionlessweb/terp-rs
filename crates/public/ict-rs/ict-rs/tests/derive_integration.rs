@@ -101,6 +101,7 @@ impl TestChain {
             gas_prices: "0.025utest".to_string(),
             gas_adjustment: 1.5,
             trusting_period: "336h".to_string(),
+            block_time: "2s".to_string(),
             genesis: None,
             modify_genesis: None,
             pre_genesis: None,
@@ -108,6 +109,8 @@ impl TestChain {
             additional_start_args: vec![],
             env: vec![],
             sidecar_configs: vec![],
+            faucet: None,
+            genesis_style: Default::default(),
         };
 
         Self {

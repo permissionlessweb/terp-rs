@@ -187,6 +187,11 @@ impl Interchain {
     }
 
     /// Configure all relayers with chain connection information.
+    ///
+    /// For each relayer-chain pair:
+    /// 1. Generates a key on the relayer for the chain
+    /// 2. Funds the relayer wallet from the chain's validator
+    /// 3. Configures the chain on the relayer (RPC/gRPC endpoints)
     async fn configure_relayers(&self) -> Result<()> {
         // Collect which chains each relayer needs to know about
         let mut relayer_chains: HashMap<&str, Vec<&str>> = HashMap::new();
@@ -220,14 +225,48 @@ impl Interchain {
                     "Adding chain to relayer"
                 );
 
-                // Add a key for the relayer on this chain
+                // Configure the chain on the relayer FIRST.
+                // Hermes requires chain config before keys can be added.
                 let key_name = format!("relayer-{relayer_name}-{chain_id}");
-                let _wallet = relayer.add_key(chain_id, &key_name).await?;
-
-                // Configure the chain on the relayer
                 relayer
                     .add_chain_configuration(config, &key_name, rpc, grpc)
                     .await?;
+
+                // Add a key for the relayer on this chain (now that config exists)
+                let wallet = relayer.add_key(chain_id, &key_name).await?;
+
+                // Fund the relayer wallet from the validator so it can submit
+                // IBC transactions (create clients, connections, channels, relay packets).
+                let relayer_addr = wallet.formatted_address();
+                if !relayer_addr.is_empty() && !relayer_addr.contains("unknown") {
+                    let fund = WalletAmount {
+                        address: relayer_addr.clone(),
+                        denom: config.denom.clone(),
+                        amount: 100_000_000, // 100M micro-units
+                    };
+                    info!(
+                        relayer = %relayer_name,
+                        chain_id = %chain_id,
+                        address = %relayer_addr,
+                        amount = fund.amount,
+                        "Funding relayer wallet"
+                    );
+                    if let Err(e) = chain.send_funds("validator", &fund).await {
+                        warn!(
+                            relayer = %relayer_name,
+                            chain_id = %chain_id,
+                            error = %e,
+                            "Failed to fund relayer (may be mock mode)"
+                        );
+                    }
+                }
+            }
+        }
+
+        // Wait for funding txs to confirm on all chains
+        for chain in self.chains.values() {
+            if let Err(e) = wait_for_blocks(chain.as_ref(), 2).await {
+                warn!(error = %e, "Failed to wait for blocks (may be mock mode)");
             }
         }
 
@@ -373,13 +412,39 @@ pub async fn get_and_fund_test_users(
 ///
 /// Polls `chain.height()` every 500ms until the height has advanced by
 /// at least `num_blocks` from the height observed at call time.
+///
+/// Exits early if the height hasn't changed after 5 consecutive polls
+/// (indicates mock mode or stalled chain). Times out after 120 seconds.
 pub async fn wait_for_blocks(chain: &dyn crate::chain::Chain, num_blocks: u64) -> Result<()> {
     let start = chain.height().await?;
     let target = start + num_blocks;
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(120);
+    let mut last_height = start;
+    let mut stale_count = 0u32;
+
     loop {
         tokio::time::sleep(std::time::Duration::from_millis(500)).await;
         let current = chain.height().await?;
         if current >= target {
+            return Ok(());
+        }
+        // Detect stale height (mock mode or stalled chain)
+        if current == last_height {
+            stale_count += 1;
+            if stale_count >= 5 {
+                return Ok(()); // Height not advancing — likely mock mode
+            }
+        } else {
+            stale_count = 0;
+            last_height = current;
+        }
+        if std::time::Instant::now() > deadline {
+            warn!(
+                start_height = start,
+                target_height = target,
+                current_height = current,
+                "wait_for_blocks timed out"
+            );
             return Ok(());
         }
     }

@@ -3,12 +3,13 @@ use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 use tracing::{debug, info};
 
+use crate::chain::GenesisStyle;
 use crate::error::{IctError, Result};
 use crate::runtime::{
     ContainerId, ContainerOptions, DockerImage, NetworkId, PortBinding, RuntimeBackend,
     VolumeMount,
 };
-use crate::tx::ExecOutput;
+use crate::tx::{ExecOutput, TxOptions};
 
 /// Ports used by a Cosmos SDK node.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -57,6 +58,10 @@ pub struct ChainNode {
     pub host_p2p_port: Option<u16>,
     /// Host-mapped port for REST API.
     pub host_api_port: Option<u16>,
+    /// Container port for faucet (if configured).
+    pub faucet_port: Option<u16>,
+    /// Host-mapped port for faucet.
+    pub host_faucet_port: Option<u16>,
     /// Hostname within the Docker network.
     pub hostname: String,
     /// Chain binary name (e.g., "terpd", "gaiad").
@@ -67,6 +72,12 @@ pub struct ChainNode {
     pub home_dir: String,
     /// Default container ports.
     pub ports: NodePorts,
+    /// Genesis command style (Legacy vs Modern).
+    pub genesis_style: GenesisStyle,
+    /// Gas prices for transactions (e.g. "0.025uakt").
+    pub gas_prices: String,
+    /// Gas adjustment multiplier (e.g. 1.5).
+    pub gas_adjustment: f64,
     /// Runtime backend reference.
     pub runtime: Arc<dyn RuntimeBackend>,
 }
@@ -93,6 +104,10 @@ impl ChainNode {
         test_name: &str,
         network_id: &str,
         runtime: Arc<dyn RuntimeBackend>,
+        faucet_port: Option<u16>,
+        genesis_style: GenesisStyle,
+        gas_prices: &str,
+        gas_adjustment: f64,
     ) -> Self {
         let node_type = if is_validator { "val" } else { "fn" };
         let hostname = format!("{chain_id}-{node_type}-{index}");
@@ -110,11 +125,16 @@ impl ChainNode {
             host_grpc_port: None,
             host_p2p_port: None,
             host_api_port: None,
+            faucet_port,
+            host_faucet_port: None,
             hostname,
             chain_bin: chain_bin.to_string(),
             chain_id: chain_id.to_string(),
             home_dir: format!("/var/cosmos-chain/{chain_id}"),
             ports: NodePorts::default(),
+            genesis_style,
+            gas_prices: gas_prices.to_string(),
+            gas_adjustment,
             runtime,
         }
     }
@@ -152,9 +172,21 @@ impl ChainNode {
             .map(|p| format!("http://localhost:{p}"))
     }
 
+    /// Internal faucet address (within Docker network).
+    pub fn faucet_address(&self) -> Option<String> {
+        self.faucet_port
+            .map(|p| format!("http://{}:{p}", self.hostname))
+    }
+
+    /// Host-accessible faucet address.
+    pub fn host_faucet_address(&self) -> Option<String> {
+        self.host_faucet_port
+            .map(|p| format!("http://localhost:{p}"))
+    }
+
     /// Build the ContainerOptions for this node.
     fn container_options(&self) -> ContainerOptions {
-        let ports = vec![
+        let mut ports = vec![
             PortBinding {
                 host_port: 0, // auto-assign
                 container_port: self.ports.rpc,
@@ -176,6 +208,14 @@ impl ChainNode {
                 protocol: "tcp".to_string(),
             },
         ];
+
+        if let Some(fp) = self.faucet_port {
+            ports.push(PortBinding {
+                host_port: 0,
+                container_port: fp,
+                protocol: "tcp".to_string(),
+            });
+        }
 
         let labels = vec![
             ("ict.test".to_string(), self.test_name.clone()),
@@ -252,8 +292,8 @@ impl ChainNode {
         Ok(())
     }
 
-    /// Start the node container.
-    pub async fn start_container(&self) -> Result<()> {
+    /// Start the node container and resolve auto-assigned host ports.
+    pub async fn start_container(&mut self) -> Result<()> {
         let id = self.container_id.as_ref().ok_or_else(|| {
             IctError::Chain {
                 chain_id: self.chain_id.clone(),
@@ -261,7 +301,30 @@ impl ChainNode {
             }
         })?;
         info!(node = %self.hostname, "Starting container");
-        self.runtime.start_container(id).await
+        self.runtime.start_container(id).await?;
+
+        // Resolve auto-assigned host ports via container inspection.
+        let id = self.container_id.as_ref().unwrap();
+        self.host_rpc_port = self.runtime.get_host_port(id, self.ports.rpc, "tcp").await?;
+        self.host_grpc_port = self.runtime.get_host_port(id, self.ports.grpc, "tcp").await?;
+        self.host_p2p_port = self.runtime.get_host_port(id, self.ports.p2p, "tcp").await?;
+        self.host_api_port = self.runtime.get_host_port(id, self.ports.api, "tcp").await?;
+
+        if let Some(fp) = self.faucet_port {
+            self.host_faucet_port = self.runtime.get_host_port(id, fp, "tcp").await?;
+        }
+
+        debug!(
+            node = %self.hostname,
+            rpc = ?self.host_rpc_port,
+            grpc = ?self.host_grpc_port,
+            p2p = ?self.host_p2p_port,
+            api = ?self.host_api_port,
+            faucet = ?self.host_faucet_port,
+            "Resolved host ports"
+        );
+
+        Ok(())
     }
 
     /// Stop the node container.
@@ -282,6 +345,12 @@ impl ChainNode {
         Ok(())
     }
 
+    /// Build `TxOptions` with this node's chain-id and gas settings.
+    pub fn default_tx_opts(&self) -> TxOptions {
+        TxOptions::new(&self.chain_id, &self.gas_prices)
+            .gas_adjustment(self.gas_adjustment)
+    }
+
     /// Execute a chain CLI command on this node.
     pub async fn exec_cmd(&self, args: &[&str]) -> Result<ExecOutput> {
         let id = self.container_id.as_ref().ok_or_else(|| {
@@ -299,6 +368,23 @@ impl ChainNode {
         self.runtime.exec_in_container(id, &cmd, &[]).await
     }
 
+    /// Execute a `tx` subcommand with default tx options appended.
+    ///
+    /// `args` should contain the subcommand (e.g. `["tx", "bank", "send", ...]`)
+    /// but NOT the canonical flags — those are appended from [`default_tx_opts`].
+    pub async fn exec_tx(&self, args: &[&str]) -> Result<ExecOutput> {
+        self.exec_tx_with(args, self.default_tx_opts()).await
+    }
+
+    /// Execute a `tx` subcommand with custom [`TxOptions`].
+    pub async fn exec_tx_with(&self, args: &[&str], opts: TxOptions) -> Result<ExecOutput> {
+        let flags = opts.to_flags();
+        let mut full: Vec<String> = args.iter().map(|s| s.to_string()).collect();
+        full.extend(flags);
+        let refs: Vec<&str> = full.iter().map(|s| s.as_str()).collect();
+        self.exec_cmd(&refs).await
+    }
+
     /// Execute a raw command (not prefixed with chain binary).
     pub async fn exec_raw(&self, cmd: &[&str], env: &[(&str, &str)]) -> Result<ExecOutput> {
         let id = self.container_id.as_ref().ok_or_else(|| {
@@ -313,16 +399,15 @@ impl ChainNode {
 
     /// Initialize the node's config directory.
     ///
-    /// Matches Go ICT: `<bin> init <moniker> --chain-id <id> --home <home>`
-    /// No `--overwrite` or `--default-denom` flags.
+    /// Legacy: `<bin> init <moniker> --chain-id <id> --home <home>`
+    /// Modern (SDK 0.50+): `<bin> genesis init <moniker> --chain-id <id> --home <home>`
     pub async fn init_home(&self, moniker: &str) -> Result<ExecOutput> {
-        self.exec_cmd(&[
-            "init",
-            moniker,
-            "--chain-id",
-            &self.chain_id,
-        ])
-        .await
+        let mut cmd: Vec<&str> = match self.genesis_style {
+            GenesisStyle::Modern => vec!["genesis", "init"],
+            GenesisStyle::Legacy => vec!["init"],
+        };
+        cmd.extend_from_slice(&[moniker, "--chain-id", &self.chain_id]);
+        self.exec_cmd(&cmd).await
     }
 
     /// Start the chain binary inside the running container (background).
@@ -345,18 +430,26 @@ impl ChainNode {
     }
 
     /// Add a genesis account.
+    ///
+    /// Legacy: `genesis add-genesis-account`
+    /// Modern (SDK 0.50+): `genesis add-account`
     pub async fn add_genesis_account(
         &self,
         address: &str,
         coins: &str,
     ) -> Result<ExecOutput> {
-        self.exec_cmd(&["genesis", "add-genesis-account", address, coins])
-            .await
+        let cmd = match self.genesis_style {
+            GenesisStyle::Modern => vec!["genesis", "add-account", address, coins],
+            GenesisStyle::Legacy => vec!["genesis", "add-genesis-account", address, coins],
+        };
+        self.exec_cmd(&cmd).await
     }
 
     /// Generate a gentx for this validator.
     ///
     /// Matches Go ICT: includes --gas-prices and --gas-adjustment.
+    /// For Modern (SDK 0.50+) chains, also passes `--min-self-delegation 1`
+    /// which is required by newer SDK versions.
     pub async fn gentx(
         &self,
         key_name: &str,
@@ -365,7 +458,7 @@ impl ChainNode {
         gas_adjustment: f64,
     ) -> Result<ExecOutput> {
         let gas_adj = format!("{gas_adjustment}");
-        self.exec_cmd(&[
+        let mut args = vec![
             "genesis",
             "gentx",
             key_name,
@@ -378,13 +471,25 @@ impl ChainNode {
             gas_prices,
             "--gas-adjustment",
             &gas_adj,
-        ])
-        .await
+        ];
+        // SDK 0.50+ requires explicit --min-self-delegation
+        if self.genesis_style == GenesisStyle::Modern {
+            args.push("--min-self-delegation");
+            args.push("1");
+        }
+        self.exec_cmd(&args).await
     }
 
     /// Collect gentxs.
+    ///
+    /// Legacy: `genesis collect-gentxs`
+    /// Modern (SDK 0.50+): `genesis collect`
     pub async fn collect_gentxs(&self) -> Result<ExecOutput> {
-        self.exec_cmd(&["genesis", "collect-gentxs"]).await
+        let cmd = match self.genesis_style {
+            GenesisStyle::Modern => vec!["genesis", "collect"],
+            GenesisStyle::Legacy => vec!["genesis", "collect-gentxs"],
+        };
+        self.exec_cmd(&cmd).await
     }
 
     /// Create a new key in the node's keyring.
@@ -428,24 +533,47 @@ impl ChainNode {
 
     /// Query balance of an address.
     pub async fn query_balance(&self, address: &str, denom: &str) -> Result<u128> {
+        // Try SDK v0.47+ format first: `query bank balance <address> <denom>`
         let output = self
             .exec_cmd(&[
-                "query",
-                "bank",
-                "balances",
-                address,
-                "--denom",
-                denom,
-                "--output",
-                "json",
+                "query", "bank", "balance", address, denom, "--output", "json",
             ])
             .await?;
 
+        let stdout = output.stdout_str();
+        let trimmed = stdout.trim();
+
+        // If the v0.47+ command failed (exit != 0 or empty), try older format
+        let output = if output.exit_code != 0 || trimmed.is_empty() {
+            self.exec_cmd(&[
+                "query", "bank", "balances", address,
+                "--denom", denom, "--output", "json",
+            ])
+            .await?
+        } else {
+            output
+        };
+
+        let stdout = output.stdout_str();
+        let trimmed = stdout.trim();
+
+        if trimmed.is_empty() {
+            debug!(
+                node = %self.hostname,
+                stderr = %output.stderr_str(),
+                "query_balance returned empty stdout"
+            );
+            return Ok(0);
+        }
+
         let json: serde_json::Value =
-            serde_json::from_str(output.stdout_str().trim()).map_err(|e| {
+            serde_json::from_str(trimmed).map_err(|e| {
                 IctError::Chain {
                     chain_id: self.chain_id.clone(),
-                    source: e.into(),
+                    source: anyhow::anyhow!(
+                        "failed to parse balance JSON: {e}\nstdout: {trimmed}\nstderr: {}",
+                        output.stderr_str()
+                    ),
                 }
             })?;
 
@@ -466,29 +594,25 @@ impl ChainNode {
         from_key: &str,
         to_address: &str,
         amount: &str,
-        gas_prices: &str,
+        _gas_prices: &str,
     ) -> Result<ExecOutput> {
-        self.exec_cmd(&[
-            "tx",
-            "bank",
-            "send",
-            from_key,
-            to_address,
-            amount,
-            "--keyring-backend",
-            "test",
-            "--gas-prices",
-            gas_prices,
-            "--gas",
-            "auto",
-            "--gas-adjustment",
-            "1.5",
-            "--broadcast-mode",
-            "sync",
-            "--output",
-            "json",
-            "-y",
-        ])
+        self.bank_send_with(from_key, to_address, amount, self.default_tx_opts())
+            .await
+    }
+
+    /// Send tokens with custom [`TxOptions`].
+    pub async fn bank_send_with(
+        &self,
+        from_key: &str,
+        to_address: &str,
+        amount: &str,
+        opts: TxOptions,
+    ) -> Result<ExecOutput> {
+        let opts = opts.from(from_key);
+        self.exec_tx_with(
+            &["tx", "bank", "send", from_key, to_address, amount],
+            opts,
+        )
         .await
     }
 
@@ -524,42 +648,21 @@ impl ChainNode {
         from_key: &str,
         to_address: &str,
         amount: &str,
-        gas_prices: &str,
+        _gas_prices: &str,
         memo: Option<&str>,
     ) -> Result<ExecOutput> {
-        let mut args = vec![
-            "tx",
-            "ibc-transfer",
-            "transfer",
-            "transfer",
-            channel_id,
-            to_address,
-            amount,
-            "--from",
-            from_key,
-            "--keyring-backend",
-            "test",
-            "--gas-prices",
-            gas_prices,
-            "--gas",
-            "auto",
-            "--gas-adjustment",
-            "1.5",
-            "--broadcast-mode",
-            "sync",
-            "--output",
-            "json",
-            "-y",
-        ];
-
-        let memo_owned;
+        let mut opts = self.default_tx_opts().from(from_key);
         if let Some(m) = memo {
-            memo_owned = m.to_string();
-            args.push("--memo");
-            args.push(&memo_owned);
+            opts = opts.memo(m);
         }
-
-        self.exec_cmd(&args).await
+        self.exec_tx_with(
+            &[
+                "tx", "ibc-transfer", "transfer", "transfer",
+                channel_id, to_address, amount,
+            ],
+            opts,
+        )
+        .await
     }
 
     /// Export chain state at a given height.

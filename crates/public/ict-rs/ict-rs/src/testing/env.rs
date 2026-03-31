@@ -4,7 +4,7 @@
 
 use std::collections::HashMap;
 
-use crate::chain::{ChainConfig, ChainType, SigningAlgorithm};
+use crate::chain::{ChainConfig, ChainType, FaucetConfig, GenesisStyle, SigningAlgorithm};
 use crate::runtime::DockerImage;
 
 /// Log output mode for test containers.
@@ -79,6 +79,7 @@ impl TestEnv {
             gas_prices: "0.025uterp".to_string(),
             gas_adjustment: 1.5,
             trusting_period: "508h".to_string(),
+            block_time: "2s".to_string(),
             genesis: None,
             modify_genesis: None,
             pre_genesis: None,
@@ -86,7 +87,24 @@ impl TestEnv {
             additional_start_args: Vec::new(),
             env: Vec::new(),
             sidecar_configs: Vec::new(),
+            faucet: None,
+            genesis_style: GenesisStyle::default(),
         }
+    }
+
+    /// Terp config with localterp faucet enabled.
+    ///
+    /// Uses the `terpnetwork/terp-core:localterp` image which includes
+    /// Node.js and `/code/faucet_server.js`.
+    pub fn terp_localterp_config() -> ChainConfig {
+        let mut cfg = Self::terp_config();
+        cfg.images = vec![DockerImage {
+            repository: "terpnetwork/terp-core".into(),
+            version: "localterp".into(),
+            uid_gid: None,
+        }];
+        cfg.faucet = Some(FaucetConfig::default());
+        cfg
     }
 
     /// Build a default Anvil chain config from environment variables.
@@ -118,6 +136,7 @@ impl TestEnv {
             gas_prices: String::new(),
             gas_adjustment: 1.0,
             trusting_period: String::new(),
+            block_time: "2s".to_string(),
             genesis: None,
             modify_genesis: None,
             pre_genesis: None,
@@ -125,6 +144,8 @@ impl TestEnv {
             additional_start_args: Vec::new(),
             env: Vec::new(),
             sidecar_configs: Vec::new(),
+            faucet: None,
+            genesis_style: GenesisStyle::default(),
         }
     }
 }

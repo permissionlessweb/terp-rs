@@ -35,6 +35,7 @@ fn gaia_config(chain_id: &str) -> ChainConfig {
         gas_prices: "0.025uatom".to_string(),
         gas_adjustment: 1.5,
         trusting_period: "336h".to_string(),
+        block_time: "2s".to_string(),
         genesis: None,
         modify_genesis: None,
         pre_genesis: None,
@@ -42,6 +43,8 @@ fn gaia_config(chain_id: &str) -> ChainConfig {
         additional_start_args: Vec::new(),
         env: Vec::new(),
         sidecar_configs: Vec::new(),
+        faucet: None,
+        genesis_style: Default::default(),
     }
 }
 

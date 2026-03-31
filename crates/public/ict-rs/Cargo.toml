@@ -1,5 +1,5 @@
 [workspace]
-members = ["ict-rs", "ict-rs-derive", "ict-rs-codegen"]
+members = ["ict-rs", "ict-rs-derive", "ict-rs-codegen", "ict-rs-cw-orch"]
 resolver = "2"
 
 [workspace.package]

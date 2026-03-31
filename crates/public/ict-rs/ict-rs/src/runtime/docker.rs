@@ -319,6 +319,14 @@ impl RuntimeBackend for DockerBackend {
     }
 
     async fn create_network(&self, name: &str) -> Result<NetworkId> {
+        // Idempotent: if the network already exists, return its ID.
+        if let Ok(net) = self.client.inspect_network::<String>(name, None).await {
+            if let Some(id) = net.id {
+                info!(network_id = %id, name = %name, "Network already exists, reusing");
+                return Ok(NetworkId(id));
+            }
+        }
+
         // Generate a unique /16 subnet from a hash of the network name to reduce
         // collisions across concurrent test runs.
         let hash = {
@@ -362,6 +370,25 @@ impl RuntimeBackend for DockerBackend {
     async fn remove_network(&self, id: &NetworkId) -> Result<()> {
         self.client.remove_network(&id.0).await?;
         info!(network_id = %id.0, "Network removed");
+        Ok(())
+    }
+
+    async fn remove_networks_by_prefix(&self, prefix: &str) -> Result<()> {
+        use bollard::network::ListNetworksOptions;
+        let opts = ListNetworksOptions::<String> {
+            ..Default::default()
+        };
+        let networks = self.client.list_networks(Some(opts)).await?;
+        for net in networks {
+            if let Some(ref name) = net.name {
+                if name.starts_with(prefix) {
+                    if let Some(ref id) = net.id {
+                        let _ = self.client.remove_network(id).await;
+                        info!(network = %name, "Removed orphaned network");
+                    }
+                }
+            }
+        }
         Ok(())
     }
 
@@ -423,5 +450,38 @@ impl RuntimeBackend for DockerBackend {
         self.client.remove_volume(name, None).await?;
         info!(volume = %name, "Volume removed");
         Ok(())
+    }
+
+    async fn get_host_port(
+        &self,
+        id: &ContainerId,
+        container_port: u16,
+        protocol: &str,
+    ) -> Result<Option<u16>> {
+        let inspect = self.client.inspect_container(&id.0, None).await?;
+
+        let ports = inspect
+            .network_settings
+            .and_then(|ns| ns.ports)
+            .unwrap_or_default();
+
+        let key = format!("{container_port}/{protocol}");
+        if let Some(Some(bindings)) = ports.get(&key) {
+            for binding in bindings {
+                if let Some(ref host_port_str) = binding.host_port {
+                    if let Ok(port) = host_port_str.parse::<u16>() {
+                        debug!(
+                            container_id = %id.0,
+                            container_port = container_port,
+                            host_port = port,
+                            "Resolved host port"
+                        );
+                        return Ok(Some(port));
+                    }
+                }
+            }
+        }
+
+        Ok(None)
     }
 }

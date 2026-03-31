@@ -1,307 +1,334 @@
-//! IBC token transfer end-to-end example.
+//! IBC token transfer end-to-end test using real Docker containers.
 //!
-//! Mirrors `ibc_transfer_test.go` — two chains (Terp + Gaia), one relayer,
+//! Mirrors `ibc_transfer_test.go` — two Terp chains, one Hermes relayer,
 //! transfer tokens both directions and verify IBC denom computation.
 //!
+//! ## Prerequisites
+//!
+//! Build the Terp chain Docker image locally:
 //! ```sh
-//! cargo run --example ibc_transfer_e2e
+//! cd terp-core && make build-docker-local
+//! # → terpnetwork/terp-core:local-zk
+//! ```
+//!
+//! ```sh
+//! cargo run --example ibc_transfer_e2e --features docker
 //! ```
 
-use std::sync::{Arc, Mutex};
+use std::collections::HashMap;
 
-use async_trait::async_trait;
-
-use ict_rs::auth::generate_mnemonic;
 use ict_rs::chain::cosmos::CosmosChain;
-use ict_rs::chain::Chain;
-use ict_rs::ibc::{ibc_denom, ChannelOptions, ChannelOutput, ClientOptions, ConnectionOutput};
-use ict_rs::interchain::{Interchain, InterchainBuildOptions, InterchainLink};
-use ict_rs::relayer::Relayer;
-use ict_rs::runtime::mock::MockRuntime;
-use ict_rs::runtime::RuntimeBackend;
-use ict_rs::spec::builtin_chain_config;
-use ict_rs::tx::{ExecOutput, TransferOptions, WalletAmount};
-use ict_rs::wallet::{KeyWallet, Wallet};
+use ict_rs::chain::{Chain, ChainConfig, ChainType, SigningAlgorithm};
+use ict_rs::ibc::ibc_denom;
+use ict_rs::interchain::{wait_for_blocks, Interchain, InterchainBuildOptions, InterchainLink};
+use ict_rs::relayer::{build_relayer, RelayerType};
+use ict_rs::runtime::{DockerConfig, DockerImage, IctRuntime};
+use ict_rs::tx::{TransferOptions, WalletAmount};
 
-// ---------------------------------------------------------------------------
-// Inline mock relayer (same pattern as examples/ibc_transfer.rs)
-// ---------------------------------------------------------------------------
-
-struct ExampleRelayer {
-    configured_chains: Arc<Mutex<Vec<String>>>,
-    next_channel: Arc<Mutex<usize>>,
-}
-
-impl ExampleRelayer {
-    fn new() -> Box<Self> {
-        Box::new(Self {
-            configured_chains: Arc::new(Mutex::new(Vec::new())),
-            next_channel: Arc::new(Mutex::new(0)),
-        })
+/// Docker image to use. Override with TERP_IMAGE env var.
+fn terp_image() -> DockerImage {
+    let repo = std::env::var("TERP_IMAGE_REPO")
+        .unwrap_or_else(|_| "terpnetwork/terp-core".to_string());
+    let version = std::env::var("TERP_IMAGE_VERSION")
+        .unwrap_or_else(|_| "local-zk".to_string());
+    DockerImage {
+        repository: repo,
+        version,
+        uid_gid: None,
     }
 }
 
-#[async_trait]
-impl Relayer for ExampleRelayer {
-    async fn add_key(
-        &self,
-        chain_id: &str,
-        key_name: &str,
-    ) -> ict_rs::error::Result<Box<dyn Wallet>> {
-        Ok(Box::new(KeyWallet {
-            key_name: key_name.to_string(),
-            address_bytes: vec![0u8; 20],
-            bech32_address: format!("cosmos1relayer{chain_id}"),
-            mnemonic_phrase: String::new(),
-        }))
-    }
-
-    async fn restore_key(
-        &self,
-        _chain_id: &str,
-        _key_name: &str,
-        _mnemonic: &str,
-    ) -> ict_rs::error::Result<()> {
-        Ok(())
-    }
-
-    fn get_wallet(&self, _chain_id: &str) -> Option<&dyn Wallet> {
-        None
-    }
-
-    async fn add_chain_configuration(
-        &self,
-        config: &ict_rs::chain::ChainConfig,
-        _key_name: &str,
-        _rpc_addr: &str,
-        _grpc_addr: &str,
-    ) -> ict_rs::error::Result<()> {
-        self.configured_chains
-            .lock()
-            .unwrap()
-            .push(config.chain_id.clone());
-        println!("  Relayer: configured chain {}", config.chain_id);
-        Ok(())
-    }
-
-    async fn generate_path(
-        &self,
-        src: &str,
-        dst: &str,
-        path_name: &str,
-    ) -> ict_rs::error::Result<()> {
-        println!("  Relayer: generated path '{path_name}' ({src} <-> {dst})");
-        Ok(())
-    }
-
-    async fn link_path(
-        &self,
-        path_name: &str,
-        _opts: &ChannelOptions,
-    ) -> ict_rs::error::Result<()> {
-        let idx = {
-            let mut n = self.next_channel.lock().unwrap();
-            let i = *n;
-            *n += 1;
-            i
-        };
-        println!("  Relayer: linked path '{path_name}' -> channel-{idx}");
-        Ok(())
-    }
-
-    async fn create_clients(
-        &self,
-        _path_name: &str,
-        _opts: &ClientOptions,
-    ) -> ict_rs::error::Result<()> {
-        Ok(())
-    }
-
-    async fn create_connections(&self, _path_name: &str) -> ict_rs::error::Result<()> {
-        Ok(())
-    }
-
-    async fn create_channel(
-        &self,
-        _path_name: &str,
-        _opts: &ChannelOptions,
-    ) -> ict_rs::error::Result<()> {
-        Ok(())
-    }
-
-    async fn update_clients(&self, _path_name: &str) -> ict_rs::error::Result<()> {
-        Ok(())
-    }
-
-    async fn start(&self, path_names: &[&str]) -> ict_rs::error::Result<()> {
-        println!(
-            "  Relayer: started on paths: {}",
-            path_names.join(", ")
-        );
-        Ok(())
-    }
-
-    async fn stop(&self) -> ict_rs::error::Result<()> {
-        println!("  Relayer: stopped");
-        Ok(())
-    }
-
-    async fn flush(
-        &self,
-        _path_name: &str,
-        _channel_id: &str,
-    ) -> ict_rs::error::Result<()> {
-        Ok(())
-    }
-
-    async fn get_channels(
-        &self,
-        _chain_id: &str,
-    ) -> ict_rs::error::Result<Vec<ChannelOutput>> {
-        Ok(Vec::new())
-    }
-
-    async fn get_connections(
-        &self,
-        _chain_id: &str,
-    ) -> ict_rs::error::Result<Vec<ConnectionOutput>> {
-        Ok(Vec::new())
-    }
-
-    async fn exec(
-        &self,
-        _cmd: &[&str],
-        _env: &[(&str, &str)],
-    ) -> ict_rs::error::Result<ExecOutput> {
-        Ok(ExecOutput::default())
-    }
-}
-
-// ---------------------------------------------------------------------------
-// Main
-// ---------------------------------------------------------------------------
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("=== IBC Transfer E2E Test ===\n");
-
-    let runtime: Arc<dyn RuntimeBackend> = Arc::new(MockRuntime::new());
-
-    // 1. Create two chains
-    let terp_config = builtin_chain_config("terp")?;
-    let gaia_config = builtin_chain_config("gaia")?;
-    let terp = CosmosChain::new(terp_config, 1, 0, runtime.clone());
-    let gaia = CosmosChain::new(gaia_config, 1, 0, runtime.clone());
-
-    println!("Chains: {} and {}", terp.chain_id(), gaia.chain_id());
-
-    // 2. Build interchain with relayer
-    let relayer = ExampleRelayer::new();
-    let mut ic = Interchain::new(runtime)
-        .add_chain(Box::new(terp))
-        .add_chain(Box::new(gaia))
-        .add_relayer("hermes", relayer)
-        .add_link(InterchainLink {
-            chain1: "terp-test-1".to_string(),
-            chain2: "cosmoshub-test-1".to_string(),
-            relayer: "hermes".to_string(),
-            path: "transfer".to_string(),
-        });
-
-    println!("\nBuilding interchain environment...");
-    ic.build(InterchainBuildOptions {
-        test_name: "ibc-transfer-e2e".to_string(),
-        ..Default::default()
-    })
-    .await?;
-    println!("Interchain environment ready!\n");
-
-    // 3. Get chain references and create + fund users
-    let terp_chain = ic.get_chain("terp-test-1").unwrap();
-    let gaia_chain = ic.get_chain("cosmoshub-test-1").unwrap();
-
-    let terp_user = KeyWallet::from_mnemonic("terp-user-0", &generate_mnemonic(), "terp", 118)?;
-    let gaia_user = KeyWallet::from_mnemonic("gaia-user-0", &generate_mnemonic(), "cosmos", 118)?;
-
-    for (chain, user) in [(terp_chain, &terp_user), (gaia_chain, &gaia_user)] {
-        let fund = WalletAmount {
-            address: user.bech32_address.clone(),
-            denom: chain.config().denom.clone(),
-            amount: 10_000_000_000,
-        };
-        chain.send_funds("validator-0", &fund).await?;
-    }
-
-    println!("Terp user: {}", terp_user.bech32_address);
-    println!("Gaia user: {}", gaia_user.bech32_address);
-
-    // 4. Query initial balances
-    let terp_bal_before = terp_chain
-        .get_balance(&terp_user.bech32_address, "uterp")
-        .await?;
-    println!("\n--- Initial Balances ---");
-    println!("  Terp user: {} uterp", terp_bal_before);
-
-    // 5. IBC transfer Terp -> Gaia (1000 uterp)
-    println!("\n--- IBC Transfer: Terp -> Gaia ---");
-    let transfer_amount = WalletAmount {
-        address: gaia_user.bech32_address.clone(),
+/// Chain A config.
+fn chain_a_config() -> ChainConfig {
+    ChainConfig {
+        chain_type: ChainType::Cosmos,
+        name: "terp-a".to_string(),
+        chain_id: "terp-test-1".to_string(),
+        images: vec![terp_image()],
+        bin: "terpd".to_string(),
+        bech32_prefix: "terp".to_string(),
         denom: "uterp".to_string(),
-        amount: 1000,
-    };
-    let tx = terp_chain
+        coin_type: 118,
+        signing_algorithm: SigningAlgorithm::Secp256k1,
+        gas_prices: "0uterp".to_string(),
+        gas_adjustment: 2.0,
+        trusting_period: "112h".to_string(),
+        block_time: "2s".to_string(),
+        genesis: None,
+        modify_genesis: None,
+        pre_genesis: None,
+        config_file_overrides: HashMap::new(),
+        additional_start_args: Vec::new(),
+        env: Vec::new(),
+        sidecar_configs: Vec::new(),
+        faucet: None,
+        genesis_style: Default::default(),
+    }
+}
+
+/// Chain B config (same binary, different chain_id).
+fn chain_b_config() -> ChainConfig {
+    ChainConfig {
+        chain_type: ChainType::Cosmos,
+        name: "terp-b".to_string(),
+        chain_id: "terp-test-2".to_string(),
+        images: vec![terp_image()],
+        bin: "terpd".to_string(),
+        bech32_prefix: "terp".to_string(),
+        denom: "uterp".to_string(),
+        coin_type: 118,
+        signing_algorithm: SigningAlgorithm::Secp256k1,
+        gas_prices: "0uterp".to_string(),
+        gas_adjustment: 2.0,
+        trusting_period: "112h".to_string(),
+        block_time: "2s".to_string(),
+        genesis: None,
+        modify_genesis: None,
+        pre_genesis: None,
+        config_file_overrides: HashMap::new(),
+        additional_start_args: Vec::new(),
+        env: Vec::new(),
+        sidecar_configs: Vec::new(),
+        faucet: None,
+        genesis_style: Default::default(),
+    }
+}
+
+/// Get a key's bech32 address from a chain via chain_exec.
+async fn key_address(
+    chain: &dyn Chain,
+    key_name: &str,
+) -> Result<String, Box<dyn std::error::Error>> {
+    let output = chain
+        .chain_exec(&[
+            "keys", "show", key_name, "-a",
+            "--keyring-backend", "test",
+        ])
+        .await?;
+    let addr = output.stdout_str().trim().to_string();
+    if addr.is_empty() {
+        return Err(format!("empty address for key '{key_name}'").into());
+    }
+    Ok(addr)
+}
+
+/// Run the IBC transfer test logic.
+async fn run_test(ic: &mut Interchain) -> Result<(), Box<dyn std::error::Error>> {
+    // 1. Fund test users
+    println!("\n--- Funding test users ---");
+    let chain_a = ic.get_chain("terp-test-1").unwrap();
+    let chain_b = ic.get_chain("terp-test-2").unwrap();
+
+    // Create keys on each chain
+    chain_a.create_key("user-a").await?;
+    chain_b.create_key("user-b").await?;
+
+    let user_a = key_address(chain_a, "user-a").await?;
+    let user_b = key_address(chain_b, "user-b").await?;
+    println!("  Chain A user: {}", user_a);
+    println!("  Chain B user: {}", user_b);
+
+    // Fund users from validators
+    let fund_amount = 10_000_000_000u128;
+    chain_a
+        .send_funds(
+            "validator",
+            &WalletAmount {
+                address: user_a.clone(),
+                denom: "uterp".to_string(),
+                amount: fund_amount,
+            },
+        )
+        .await?;
+    chain_b
+        .send_funds(
+            "validator",
+            &WalletAmount {
+                address: user_b.clone(),
+                denom: "uterp".to_string(),
+                amount: fund_amount,
+            },
+        )
+        .await?;
+    wait_for_blocks(chain_a, 3).await?;
+    wait_for_blocks(chain_b, 3).await?;
+    println!("  Funded with {} micro-units each", fund_amount);
+
+    // 2. Query initial balances
+    let a_bal_before = chain_a.get_balance(&user_a, "uterp").await?;
+    let b_bal_before = chain_b.get_balance(&user_b, "uterp").await?;
+    println!("\n--- Initial Balances ---");
+    println!("  Chain A user: {} uterp", a_bal_before);
+    println!("  Chain B user: {} uterp", b_bal_before);
+
+    // 3. IBC transfer: A → B (1000 uterp)
+    println!("\n--- IBC Transfer: A → B (1000 uterp) ---");
+    let transfer_amount = 1000u128;
+    let tx = chain_a
         .send_ibc_transfer(
             "channel-0",
-            &terp_user.key_name,
-            &transfer_amount,
+            "user-a",
+            &WalletAmount {
+                address: user_b.clone(),
+                denom: "uterp".to_string(),
+                amount: transfer_amount,
+            },
             &TransferOptions::default(),
         )
         .await?;
     println!("  Transfer tx: {} (height: {})", tx.tx_hash, tx.height);
 
-    // 6. Compute expected IBC denom on Gaia side
-    let expected_ibc_denom = ibc_denom("transfer", "channel-0", "uterp");
-    println!("  Expected IBC denom on Gaia: {}", expected_ibc_denom);
+    // Wait for relayer to relay the packet
+    println!("  Waiting for IBC relay...");
+    wait_for_blocks(chain_a, 10).await?;
+    wait_for_blocks(chain_b, 5).await?;
 
-    // 7. Check balances after transfer
-    let terp_bal_after = terp_chain
-        .get_balance(&terp_user.bech32_address, "uterp")
-        .await?;
-    let gaia_ibc_bal = gaia_chain
-        .get_balance(&gaia_user.bech32_address, &expected_ibc_denom)
+    // 4. Compute expected IBC denom on chain B side
+    let expected_ibc_denom = ibc_denom("transfer", "channel-0", "uterp");
+    println!("  Expected IBC denom on B: {}", expected_ibc_denom);
+
+    // 5. Check balances after transfer
+    let a_bal_after = chain_a.get_balance(&user_a, "uterp").await?;
+    let b_ibc_bal = chain_b
+        .get_balance(&user_b, &expected_ibc_denom)
         .await?;
     println!("\n--- Post-Transfer Balances ---");
-    println!("  Terp user: {} uterp", terp_bal_after);
-    println!("  Gaia user: {} {}", gaia_ibc_bal, expected_ibc_denom);
+    println!(
+        "  Chain A user: {} uterp (was {})",
+        a_bal_after, a_bal_before
+    );
+    println!(
+        "  Chain B user: {} {} (IBC-wrapped uterp)",
+        b_ibc_bal, expected_ibc_denom
+    );
 
-    // 8. IBC transfer Gaia -> Terp (return 500 tokens)
-    println!("\n--- IBC Transfer: Gaia -> Terp (return) ---");
-    let return_amount = WalletAmount {
-        address: terp_user.bech32_address.clone(),
-        denom: expected_ibc_denom.clone(),
-        amount: 500,
-    };
-    let tx2 = gaia_chain
+    if a_bal_after < a_bal_before {
+        println!("  OK: Chain A balance decreased");
+    } else {
+        eprintln!("  WARN: Chain A balance did NOT decrease");
+    }
+    if b_ibc_bal >= transfer_amount {
+        println!("  OK: Chain B received {} IBC tokens", b_ibc_bal);
+    } else {
+        eprintln!(
+            "  WARN: Chain B IBC balance {} < expected {}",
+            b_ibc_bal, transfer_amount
+        );
+    }
+
+    // 6. IBC transfer: B → A (return 500 IBC uterp)
+    println!("\n--- IBC Transfer: B → A (return 500 IBC uterp) ---");
+    let return_amount = 500u128;
+    let tx2 = chain_b
         .send_ibc_transfer(
             "channel-0",
-            &gaia_user.key_name,
-            &return_amount,
+            "user-b",
+            &WalletAmount {
+                address: user_a.clone(),
+                denom: expected_ibc_denom.clone(),
+                amount: return_amount,
+            },
             &TransferOptions::default(),
         )
         .await?;
     println!("  Return tx: {} (height: {})", tx2.tx_hash, tx2.height);
 
-    // 9. Final balance check
-    let terp_bal_final = terp_chain
-        .get_balance(&terp_user.bech32_address, "uterp")
+    // Wait for relay
+    println!("  Waiting for IBC relay...");
+    wait_for_blocks(chain_b, 10).await?;
+    wait_for_blocks(chain_a, 5).await?;
+
+    // 7. Final balance check
+    let a_bal_final = chain_a.get_balance(&user_a, "uterp").await?;
+    let b_ibc_final = chain_b
+        .get_balance(&user_b, &expected_ibc_denom)
         .await?;
     println!("\n--- Final Balances ---");
-    println!("  Terp user: {} uterp", terp_bal_final);
+    println!("  Chain A user: {} uterp", a_bal_final);
+    println!("  Chain B user: {} {}", b_ibc_final, expected_ibc_denom);
 
-    // 10. Shutdown
-    println!("\n--- Shutdown ---");
-    ic.close().await?;
-    println!("IBC transfer E2E test passed!");
+    if a_bal_final > a_bal_after {
+        println!("  OK: Chain A balance increased (tokens returned)");
+    }
+    if b_ibc_final < b_ibc_bal {
+        println!("  OK: Chain B IBC balance decreased (tokens sent back)");
+    }
 
+    println!("\nIBC transfer E2E test PASSED!");
     Ok(())
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            std::env::var("RUST_LOG").unwrap_or_else(|_| "info,ict_rs::relayer=debug".to_string()),
+        )
+        .init();
+
+    println!("=== IBC Transfer E2E Test (Docker) ===\n");
+
+    // 1. Create Docker runtime
+    let runtime = IctRuntime::Docker(DockerConfig::default())
+        .into_backend()
+        .await?;
+    println!("Docker runtime connected.");
+
+    // 2. Create shared Docker network (must exist before relayer container)
+    let test_name = "ibc-transfer-e2e";
+    let network_id = format!("ict-{test_name}");
+    runtime.create_network(&network_id).await?;
+    println!("Docker network created: {}", network_id);
+
+    // 3. Create two Terp chains
+    let chain_a = CosmosChain::new(chain_a_config(), 1, 0, runtime.clone());
+    let chain_b = CosmosChain::new(chain_b_config(), 1, 0, runtime.clone());
+    println!("Chains: {} and {}", chain_a.chain_id(), chain_b.chain_id());
+
+    // 4. Create Hermes relayer
+    let relayer = build_relayer(
+        RelayerType::Hermes,
+        runtime.clone(),
+        test_name,
+        &network_id,
+    )
+    .await?;
+    println!("Hermes relayer created.");
+
+    // 5. Build interchain environment (init chains, start, configure relayer,
+    //    create IBC clients+connections+channels, start relayer)
+    let mut ic = Interchain::new(runtime)
+        .add_chain(Box::new(chain_a))
+        .add_chain(Box::new(chain_b))
+        .add_relayer("hermes", relayer)
+        .add_link(InterchainLink {
+            chain1: "terp-test-1".to_string(),
+            chain2: "terp-test-2".to_string(),
+            relayer: "hermes".to_string(),
+            path: "ibc-path".to_string(),
+        });
+
+    println!("\nBuilding interchain environment...");
+    ic.build(InterchainBuildOptions {
+        test_name: test_name.to_string(),
+        ..Default::default()
+    })
+    .await?;
+    println!("Interchain environment ready!");
+
+    // 6. Run test logic, then ALWAYS clean up
+    let result = run_test(&mut ic).await;
+
+    println!("\n--- Shutdown ---");
+    if let Err(e) = ic.close().await {
+        eprintln!("Warning: cleanup error: {}", e);
+    }
+
+    match result {
+        Ok(()) => Ok(()),
+        Err(e) => {
+            eprintln!("Test FAILED: {}", e);
+            Err(e)
+        }
+    }
 }

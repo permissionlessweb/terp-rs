@@ -4,13 +4,15 @@
 //! Path concepts are tracked in-memory since Hermes doesn't have native path objects.
 //! This wraps `DockerRelayer` and overrides certain operations to handle
 //! Hermes-specific behavior.
+//!
+//! Ported from Go interchaintest's `relayer/hermes/` package.
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use tracing::info;
+use tracing::{debug, info, warn};
 
 use crate::chain::ChainConfig;
 use crate::error::{IctError, Result};
@@ -39,20 +41,33 @@ struct PathChainConfig {
 }
 
 /// A Hermes chain config that will be serialized into the TOML config file.
+/// Matches Go interchaintest's `hermes_config.go` Chain struct.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct HermesChainConfig {
     id: String,
+    chain_type: String,
     rpc_addr: String,
     grpc_addr: String,
+    event_source_url: String,
+    ccv_consumer_chain: bool,
+    rpc_timeout: String,
     account_prefix: String,
     key_name: String,
+    address_type_derivation: String,
+    store_prefix: String,
+    default_gas: u64,
+    max_gas: u64,
     gas_price_denom: String,
     gas_price_amount: String,
-    trusting_period: String,
-    store_prefix: String,
-    max_gas: u64,
     gas_multiplier: f64,
+    max_msg_num: u32,
+    max_tx_size: u64,
     clock_drift: String,
+    max_block_time: String,
+    trusting_period: String,
+    trust_threshold_numerator: String,
+    trust_threshold_denominator: String,
+    memo_prefix: String,
 }
 
 /// Hermes IBC relayer.
@@ -94,90 +109,203 @@ impl HermesRelayer {
     }
 
     /// Regenerate the Hermes TOML config file from stored chain configs.
+    /// Matches Go interchaintest's `NewConfig()` in `hermes_config.go`.
     async fn write_hermes_config(&self) -> Result<()> {
         let configs = self.chain_configs.lock().unwrap().clone();
 
-        let mut toml_content = String::new();
-        toml_content.push_str("[global]\nlog_level = 'info'\n\n");
-        toml_content.push_str("[mode]\n\n");
-        toml_content.push_str("[mode.clients]\nenabled = true\nrefresh = true\nmisbehaviour = true\n\n");
-        toml_content.push_str("[mode.connections]\nenabled = true\n\n");
-        toml_content.push_str("[mode.channels]\nenabled = true\n\n");
-        toml_content.push_str("[mode.packets]\nenabled = true\nclear_interval = 100\nclear_on_start = true\ntx_confirmation = true\n\n");
-        toml_content.push_str("[rest]\nenabled = false\n\n");
-        toml_content.push_str("[telemetry]\nenabled = false\n\n");
+        let mut toml = String::new();
 
+        // Global
+        toml.push_str("[global]\nlog_level = 'info'\n\n");
+
+        // Mode — matches Go's Config.Mode
+        toml.push_str("[mode]\n\n");
+        toml.push_str("[mode.clients]\nenabled = true\nrefresh = true\nmisbehaviour = true\n\n");
+        toml.push_str("[mode.connections]\nenabled = true\n\n");
+        toml.push_str("[mode.channels]\nenabled = true\n\n");
+        // Go: ClearInterval=0, ClearOnStart=true, TxConfirmation=false
+        toml.push_str("[mode.packets]\nenabled = true\nclear_interval = 0\nclear_on_start = true\ntx_confirmation = false\n\n");
+
+        // Rest, Telemetry, TracingServer — include host/port fields even when
+        // disabled; Hermes 1.8.2+ requires them.
+        toml.push_str("[rest]\nenabled = false\nhost = '0.0.0.0'\nport = 3000\n\n");
+        toml.push_str("[telemetry]\nenabled = false\nhost = '0.0.0.0'\nport = 3001\n\n");
+        toml.push_str("[tracing_server]\nenabled = false\nport = 5555\n\n");
+
+        // Chains — matches Go's Chain struct with ALL fields
         for cfg in &configs {
-            toml_content.push_str(&format!(
+            toml.push_str(&format!(
                 "[[chains]]\n\
-                 id = '{}'\n\
-                 rpc_addr = '{}'\n\
-                 grpc_addr = '{}'\n\
-                 account_prefix = '{}'\n\
-                 key_name = '{}'\n\
-                 store_prefix = '{}'\n\
-                 max_gas = {}\n\
-                 gas_multiplier = {}\n\
-                 clock_drift = '{}'\n\
-                 trusting_period = '{}'\n\
+                 id = '{id}'\n\
+                 type = '{chain_type}'\n\
+                 rpc_addr = '{rpc_addr}'\n\
+                 grpc_addr = '{grpc_addr}'\n\
+                 ccv_consumer_chain = {ccv}\n\
+                 rpc_timeout = '{rpc_timeout}'\n\
+                 account_prefix = '{account_prefix}'\n\
+                 key_name = '{key_name}'\n\
+                 store_prefix = '{store_prefix}'\n\
+                 default_gas = {default_gas}\n\
+                 max_gas = {max_gas}\n\
+                 gas_multiplier = {gas_multiplier}\n\
+                 max_msg_num = {max_msg_num}\n\
+                 max_tx_size = {max_tx_size}\n\
+                 clock_drift = '{clock_drift}'\n\
+                 max_block_time = '{max_block_time}'\n\
+                 trusting_period = '{trusting_period}'\n\
+                 memo_prefix = '{memo_prefix}'\n\
+                 \n\
+                 [chains.event_source]\n\
+                 mode = 'push'\n\
+                 url = '{event_source_url}'\n\
+                 batch_delay = '200ms'\n\
+                 \n\
+                 [chains.address_type]\n\
+                 derivation = '{address_derivation}'\n\
                  \n\
                  [chains.gas_price]\n\
-                 price = {}\n\
-                 denom = '{}'\n\n",
-                cfg.id,
-                cfg.rpc_addr,
-                cfg.grpc_addr,
-                cfg.account_prefix,
-                cfg.key_name,
-                cfg.store_prefix,
-                cfg.max_gas,
-                cfg.gas_multiplier,
-                cfg.clock_drift,
-                cfg.trusting_period,
-                cfg.gas_price_amount,
-                cfg.gas_price_denom,
+                 price = {gas_price}\n\
+                 denom = '{gas_denom}'\n\
+                 \n\
+                 [chains.trust_threshold]\n\
+                 numerator = '{trust_num}'\n\
+                 denominator = '{trust_den}'\n\n",
+                id = cfg.id,
+                chain_type = cfg.chain_type,
+                rpc_addr = cfg.rpc_addr,
+                grpc_addr = cfg.grpc_addr,
+                ccv = cfg.ccv_consumer_chain,
+                rpc_timeout = cfg.rpc_timeout,
+                account_prefix = cfg.account_prefix,
+                key_name = cfg.key_name,
+                store_prefix = cfg.store_prefix,
+                default_gas = cfg.default_gas,
+                max_gas = cfg.max_gas,
+                gas_multiplier = cfg.gas_multiplier,
+                max_msg_num = cfg.max_msg_num,
+                max_tx_size = cfg.max_tx_size,
+                clock_drift = cfg.clock_drift,
+                max_block_time = cfg.max_block_time,
+                trusting_period = cfg.trusting_period,
+                memo_prefix = cfg.memo_prefix,
+                event_source_url = cfg.event_source_url,
+                address_derivation = cfg.address_type_derivation,
+                gas_price = cfg.gas_price_amount,
+                gas_denom = cfg.gas_price_denom,
+                trust_num = cfg.trust_threshold_numerator,
+                trust_den = cfg.trust_threshold_denominator,
             ));
         }
+
+        debug!(relayer = "hermes", config = %toml, "Generated Hermes config");
 
         let config_path = format!(
             "{}/.hermes/config.toml",
             self.docker_relayer.commander().home_dir()
         );
         self.docker_relayer
-            .write_file(&config_path, toml_content.as_bytes())
+            .write_file(&config_path, toml.as_bytes())
             .await
+    }
+
+    /// Validate the Hermes config file.
+    /// Matches Go's `validateConfig()`.
+    async fn validate_config(&self) -> Result<()> {
+        let home = self.docker_relayer.commander().home_dir();
+        let cmd = vec![
+            "hermes".to_string(),
+            "--config".to_string(),
+            format!("{home}/.hermes/config.toml"),
+            "config".to_string(),
+            "validate".to_string(),
+        ];
+        let output = self.docker_relayer.exec_oneoff(&cmd, &[]).await?;
+        if output.exit_code != 0 {
+            let stderr = output.stderr_str();
+            let stdout = output.stdout_str();
+            warn!(
+                relayer = "hermes",
+                exit_code = output.exit_code,
+                stdout = %stdout,
+                stderr = %stderr,
+                "Hermes config validation failed"
+            );
+            return Err(IctError::Relayer {
+                relayer: "hermes".to_string(),
+                source: anyhow::anyhow!(
+                    "config validation failed (exit {}): {}",
+                    output.exit_code,
+                    if stderr.is_empty() { &stdout } else { &stderr }
+                ),
+            });
+        }
+        debug!(relayer = "hermes", "Config validation passed");
+        Ok(())
     }
 }
 
 #[async_trait]
 impl Relayer for HermesRelayer {
     async fn add_key(&self, chain_id: &str, key_name: &str) -> Result<Box<dyn Wallet>> {
+        // Hermes `keys add` REQUIRES --mnemonic-file or --key-file; it cannot
+        // generate a key from nothing. Go interchaintest doesn't implement AddKey
+        // for Hermes — it only uses RestoreKey. We generate a mnemonic, write it
+        // to a file in the volume, then call `hermes keys add --mnemonic-file`.
+        let mnemonic = crate::auth::generate_mnemonic();
+
+        let home = self.docker_relayer.commander().home_dir();
+        let mnemonic_path = format!("{home}/{chain_id}/mnemonic.txt");
+        self.docker_relayer
+            .write_file(&mnemonic_path, mnemonic.as_bytes())
+            .await?;
+
         let cmd = vec![
             "hermes".to_string(),
-            "--json".to_string(),
             "keys".to_string(),
             "add".to_string(),
             "--chain".to_string(),
             chain_id.to_string(),
+            "--mnemonic-file".to_string(),
+            mnemonic_path,
             "--key-name".to_string(),
             key_name.to_string(),
             "--hd-path".to_string(),
             "m/44'/118'/0'/0/0".to_string(),
+            "--overwrite".to_string(),
         ];
 
-        info!(relayer = "hermes", chain = %chain_id, key = %key_name, "Adding key");
+        info!(relayer = "hermes", chain = %chain_id, key = %key_name, "Adding key via mnemonic");
         let output = self.docker_relayer.exec_oneoff(&cmd, &[]).await?;
 
         let stdout = output.stdout_str();
-        let address = parse_hermes_key_output(&stdout).unwrap_or_else(|| {
-            format!("cosmos1hermes{chain_id}")
+        let stderr = output.stderr_str();
+        debug!(
+            relayer = "hermes",
+            stdout = %stdout,
+            stderr = %stderr,
+            exit_code = output.exit_code,
+            "hermes keys add output"
+        );
+
+        // Parse address from parentheses: "SUCCESS Added key 'name' (address) on chain ..."
+        // Go uses regex `\((.*)\)` — we use simple string search.
+        let combined = format!("{stdout}\n{stderr}");
+        let address = parse_key_address_from_output(&combined).unwrap_or_else(|| {
+            warn!(
+                relayer = "hermes",
+                chain = %chain_id,
+                stdout = %stdout,
+                stderr = %stderr,
+                "Failed to parse key address from hermes output"
+            );
+            String::new()
         });
 
         let wallet = KeyWallet {
             key_name: key_name.to_string(),
             address_bytes: address.as_bytes().to_vec(),
             bech32_address: address,
-            mnemonic_phrase: String::new(),
+            mnemonic_phrase: mnemonic,
         };
 
         Ok(Box::new(wallet))
@@ -189,30 +317,36 @@ impl Relayer for HermesRelayer {
         key_name: &str,
         mnemonic: &str,
     ) -> Result<()> {
-        // Write mnemonic to a temp file in the volume, then use it
-        let mnemonic_path = format!(
-            "{}/.hermes/mnemonic_{}",
-            self.docker_relayer.commander().home_dir(),
-            chain_id
-        );
+        // Write mnemonic to a file in the volume, then reference it.
+        // Matches Go's RestoreKey: hermes keys add --chain <id> --mnemonic-file <path> --key-name <name>
+        let home = self.docker_relayer.commander().home_dir();
+        let mnemonic_path = format!("{home}/{chain_id}/mnemonic.txt");
         self.docker_relayer
             .write_file(&mnemonic_path, mnemonic.as_bytes())
             .await?;
 
+        // No --json flag (matches Go)
         let restore_cmd = vec![
             "hermes".to_string(),
-            "--json".to_string(),
             "keys".to_string(),
             "add".to_string(),
             "--chain".to_string(),
             chain_id.to_string(),
-            "--key-name".to_string(),
-            key_name.to_string(),
             "--mnemonic-file".to_string(),
             mnemonic_path,
+            "--key-name".to_string(),
+            key_name.to_string(),
         ];
 
-        self.docker_relayer.exec_oneoff(&restore_cmd, &[]).await?;
+        info!(relayer = "hermes", chain = %chain_id, key = %key_name, "Restoring key");
+        let output = self.docker_relayer.exec_oneoff(&restore_cmd, &[]).await?;
+        debug!(
+            relayer = "hermes",
+            stdout = %output.stdout_str(),
+            stderr = %output.stderr_str(),
+            exit_code = output.exit_code,
+            "hermes restore key output"
+        );
         Ok(())
     }
 
@@ -230,23 +364,39 @@ impl Relayer for HermesRelayer {
         // Parse gas price from "0.025uatom" format
         let (gas_amount, gas_denom) = parse_gas_prices(&config.gas_prices);
 
+        // Compute WebSocket URL for event_source from RPC addr.
+        // Go: strings.ReplaceAll(fmt.Sprintf("%s/websocket", rpcAddr), "http", "ws")
+        let event_source_url = format!("{}/websocket", rpc_addr).replace("http", "ws");
+
         let hermes_cfg = HermesChainConfig {
             id: config.chain_id.clone(),
+            chain_type: "CosmosSdk".to_string(),
             rpc_addr: rpc_addr.to_string(),
             grpc_addr: format!("http://{grpc_addr}"),
+            event_source_url,
+            ccv_consumer_chain: false,
+            rpc_timeout: "10s".to_string(),
             account_prefix: config.bech32_prefix.clone(),
             key_name: key_name.to_string(),
+            address_type_derivation: "cosmos".to_string(),
+            store_prefix: "ibc".to_string(),
+            default_gas: 100000,
+            max_gas: 400000,
             gas_price_denom: gas_denom,
             gas_price_amount: gas_amount,
+            gas_multiplier: config.gas_adjustment,
+            max_msg_num: 30,
+            max_tx_size: 2097152,
+            clock_drift: "5s".to_string(),
+            max_block_time: "30s".to_string(),
             trusting_period: if config.trusting_period.is_empty() {
-                "336h".to_string()
+                "14days".to_string()
             } else {
                 config.trusting_period.clone()
             },
-            store_prefix: "ibc".to_string(),
-            max_gas: 3000000,
-            gas_multiplier: config.gas_adjustment,
-            clock_drift: "5s".to_string(),
+            trust_threshold_numerator: "1".to_string(),
+            trust_threshold_denominator: "3".to_string(),
+            memo_prefix: "hermes".to_string(),
         };
 
         {
@@ -255,7 +405,24 @@ impl Relayer for HermesRelayer {
         }
 
         info!(relayer = "hermes", chain = %config.chain_id, "Adding chain configuration");
-        self.write_hermes_config().await
+        self.write_hermes_config().await?;
+
+        // Read back config to verify it was written correctly
+        let config_path = format!(
+            "{}/.hermes/config.toml",
+            self.docker_relayer.commander().home_dir()
+        );
+        match self.docker_relayer.read_file(&config_path).await {
+            Ok(content) => debug!(relayer = "hermes", config_readback = %content, "Config file readback"),
+            Err(e) => warn!(relayer = "hermes", error = %e, "Failed to read back config"),
+        }
+
+        // Validate config after writing (matches Go's validateConfig)
+        if let Err(e) = self.validate_config().await {
+            warn!(relayer = "hermes", error = %e, "Config validation failed (continuing)");
+        }
+
+        Ok(())
     }
 
     async fn generate_path(
@@ -314,10 +481,25 @@ impl Relayer for HermesRelayer {
             "--reference-chain".to_string(),
             chain_b.clone(),
         ];
-        info!(relayer = "hermes", path = %path_name, "Creating client A→B");
+        info!(relayer = "hermes", path = %path_name, host = %chain_a, ref_chain = %chain_b, "Creating client A→B");
         let output_a = self.docker_relayer.exec_oneoff(&cmd_a, &[]).await?;
-        let client_id_a = parse_hermes_client_id(&output_a.stdout_str())
-            .unwrap_or_else(|| "07-tendermint-0".to_string());
+        let stdout_a = output_a.stdout_str();
+        debug!(
+            relayer = "hermes",
+            stdout = %stdout_a,
+            stderr = %output_a.stderr_str(),
+            exit_code = output_a.exit_code,
+            "create client A→B output"
+        );
+
+        // Parse client ID using extractJSONResult pattern (matches Go)
+        let client_id_a = parse_client_id_from_stdout(&stdout_a)
+            .map_err(|e| {
+                warn!(relayer = "hermes", error = %e, stdout = %stdout_a, "Failed to parse client_id A→B");
+                e
+            })
+            .unwrap_or_else(|_| "07-tendermint-0".to_string());
+        info!(relayer = "hermes", client_id = %client_id_a, "Client A→B created");
 
         // Create client on chain_b for chain_a
         let cmd_b = vec![
@@ -330,10 +512,24 @@ impl Relayer for HermesRelayer {
             "--reference-chain".to_string(),
             chain_a.clone(),
         ];
-        info!(relayer = "hermes", path = %path_name, "Creating client B→A");
+        info!(relayer = "hermes", path = %path_name, host = %chain_b, ref_chain = %chain_a, "Creating client B→A");
         let output_b = self.docker_relayer.exec_oneoff(&cmd_b, &[]).await?;
-        let client_id_b = parse_hermes_client_id(&output_b.stdout_str())
-            .unwrap_or_else(|| "07-tendermint-0".to_string());
+        let stdout_b = output_b.stdout_str();
+        debug!(
+            relayer = "hermes",
+            stdout = %stdout_b,
+            stderr = %output_b.stderr_str(),
+            exit_code = output_b.exit_code,
+            "create client B→A output"
+        );
+
+        let client_id_b = parse_client_id_from_stdout(&stdout_b)
+            .map_err(|e| {
+                warn!(relayer = "hermes", error = %e, stdout = %stdout_b, "Failed to parse client_id B→A");
+                e
+            })
+            .unwrap_or_else(|_| "07-tendermint-0".to_string());
+        info!(relayer = "hermes", client_id = %client_id_b, "Client B→A created");
 
         // Store client IDs
         let mut paths = self.paths.lock().unwrap();
@@ -377,14 +573,28 @@ impl Relayer for HermesRelayer {
 
         info!(relayer = "hermes", path = %path_name, "Creating connection");
         let output = self.docker_relayer.exec_oneoff(&cmd, &[]).await?;
+        let stdout = output.stdout_str();
+        debug!(
+            relayer = "hermes",
+            stdout = %stdout,
+            stderr = %output.stderr_str(),
+            exit_code = output.exit_code,
+            "create connection output"
+        );
 
-        let conn_id = parse_hermes_connection_id(&output.stdout_str())
-            .unwrap_or_else(|| "connection-0".to_string());
+        // Parse both a_side and b_side connection IDs (matches Go's GetConnectionIDsFromStdout)
+        let (conn_a, conn_b) = parse_connection_ids_from_stdout(&stdout)
+            .map_err(|e| {
+                warn!(relayer = "hermes", error = %e, stdout = %stdout, "Failed to parse connection IDs");
+                e
+            })
+            .unwrap_or_else(|_| ("connection-0".to_string(), "connection-0".to_string()));
+        info!(relayer = "hermes", conn_a = %conn_a, conn_b = %conn_b, "Connection created");
 
         let mut paths = self.paths.lock().unwrap();
         if let Some(path) = paths.get_mut(path_name) {
-            path.chain_a.connection_id = conn_id.clone();
-            path.chain_b.connection_id = conn_id;
+            path.chain_a.connection_id = conn_a;
+            path.chain_b.connection_id = conn_b;
         }
 
         Ok(())
@@ -416,21 +626,23 @@ impl Relayer for HermesRelayer {
             &opts.dst_port
         };
 
+        // Matches Go: hermes --json create channel --order <order> --a-chain <chain>
+        //   --a-port <port> --b-port <port> --a-connection <conn>
         let mut cmd = vec![
             "hermes".to_string(),
             "--json".to_string(),
             "create".to_string(),
             "channel".to_string(),
+            "--order".to_string(),
+            opts.ordering.to_string(),
             "--a-chain".to_string(),
             chain_a,
-            "--a-connection".to_string(),
-            conn_a,
             "--a-port".to_string(),
             src_port.to_string(),
             "--b-port".to_string(),
             dst_port.to_string(),
-            "--order".to_string(),
-            opts.ordering.to_string(),
+            "--a-connection".to_string(),
+            conn_a,
         ];
 
         if !opts.version.is_empty() {
@@ -439,7 +651,20 @@ impl Relayer for HermesRelayer {
         }
 
         info!(relayer = "hermes", path = %path_name, "Creating channel");
-        self.docker_relayer.exec_oneoff(&cmd, &[]).await?;
+        let output = self.docker_relayer.exec_oneoff(&cmd, &[]).await?;
+        let stdout = output.stdout_str();
+        debug!(
+            relayer = "hermes",
+            stdout = %stdout,
+            stderr = %output.stderr_str(),
+            exit_code = output.exit_code,
+            "create channel output"
+        );
+
+        // Parse channel IDs
+        if let Ok((ch_a, ch_b)) = parse_channel_ids_from_stdout(&stdout) {
+            info!(relayer = "hermes", channel_a = %ch_a, channel_b = %ch_b, "Channel created");
+        }
 
         // Store port IDs
         let mut paths = self.paths.lock().unwrap();
@@ -524,7 +749,6 @@ impl Relayer for HermesRelayer {
 
         let cmd = vec![
             "hermes".to_string(),
-            "--json".to_string(),
             "clear".to_string(),
             "packets".to_string(),
             "--chain".to_string(),
@@ -547,6 +771,8 @@ impl Relayer for HermesRelayer {
             "channels".to_string(),
             "--chain".to_string(),
             chain_id.to_string(),
+            "--show-counterparty".to_string(),
+            "--verbose".to_string(),
         ];
 
         let output = self.docker_relayer.exec_oneoff(&cmd, &[]).await?;
@@ -554,13 +780,17 @@ impl Relayer for HermesRelayer {
     }
 
     async fn get_connections(&self, chain_id: &str) -> Result<Vec<ConnectionOutput>> {
+        let home = self.docker_relayer.commander().home_dir();
         let cmd = vec![
             "hermes".to_string(),
+            "--config".to_string(),
+            format!("{home}/.hermes/config.toml"),
             "--json".to_string(),
             "query".to_string(),
             "connections".to_string(),
             "--chain".to_string(),
             chain_id.to_string(),
+            "--verbose".to_string(),
         ];
 
         let output = self.docker_relayer.exec_oneoff(&cmd, &[]).await?;
@@ -633,7 +863,6 @@ impl RelayerCommander for HermesCommander {
     ) -> Vec<String> {
         vec![
             "hermes".to_string(),
-            "--json".to_string(),
             "keys".to_string(),
             "add".to_string(),
             "--chain".to_string(),
@@ -654,7 +883,6 @@ impl RelayerCommander for HermesCommander {
     ) -> Vec<String> {
         vec![
             "hermes".to_string(),
-            "--json".to_string(),
             "keys".to_string(),
             "add".to_string(),
             "--chain".to_string(),
@@ -711,23 +939,29 @@ impl RelayerCommander for HermesCommander {
             "channels".to_string(),
             "--chain".to_string(),
             chain_id.to_string(),
+            "--show-counterparty".to_string(),
+            "--verbose".to_string(),
         ]
     }
 
-    fn get_connections_cmd(&self, chain_id: &str, _home: &str) -> Vec<String> {
+    fn get_connections_cmd(&self, chain_id: &str, home: &str) -> Vec<String> {
         vec![
             "hermes".to_string(),
+            "--config".to_string(),
+            format!("{home}/.hermes/config.toml"),
             "--json".to_string(),
             "query".to_string(),
             "connections".to_string(),
             "--chain".to_string(),
             chain_id.to_string(),
+            "--verbose".to_string(),
         ]
     }
 
-    fn parse_add_key_output(&self, stdout: &str, _stderr: &str) -> Result<Box<dyn Wallet>> {
-        let address = parse_hermes_key_output(stdout)
-            .unwrap_or_else(|| "cosmos1unknown".to_string());
+    fn parse_add_key_output(&self, stdout: &str, stderr: &str) -> Result<Box<dyn Wallet>> {
+        let combined = format!("{stdout}\n{stderr}");
+        let address = parse_key_address_from_output(&combined)
+            .unwrap_or_else(|| String::new());
 
         Ok(Box::new(KeyWallet {
             key_name: "hermes-key".to_string(),
@@ -747,6 +981,7 @@ impl RelayerCommander for HermesCommander {
 }
 
 // -- Hermes output parsers --
+// These match the Go interchaintest patterns from hermes_relayer.go and hermes_types.go.
 
 /// Parse gas prices string like "0.025uatom" into ("0.025", "uatom").
 fn parse_gas_prices(gas_prices: &str) -> (String, String) {
@@ -761,52 +996,87 @@ fn parse_gas_prices(gas_prices: &str) -> (String, String) {
     )
 }
 
+/// Extract the JSON result line from Hermes stdout.
+/// Matches Go's `extractJSONResult()`: finds the first line containing "result".
+fn extract_json_result(stdout: &str) -> Option<&str> {
+    stdout.lines().find(|line| line.contains("result"))
+}
+
+/// Parse key address from Hermes text output.
+/// Matches Go's `parseRestoreKeyOutput()` which uses regex `\((.*)\)`.
+/// Extracts text between the first pair of parentheses.
+/// Example: `SUCCESS Added key 'name' (terp1abc...) on chain test-1` → `terp1abc...`
+fn parse_key_address_from_output(stdout: &str) -> Option<String> {
+    let start = stdout.find('(')?;
+    let end = stdout[start..].find(')')? + start;
+    let addr = stdout[start + 1..end].trim().to_string();
+    if addr.is_empty() {
+        None
+    } else {
+        Some(addr)
+    }
+}
+
 /// Parse client ID from Hermes JSON output.
-fn parse_hermes_client_id(stdout: &str) -> Option<String> {
-    // Hermes outputs JSON lines. Look for CreateClient result.
-    for line in stdout.lines() {
-        if let Ok(json) = serde_json::from_str::<serde_json::Value>(line) {
-            if let Some(client_id) = json["result"]["CreateClient"]["client_id"].as_str() {
-                return Some(client_id.to_string());
-            }
-            // Also check flattened format
-            if let Some(client_id) = json["result"].as_str() {
-                if client_id.contains("tendermint") {
-                    return Some(client_id.to_string());
-                }
-            }
-        }
-    }
-    None
+/// Matches Go's `GetClientIDFromStdout()`.
+/// JSON format: `{"result":{"CreateClient":{"client_id":"07-tendermint-0",...}}}`
+fn parse_client_id_from_stdout(stdout: &str) -> std::result::Result<String, String> {
+    let line = extract_json_result(stdout)
+        .ok_or_else(|| format!("no JSON result line in stdout: {stdout}"))?;
+
+    let json: serde_json::Value = serde_json::from_str(line)
+        .map_err(|e| format!("JSON parse error: {e} in line: {line}"))?;
+
+    json["result"]["CreateClient"]["client_id"]
+        .as_str()
+        .map(|s| s.to_string())
+        .ok_or_else(|| format!("client_id not found in JSON: {line}"))
 }
 
-/// Parse connection ID from Hermes JSON output.
-fn parse_hermes_connection_id(stdout: &str) -> Option<String> {
-    for line in stdout.lines() {
-        if let Ok(json) = serde_json::from_str::<serde_json::Value>(line) {
-            if let Some(conn_id) = json["result"]["a_side"]["connection_id"].as_str() {
-                return Some(conn_id.to_string());
-            }
-        }
-    }
-    None
+/// Parse connection IDs from Hermes JSON output (both a_side and b_side).
+/// Matches Go's `GetConnectionIDsFromStdout()`.
+/// JSON format: `{"result":{"a_side":{"connection_id":"connection-0"},"b_side":{"connection_id":"connection-0"}}}`
+fn parse_connection_ids_from_stdout(stdout: &str) -> std::result::Result<(String, String), String> {
+    let line = extract_json_result(stdout)
+        .ok_or_else(|| format!("no JSON result line in stdout: {stdout}"))?;
+
+    let json: serde_json::Value = serde_json::from_str(line)
+        .map_err(|e| format!("JSON parse error: {e} in line: {line}"))?;
+
+    let a_conn = json["result"]["a_side"]["connection_id"]
+        .as_str()
+        .ok_or_else(|| format!("a_side connection_id not found in: {line}"))?
+        .to_string();
+
+    let b_conn = json["result"]["b_side"]["connection_id"]
+        .as_str()
+        .ok_or_else(|| format!("b_side connection_id not found in: {line}"))?
+        .to_string();
+
+    Ok((a_conn, b_conn))
 }
 
-/// Parse key address from Hermes JSON output.
-fn parse_hermes_key_output(stdout: &str) -> Option<String> {
-    for line in stdout.lines() {
-        if let Ok(json) = serde_json::from_str::<serde_json::Value>(line) {
-            if let Some(addr) = json["result"]["account"].as_str() {
-                return Some(addr.to_string());
-            }
-            if let Some(addr) = json["result"].as_str() {
-                if addr.starts_with("cosmos1") || addr.starts_with("osmo1") {
-                    return Some(addr.to_string());
-                }
-            }
-        }
-    }
-    None
+/// Parse channel IDs from Hermes JSON output (both a_side and b_side).
+/// Matches Go's `GetChannelIDsFromStdout()`.
+/// JSON format: `{"result":{"a_side":{"channel_id":"channel-0"},"b_side":{"channel_id":"channel-0"}}}`
+fn parse_channel_ids_from_stdout(stdout: &str) -> std::result::Result<(String, String), String> {
+    let line = extract_json_result(stdout)
+        .ok_or_else(|| format!("no JSON result line in stdout: {stdout}"))?;
+
+    let json: serde_json::Value = serde_json::from_str(line)
+        .map_err(|e| format!("JSON parse error: {e} in line: {line}"))?;
+
+    let a_ch = json["result"]["a_side"]["channel_id"]
+        .as_str()
+        .ok_or_else(|| format!("a_side channel_id not found in: {line}"))?
+        .to_string();
+
+    let b_ch = json["result"]["b_side"]["channel_id"]
+        .as_str()
+        .ok_or_else(|| format!("b_side channel_id not found in: {line}"))?
+        .to_string();
+
+    Ok((a_ch, b_ch))
 }
 
 /// Parse Hermes channel query output.

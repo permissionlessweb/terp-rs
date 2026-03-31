@@ -95,14 +95,14 @@ impl TestChain {
             runtime.clone(),
         );
 
-        // Generate a unique network name to avoid collisions
+        // Generate a unique network name using PID + atomic counter.
+        // The old millis & 0xFFFF approach caused collisions in parallel tests.
+        use std::sync::atomic::{AtomicU32, Ordering};
+        static NETWORK_COUNTER: AtomicU32 = AtomicU32::new(0);
         let unique_id = format!(
-            "{:x}",
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap_or_default()
-                .as_millis()
-                & 0xFFFF
+            "{}-{}",
+            std::process::id(),
+            NETWORK_COUNTER.fetch_add(1, Ordering::Relaxed),
         );
         let network_id = format!("ict-{test_name}-{unique_id}");
 
@@ -216,6 +216,7 @@ impl Drop for TestChain {
                         gas_prices: String::new(),
                         gas_adjustment: 0.0,
                         trusting_period: String::new(),
+                        block_time: "2s".to_string(),
                         genesis: None,
                         modify_genesis: None,
                         pre_genesis: None,
@@ -223,6 +224,8 @@ impl Drop for TestChain {
                         additional_start_args: Vec::new(),
                         env: Vec::new(),
                         sidecar_configs: Vec::new(),
+                        faucet: None,
+                        genesis_style: Default::default(),
                     },
                     0,
                     0,
@@ -338,13 +341,12 @@ mod anvil {
             let cfg = TestEnv::anvil_config();
             let mut chain = AnvilChain::new(cfg, runtime.clone());
 
+            use std::sync::atomic::{AtomicU32, Ordering};
+            static ETH_NETWORK_COUNTER: AtomicU32 = AtomicU32::new(0);
             let unique_id = format!(
-                "{:x}",
-                std::time::SystemTime::now()
-                    .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap_or_default()
-                    .as_millis()
-                    & 0xFFFF
+                "{}-{}",
+                std::process::id(),
+                ETH_NETWORK_COUNTER.fetch_add(1, Ordering::Relaxed),
             );
             let network_id = format!("ict-{test_name}-{unique_id}");
 

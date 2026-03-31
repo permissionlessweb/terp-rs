@@ -271,17 +271,47 @@ impl DockerRelayer {
     }
 
     /// Write a file into the relayer volume via a temporary container.
+    ///
+    /// Uses `printf '%s'` with shell-escaped content rather than `xxd` or `base64`,
+    /// because minimal container images (e.g. Hermes) may not have those tools.
+    /// This is POSIX-compliant and works in any `/bin/sh`.
     pub async fn write_file(&self, path: &str, content: &[u8]) -> Result<()> {
-        let encoded = hex::encode(content);
+        let text = std::str::from_utf8(content).map_err(|e| {
+            crate::error::IctError::Runtime(anyhow::anyhow!(
+                "write_file: non-UTF8 content: {e}"
+            ))
+        })?;
+
+        // Shell-escape single quotes: replace ' with '\'' (end quote, literal quote, resume quote)
+        let escaped = text.replace('\'', "'\\''");
+
+        // Build: mkdir -p "$(dirname '<path>')" && printf '%s' '<escaped>' > '<path>'
+        let mut shell_cmd =
+            String::with_capacity(escaped.len() + path.len() * 2 + 80);
+        shell_cmd.push_str("mkdir -p \"$(dirname '");
+        shell_cmd.push_str(path);
+        shell_cmd.push_str("')\" && printf '%s' '");
+        shell_cmd.push_str(&escaped);
+        shell_cmd.push_str("' > '");
+        shell_cmd.push_str(path);
+        shell_cmd.push('\'');
+
         let cmd = vec![
             "sh".to_string(),
             "-c".to_string(),
-            format!(
-                "mkdir -p $(dirname {}) && echo '{}' | xxd -r -p > {}",
-                path, encoded, path
-            ),
+            shell_cmd,
         ];
-        self.exec_oneoff(&cmd, &[]).await?;
+        let output = self.exec_oneoff(&cmd, &[]).await?;
+
+        if output.exit_code != 0 {
+            return Err(crate::error::IctError::Runtime(anyhow::anyhow!(
+                "write_file '{}' failed (exit {}): {}",
+                path,
+                output.exit_code,
+                output.stderr_str()
+            )));
+        }
+
         Ok(())
     }
 
@@ -439,13 +469,16 @@ impl Relayer for DockerRelayer {
         // Pull image
         self.runtime.pull_image(&image).await?;
 
+        // Go interchaintest sets the start command as the Entrypoint (not Cmd).
+        // This overrides the image's default ENTRYPOINT (e.g. /usr/bin/hermes)
+        // so the command runs directly: `hermes --config ... start`
         let opts = ContainerOptions {
             image,
             name: format!("ict-{}-{}-bg", self.test_name, self.commander.name()),
             network_id: Some(NetworkId(self.network_id.clone())),
             env: Vec::new(),
-            cmd: cmd.iter().map(|s| s.to_string()).collect(),
-            entrypoint: None,
+            cmd: Vec::new(),
+            entrypoint: Some(cmd),
             ports: Vec::new(),
             volumes: vec![VolumeMount {
                 source: self.volume_name.clone(),

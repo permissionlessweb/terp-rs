@@ -33,6 +33,7 @@ fn mock_chain_config() -> ChainConfig {
         gas_prices: "0.025utest".to_string(),
         gas_adjustment: 1.5,
         trusting_period: "508h".to_string(),
+        block_time: "2s".to_string(),
         genesis: None,
         modify_genesis: None,
         pre_genesis: None,
@@ -40,6 +41,8 @@ fn mock_chain_config() -> ChainConfig {
         additional_start_args: Vec::new(),
         env: Vec::new(),
         sidecar_configs: Vec::new(),
+        faucet: None,
+        genesis_style: Default::default(),
     }
 }
 

@@ -197,6 +197,16 @@ fn mock_exec_response(cmd: &[&str]) -> ExecOutput {
         };
     }
 
+    // SDK v0.47+: `query bank balance <addr> <denom>`
+    if has("query") && has("bank") && has("balance") && !has("balances") {
+        return ExecOutput {
+            stdout: br#"{"balance":{"amount":"1000000","denom":"uatom"}}"#.to_vec(),
+            stderr: Vec::new(),
+            exit_code: 0,
+        };
+    }
+
+    // Older SDK: `query bank balances <addr> --denom <denom>`
     if has("query") && has("bank") && has("balances") {
         return ExecOutput {
             stdout: br#"{"balance":{"amount":"1000000","denom":"uatom"}}"#.to_vec(),
@@ -526,6 +536,7 @@ fn make_terp_config() -> ChainConfig {
         gas_prices: "0.025uterp".to_string(),
         gas_adjustment: 1.5,
         trusting_period: "336h".to_string(),
+        block_time: "2s".to_string(),
         genesis: None,
         modify_genesis: None,
         pre_genesis: None,
@@ -533,6 +544,8 @@ fn make_terp_config() -> ChainConfig {
         additional_start_args: Vec::new(),
         env: Vec::new(),
         sidecar_configs: Vec::new(),
+        faucet: None,
+        genesis_style: Default::default(),
     }
 }
 
@@ -1124,6 +1137,10 @@ async fn test_chain_node_exec_commands() {
         "node_exec_test",
         "mock-net-1",
         runtime.clone(),
+        None,
+        Default::default(),
+        "0.025uatom",
+        1.5,
     );
 
     // Create and start the container.
@@ -1396,6 +1413,10 @@ async fn test_chain_node_naming_conventions() {
         "my_test",
         "net-1",
         runtime.clone(),
+        None,
+        Default::default(),
+        "0.025uatom",
+        1.5,
     );
 
     assert_eq!(val_node.hostname, "gaia-1-val-0");
@@ -1420,6 +1441,10 @@ async fn test_chain_node_naming_conventions() {
         "another_test",
         "net-2",
         runtime.clone(),
+        None,
+        Default::default(),
+        "0.025uosmo",
+        1.5,
     );
 
     assert_eq!(fn_node.hostname, "osmo-1-fn-2");

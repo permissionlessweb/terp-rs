@@ -4,7 +4,7 @@ use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 
 use crate::chain::cosmos::CosmosChain;
-use crate::chain::{ChainConfig, ChainType, SigningAlgorithm};
+use crate::chain::{ChainConfig, ChainType, GenesisStyle, SigningAlgorithm};
 use crate::error::{IctError, Result};
 use crate::runtime::{DockerImage, RuntimeBackend};
 
@@ -97,6 +97,7 @@ pub fn builtin_chain_config(name: &str) -> Result<ChainConfig> {
             gas_prices: "0.025uatom".to_string(),
             gas_adjustment: 1.5,
             trusting_period: "336h".to_string(),
+            block_time: "2s".to_string(),
             genesis: None,
             modify_genesis: None,
             pre_genesis: None,
@@ -104,6 +105,8 @@ pub fn builtin_chain_config(name: &str) -> Result<ChainConfig> {
             additional_start_args: Vec::new(),
             env: Vec::new(),
             sidecar_configs: Vec::new(),
+            faucet: None,
+            genesis_style: GenesisStyle::default(),
         }),
 
         "osmosis" => Ok(ChainConfig {
@@ -123,6 +126,7 @@ pub fn builtin_chain_config(name: &str) -> Result<ChainConfig> {
             gas_prices: "0.025uosmo".to_string(),
             gas_adjustment: 1.5,
             trusting_period: "336h".to_string(),
+            block_time: "2s".to_string(),
             genesis: None,
             modify_genesis: None,
             pre_genesis: None,
@@ -130,6 +134,8 @@ pub fn builtin_chain_config(name: &str) -> Result<ChainConfig> {
             additional_start_args: Vec::new(),
             env: Vec::new(),
             sidecar_configs: Vec::new(),
+            faucet: None,
+            genesis_style: GenesisStyle::default(),
         }),
 
         "terp" | "terpnetwork" => Ok(ChainConfig {
@@ -149,6 +155,7 @@ pub fn builtin_chain_config(name: &str) -> Result<ChainConfig> {
             gas_prices: "0.025uterp".to_string(),
             gas_adjustment: 1.5,
             trusting_period: "336h".to_string(),
+            block_time: "2s".to_string(),
             genesis: None,
             modify_genesis: None,
             pre_genesis: None,
@@ -156,6 +163,8 @@ pub fn builtin_chain_config(name: &str) -> Result<ChainConfig> {
             additional_start_args: Vec::new(),
             env: Vec::new(),
             sidecar_configs: Vec::new(),
+            faucet: None,
+            genesis_style: GenesisStyle::default(),
         }),
 
         "juno" => Ok(ChainConfig {
@@ -175,6 +184,7 @@ pub fn builtin_chain_config(name: &str) -> Result<ChainConfig> {
             gas_prices: "0.025ujuno".to_string(),
             gas_adjustment: 1.5,
             trusting_period: "336h".to_string(),
+            block_time: "2s".to_string(),
             genesis: None,
             modify_genesis: None,
             pre_genesis: None,
@@ -182,6 +192,37 @@ pub fn builtin_chain_config(name: &str) -> Result<ChainConfig> {
             additional_start_args: Vec::new(),
             env: Vec::new(),
             sidecar_configs: Vec::new(),
+            faucet: None,
+            genesis_style: GenesisStyle::default(),
+        }),
+
+        "akash" => Ok(ChainConfig {
+            chain_type: ChainType::Cosmos,
+            name: "akash".to_string(),
+            chain_id: "akash-local-1".to_string(),
+            images: vec![DockerImage {
+                repository: "ghcr.io/akash-network/node".to_string(),
+                version: "latest".to_string(),
+                uid_gid: None,
+            }],
+            bin: "akash".to_string(),
+            bech32_prefix: "akash".to_string(),
+            denom: "uakt".to_string(),
+            coin_type: 118,
+            signing_algorithm: SigningAlgorithm::Secp256k1,
+            gas_prices: "0.025uakt".to_string(),
+            gas_adjustment: 1.5,
+            trusting_period: "336h".to_string(),
+            block_time: "2s".to_string(),
+            genesis: None,
+            modify_genesis: None,
+            pre_genesis: None,
+            config_file_overrides: HashMap::new(),
+            additional_start_args: Vec::new(),
+            env: Vec::new(),
+            sidecar_configs: Vec::new(),
+            faucet: None,
+            genesis_style: GenesisStyle::Modern,
         }),
 
         "anvil" | "ethereum" => Ok(ChainConfig {
@@ -201,6 +242,7 @@ pub fn builtin_chain_config(name: &str) -> Result<ChainConfig> {
             gas_prices: String::new(),
             gas_adjustment: 1.0,
             trusting_period: String::new(),
+            block_time: "2s".to_string(),
             genesis: None,
             modify_genesis: None,
             pre_genesis: None,
@@ -208,10 +250,12 @@ pub fn builtin_chain_config(name: &str) -> Result<ChainConfig> {
             additional_start_args: Vec::new(),
             env: Vec::new(),
             sidecar_configs: Vec::new(),
+            faucet: None,
+            genesis_style: GenesisStyle::default(),
         }),
 
         _ => Err(IctError::Config(format!(
-            "unknown built-in chain: '{name}'. Available: gaia, osmosis, terp, juno, anvil"
+            "unknown built-in chain: '{name}'. Available: gaia, osmosis, terp, juno, akash, anvil"
         ))),
     }
 }

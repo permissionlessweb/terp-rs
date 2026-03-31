@@ -1,6 +1,6 @@
 //! zk-wasmvm E2E test using real Docker containers.
 //!
-//! Mirrors `zk_wasmvm_test.go` — deploys a zk-wasmvm CosmWasm contract with a
+//! Mirrors `zk_no_rick.go` — deploys a zk-wasmvm CosmWasm contract with a
 //! verification key (VK), submits a proof, and verifies it succeeds on-chain.
 //!
 //! ## Prerequisites
@@ -13,7 +13,7 @@
 //! ```
 //!
 //! Ensure the contract and circuit files exist:
-//! - `terp-core/tests/interchaintest/contracts/zk_wasmvm_test.wasm`
+//! - `terp-core/tests/interchaintest/contracts/zk_no_rick.wasm`
 //! - `terp-core/tests/interchaintest/circuits/no_rick.bin`
 //!
 //! ```sh
@@ -33,12 +33,12 @@ const ZK_IMAGE_REPO: &str = "terpnetwork/terp-core";
 const ZK_IMAGE_VERSION: &str = "local-zk";
 
 /// Host-side paths to contract and VK files (relative to ZK workspace root).
-const WASM_REL: &str = "terp-core/tests/interchaintest/contracts/zk_wasmvm_test.wasm";
+const WASM_REL: &str = "terp-core/tests/interchaintest/contracts/zk_no_rick.wasm";
 const VK_REL: &str = "terp-core/tests/interchaintest/circuits/no_rick.bin";
 const PROOF_REL: &str = "terp-core/tests/interchaintest/circuits/no_rick_proof.json";
 
 /// Container-side paths where we copy the files.
-const CONTAINER_WASM: &str = "/tmp/zk_wasmvm_test.wasm";
+const CONTAINER_WASM: &str = "/tmp/zk_no_rick.wasm";
 const CONTAINER_VK: &str = "/tmp/no_rick.bin";
 
 fn terp_zk_config() -> ChainConfig {
@@ -59,6 +59,7 @@ fn terp_zk_config() -> ChainConfig {
         gas_prices: "0uterp".to_string(),
         gas_adjustment: 1.5,
         trusting_period: "112h".to_string(),
+        block_time: "2s".to_string(),
         genesis: None,
         modify_genesis: None,
         pre_genesis: None,
@@ -66,6 +67,8 @@ fn terp_zk_config() -> ChainConfig {
         additional_start_args: Vec::new(),
         env: Vec::new(),
         sidecar_configs: Vec::new(),
+        faucet: None,
+        genesis_style: Default::default(),
     }
 }
 
@@ -192,7 +195,7 @@ async fn run_test(chain: &mut CosmosChain) -> Result<(), Box<dyn std::error::Err
     println!("\n--- Instantiating contract ---");
     let inst_output = chain.chain_exec(&[
         "tx", "wasm", "instantiate", code_id, "{}",
-        "--label", "zk-wasmvm-test",
+        "--label", "no-rick",
         "--no-admin",
         "--from", "default",
         "--gas-prices", "0uterp",

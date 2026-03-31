@@ -5,7 +5,7 @@
 //! on any type implementing [`Chain`].
 
 use crate::chain::Chain;
-use crate::cli::{parse_tx_response, QUERY_DEFAULT_FLAGS, TX_DEFAULT_FLAGS};
+use crate::cli::{parse_tx_response, QUERY_DEFAULT_FLAGS};
 use crate::error::{IctError, Result};
 use crate::tx::Tx;
 
@@ -35,37 +35,24 @@ pub trait GovernanceExt: Chain {
         deposit: &str,
     ) -> Result<u64> {
         let height_str = height.to_string();
-        let gas_prices = self.config().gas_prices.clone();
-        let chain_id = self.chain_id().to_string();
+        let opts = self
+            .default_tx_opts()
+            .from(key_name)
+            .flag("--no-validate", "");
 
-        let mut args: Vec<String> = vec![
-            "tx".into(),
-            "gov".into(),
-            "submit-legacy-proposal".into(),
-            "software-upgrade".into(),
-            upgrade_name.into(),
-            "--title".into(),
-            format!("Upgrade to {}", upgrade_name),
-            "--description".into(),
-            format!("Software upgrade to {}", upgrade_name),
-            "--upgrade-height".into(),
-            height_str,
-            "--deposit".into(),
-            deposit.into(),
-            "--from".into(),
-            key_name.into(),
-            "--gas-prices".into(),
-            gas_prices,
-            "--chain-id".into(),
-            chain_id,
-            "--no-validate".into(),
-        ];
-        for flag in TX_DEFAULT_FLAGS {
-            args.push(flag.to_string());
-        }
-
-        let arg_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
-        let output = self.chain_exec(&arg_refs).await?;
+        let output = self
+            .chain_exec_tx_with(
+                &[
+                    "tx", "gov", "submit-legacy-proposal", "software-upgrade",
+                    upgrade_name,
+                    "--title", &format!("Upgrade to {}", upgrade_name),
+                    "--description", &format!("Software upgrade to {}", upgrade_name),
+                    "--upgrade-height", &height_str,
+                    "--deposit", deposit,
+                ],
+                opts,
+            )
+            .await?;
         let json_str = output.stdout_str();
         let v: serde_json::Value =
             serde_json::from_str(json_str.trim()).unwrap_or(serde_json::Value::Null);
@@ -106,28 +93,14 @@ pub trait GovernanceExt: Chain {
         option: &str,
     ) -> Result<Tx> {
         let prop_id_str = proposal_id.to_string();
-        let gas_prices = self.config().gas_prices.clone();
-        let chain_id = self.chain_id().to_string();
+        let opts = self.default_tx_opts().from(key_name);
 
-        let mut args: Vec<String> = vec![
-            "tx".into(),
-            "gov".into(),
-            "vote".into(),
-            prop_id_str,
-            option.into(),
-            "--from".into(),
-            key_name.into(),
-            "--gas-prices".into(),
-            gas_prices,
-            "--chain-id".into(),
-            chain_id,
-        ];
-        for flag in TX_DEFAULT_FLAGS {
-            args.push(flag.to_string());
-        }
-
-        let arg_refs: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
-        let output = self.chain_exec(&arg_refs).await?;
+        let output = self
+            .chain_exec_tx_with(
+                &["tx", "gov", "vote", &prop_id_str, option],
+                opts,
+            )
+            .await?;
         parse_tx_response(&output)
     }
 

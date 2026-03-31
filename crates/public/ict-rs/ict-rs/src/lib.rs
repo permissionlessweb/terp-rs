@@ -44,22 +44,27 @@
 pub mod auth;
 pub mod chain;
 pub mod cli;
-pub mod cosmwasm;
+pub mod cosmos;
+pub mod faucet;
 pub mod error;
-pub mod genesis;
-pub mod governance;
-pub mod ibc;
-pub mod interchain;
-pub mod node;
 pub mod relayer;
 pub mod reporter;
 pub mod runtime;
 pub mod sidecar;
 pub mod spec;
-pub mod tx;
 pub mod wallet;
 
-pub mod modules;
+// Re-export cosmos submodules at the crate root so existing `crate::node`,
+// `crate::tx`, `crate::ibc`, etc. paths continue to work.
+pub use cosmos::cosmwasm;
+pub use cosmos::genesis;
+pub use cosmos::governance;
+pub use cosmos::ibc;
+pub use cosmos::interchain;
+pub use cosmos::modules;
+pub use cosmos::node;
+pub use cosmos::tx;
+pub use cosmos::tx_builder;
 
 #[cfg(feature = "testing")]
 pub mod testing;
@@ -70,8 +75,9 @@ pub use ict_rs_derive::{ExecuteFns, QueryFns};
 /// Convenience re-exports for common usage.
 pub mod prelude {
     pub use crate::auth::Authenticator;
-    pub use crate::chain::{Chain, ChainConfig, ChainType, SidecarConfig};
+    pub use crate::chain::{Chain, ChainConfig, ChainType, FaucetConfig, SidecarConfig};
     pub use crate::cosmwasm::CosmWasmExt;
+    pub use crate::faucet::FaucetExt;
     pub use crate::error::{IctError, Result};
     pub use crate::governance::GovernanceExt;
     pub use crate::ibc::{ibc_denom, ibc_denom_multi_hop, ChannelOptions, ClientOptions};
@@ -80,7 +86,8 @@ pub mod prelude {
     pub use crate::runtime::{DockerImage, IctRuntime, RuntimeBackend};
     pub use crate::sidecar::SidecarProcess;
     pub use crate::spec::ChainSpec;
-    pub use crate::tx::{ExecOutput, Tx, TransferOptions, WalletAmount};
+    pub use crate::tx::{ExecOutput, Tx, TransferOptions, TxOptions, WalletAmount};
+    pub use crate::tx_builder::{TxBuilder, TxResponse, TxMiddlewareBody, TxMiddlewareResp};
     pub use crate::wallet::Wallet;
 
     pub use crate::{ExecuteFns, QueryFns};

@@ -27,6 +27,10 @@ pub struct CosmosChain {
     network_id: Option<NetworkId>,
     test_name: String,
     initialized: bool,
+    /// Cached Docker-network-accessible RPC address (set after nodes are created).
+    internal_rpc: String,
+    /// Cached Docker-network-accessible gRPC address (set after nodes are created).
+    internal_grpc: String,
     /// Sidecar processes attached to this chain (chain-level and validator-level).
     pub sidecars: Vec<SidecarProcess>,
 }
@@ -50,6 +54,8 @@ impl CosmosChain {
             network_id: None,
             test_name: String::new(),
             initialized: false,
+            internal_rpc: "http://localhost:26657".to_string(),
+            internal_grpc: "localhost:9090".to_string(),
             sidecars: Vec::new(),
         }
     }
@@ -96,7 +102,9 @@ impl CosmosChain {
             .map(|n| n.0.clone())
             .unwrap_or_default();
 
-        // Create validator nodes
+        let faucet_port = self.cfg.faucet.as_ref().map(|f| f.port);
+
+        // Create validator nodes (faucet port only on primary validator)
         for i in 0..self.num_validators {
             let node = ChainNode::new(
                 i,
@@ -107,6 +115,10 @@ impl CosmosChain {
                 &self.test_name,
                 &network_id,
                 self.runtime.clone(),
+                if i == 0 { faucet_port } else { None },
+                self.cfg.genesis_style,
+                &self.cfg.gas_prices,
+                self.cfg.gas_adjustment,
             );
             self.validators.push(node);
         }
@@ -122,6 +134,10 @@ impl CosmosChain {
                 &self.test_name,
                 &network_id,
                 self.runtime.clone(),
+                None,
+                self.cfg.genesis_style,
+                &self.cfg.gas_prices,
+                self.cfg.gas_adjustment,
             );
             self.full_nodes.push(node);
         }
@@ -143,6 +159,13 @@ impl CosmosChain {
         for node in all_nodes {
             node.create_container().await?;
             node.start_container().await?;
+            if let Some(ref id) = node.container_id {
+                info!(
+                    container = %id.0,
+                    hostname = %node.hostname,
+                    "Spawned test container"
+                );
+            }
         }
 
         // Init home directories
@@ -373,6 +396,34 @@ impl CosmosChain {
                 .await?;
         }
 
+        // Create faucet key and genesis account if faucet is configured
+        if let Some(ref faucet_cfg) = self.cfg.faucet {
+            let output = primary.create_key(&faucet_cfg.key_name, coin_type).await?;
+            if output.exit_code != 0 {
+                return Err(IctError::ExecFailed {
+                    exit_code: output.exit_code,
+                    stderr: format!(
+                        "create_key for faucet failed: {}",
+                        output.stderr_str()
+                    ),
+                });
+            }
+            let faucet_address = primary.get_key_address(&faucet_cfg.key_name).await?;
+            info!(address = %faucet_address, "Faucet key created");
+
+            let faucet_coins = format!("{genesis_amount}{denom}");
+            let output = primary.add_genesis_account(&faucet_address, &faucet_coins).await?;
+            if output.exit_code != 0 {
+                return Err(IctError::ExecFailed {
+                    exit_code: output.exit_code,
+                    stderr: format!(
+                        "add_genesis_account for faucet failed: {}",
+                        output.stderr_str()
+                    ),
+                });
+            }
+        }
+
         // Collect gentxs on primary node
         let output = primary.collect_gentxs().await?;
         if output.exit_code != 0 {
@@ -492,6 +543,22 @@ impl CosmosChain {
                 app_config, app_config
             );
             node.exec_raw(&["sh", "-c", &api_cmd], &[]).await?;
+
+            // Enable gRPC server on 0.0.0.0:9090
+            let grpc_cmd = format!(
+                "sed -i '/\\[grpc\\]/,/\\[/ s/enable = false/enable = true/' {} && \
+                 sed -i '/\\[grpc\\]/,/\\[/ s#address = \"localhost:9090\"#address = \"0.0.0.0:9090\"#' {}",
+                app_config, app_config
+            );
+            node.exec_raw(&["sh", "-c", &grpc_cmd], &[]).await?;
+
+            // Set consensus block time (timeout_commit and timeout_propose)
+            let consensus_cmd = format!(
+                "sed -i 's/^timeout_commit = .*/timeout_commit = \"{}\"/' {} && \
+                 sed -i 's/^timeout_propose = .*/timeout_propose = \"{}\"/' {}",
+                self.cfg.block_time, config_path, self.cfg.block_time, config_path
+            );
+            node.exec_raw(&["sh", "-c", &consensus_cmd], &[]).await?;
         }
 
         Ok(())
@@ -768,32 +835,14 @@ impl CosmosChain {
         option: &str,
     ) -> Result<()> {
         let prop_id_str = proposal_id.to_string();
-        let gas_prices = &self.cfg.gas_prices;
 
         for (i, node) in self.validators.iter().enumerate() {
+            let opts = node.default_tx_opts().from("validator");
             let output = node
-                .exec_cmd(&[
-                    "tx",
-                    "gov",
-                    "vote",
-                    &prop_id_str,
-                    option,
-                    "--from",
-                    "validator",
-                    "--keyring-backend",
-                    "test",
-                    "--gas-prices",
-                    gas_prices,
-                    "--gas",
-                    "auto",
-                    "--gas-adjustment",
-                    "1.5",
-                    "--broadcast-mode",
-                    "sync",
-                    "--output",
-                    "json",
-                    "-y",
-                ])
+                .exec_tx_with(
+                    &["tx", "gov", "vote", &prop_id_str, option],
+                    opts,
+                )
                 .await?;
 
             if output.exit_code != 0 {
@@ -919,9 +968,7 @@ impl Chain for CosmosChain {
         } else {
             ctx.network_id.clone()
         };
-        // Pre-cleanup: remove stale containers and network from a previous
-        // failed run. Containers must be removed before the network since
-        // Docker refuses to remove a network with active endpoints.
+        // Pre-cleanup: remove stale containers from a previous failed run.
         {
             let prefix = format!("ict-{}-{}", ctx.test_name, self.cfg.chain_id);
             let node_types = ["val", "fn"];
@@ -934,13 +981,24 @@ impl Chain for CosmosChain {
                     let _ = self.runtime.remove_container(&stale).await;
                 }
             }
-            let _ = self.runtime.remove_network(&NetworkId(network_name.clone())).await;
+            // Remove orphaned networks from previous crashed runs matching
+            // this test name prefix. Catches both old (millis-based) and new
+            // (pid-counter) network name formats.
+            let _ = self.runtime.remove_networks_by_prefix(
+                &format!("ict-{}-", ctx.test_name),
+            ).await;
         }
         let network_id = self.runtime.create_network(&network_name).await?;
         self.network_id = Some(network_id);
 
         // Create node structs
         self.create_nodes();
+
+        // Cache Docker-network-accessible addresses from the primary validator node
+        if let Some(primary) = self.validators.first() {
+            self.internal_rpc = primary.rpc_address();
+            self.internal_grpc = primary.grpc_address();
+        }
 
         // Initialize all nodes (create containers, init home dirs)
         self.init_nodes().await?;
@@ -1010,6 +1068,38 @@ impl Chain for CosmosChain {
         // Start post-start sidecars (after chain is producing blocks)
         self.start_sidecars_filtered(false).await?;
 
+        // Start in-container faucet if configured
+        if let Some(ref faucet_cfg) = self.cfg.faucet {
+            let primary = self.primary_node()?;
+            let env_str = faucet_cfg
+                .env
+                .iter()
+                .map(|(k, v)| format!("{k}={v}"))
+                .collect::<Vec<_>>()
+                .join(" ");
+            let cmd_str = faucet_cfg.start_cmd.join(" ");
+            let faucet_cmd = format!("{env_str} setsid {cmd_str} &");
+            info!(cmd = %faucet_cmd, "Starting faucet");
+            primary
+                .exec_raw(&["sh", "-c", &faucet_cmd], &[])
+                .await?;
+
+            // Brief wait then health-check
+            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+            let health_cmd = format!(
+                "curl -sf http://localhost:{}/status || echo 'faucet_not_ready'",
+                faucet_cfg.port
+            );
+            let output = primary
+                .exec_raw(&["sh", "-c", &health_cmd], &[])
+                .await?;
+            if output.stdout_str().contains("faucet_not_ready") {
+                warn!("Faucet health-check failed, it may still be starting up");
+            } else {
+                info!("Faucet is ready");
+            }
+        }
+
         info!(
             chain_id = %self.cfg.chain_id,
             validators = self.validators.len(),
@@ -1064,13 +1154,11 @@ impl Chain for CosmosChain {
     }
 
     fn rpc_address(&self) -> &str {
-        // Return a static-ish reference. In production, this would be stored.
-        // For now, callers should use primary_node().rpc_address() directly.
-        "http://localhost:26657"
+        &self.internal_rpc
     }
 
     fn grpc_address(&self) -> &str {
-        "localhost:9090"
+        &self.internal_grpc
     }
 
     fn host_rpc_address(&self) -> String {

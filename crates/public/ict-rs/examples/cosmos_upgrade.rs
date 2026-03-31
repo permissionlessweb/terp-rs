@@ -64,6 +64,7 @@ fn terp_upgrade_config(version: &str) -> ChainConfig {
         gas_prices: "0uterp".to_string(),
         gas_adjustment: 1.5,
         trusting_period: "112h".to_string(),
+        block_time: "2s".to_string(),
         genesis: None,
         modify_genesis: None,
         pre_genesis: None,
@@ -71,6 +72,8 @@ fn terp_upgrade_config(version: &str) -> ChainConfig {
         additional_start_args: Vec::new(),
         env: Vec::new(),
         sidecar_configs: Vec::new(),
+        faucet: None,
+        genesis_style: Default::default(),
     }
 }
 

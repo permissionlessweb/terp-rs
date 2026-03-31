@@ -554,10 +554,13 @@ address = "0.0.0.0:{grpc_port}"
         gas_prices: "0.025uterp".into(),
         gas_adjustment: 1.5,
         trusting_period: "336h".into(),
+        block_time: "2s".into(),
         genesis: None,
         pre_genesis: None,
         additional_start_args: Vec::new(),
         sidecar_configs: Vec::new(),
+        faucet: None,
+        genesis_style: Default::default(),
         // Set HASHMERCHANT_SIDECAR_URL so terpd's ExtendVoteHandler can reach our server
         env: vec![
             ("HASHMERCHANT_SIDECAR_URL".into(), sidecar_url.clone()),
