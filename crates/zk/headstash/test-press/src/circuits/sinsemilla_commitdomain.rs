@@ -1,1 +1,0 @@
-// sinsemilla commit domain circuit (use for spent-note commitments in headstash)

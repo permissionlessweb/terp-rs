@@ -1,1 +1,0 @@
-//! constrain knowledge of esk to public key

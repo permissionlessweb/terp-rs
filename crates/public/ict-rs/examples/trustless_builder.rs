@@ -1,1 +1,0 @@
-// prove you have signed the trustless manifesto contract, get minted a soull-bound trusted-builder nft
