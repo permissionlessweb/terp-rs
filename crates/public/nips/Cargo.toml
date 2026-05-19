@@ -1,0 +1,21 @@
+[package]
+name = "cw721-nips"
+version = "0.1.0"
+edition = "2021"
+description = "Nostr NIP library with cw721-trait-based metadata system"
+license = "MIT"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+schemars = "0.8"
+serde_json = "1.0"
+hex = "0.4"
+sha2 = "0.10"
+thiserror = "1.0"
+
+[features]
+default = ["nip01", "nip15", "nip52"]
+nip01 = []
+nip15 = []
+nip52 = []
+full = ["nip01", "nip15", "nip52"]

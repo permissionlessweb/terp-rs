@@ -9,7 +9,7 @@ crate-type = ["cdylib", "rlib"]
 [features]
 default = []
 # Enable generated gRPC client/server code.
-rpc = ["dep:tonic"]
+rpc = ["dep:tonic", "dep:tonic-prost"]
 # Enable Python bindings via PyO3.
 python = ["dep:pyo3", "dep:pythonize", "dep:serde_json"]
 
@@ -41,7 +41,11 @@ serde       = { version = "1", features = ["derive"] }
 
 # Optional: gRPC runtime (enabled with the `rpc` feature).
 [dependencies.tonic]
-version  = "0.12"
+version  = "0.14"
+optional = true
+
+[dependencies.tonic-prost]
+version  = "0.14"
 optional = true
 
 # Optional: Python bindings (enabled with the `python` feature).

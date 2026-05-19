@@ -212,6 +212,11 @@ pub mod terp {
             include!("gen/terp.smartaccount.v1beta1.rs");
         }
     }
+    pub mod hashmerchant {
+        pub mod v1beta1 {
+            include!("gen/terp.hashmerchant.v1.rs");
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------
