@@ -61,7 +61,7 @@ impl CalendarReference {
 
     /// Convert to an "a" tag
     pub fn to_a_tag(&self) -> Tag {
-        let a_value = format!("{}:{}:{}", self.kind, self.author_pubkey, self.d_identifier);
+        let _a_value = format!("{}:{}:{}", self.kind, self.author_pubkey, self.d_identifier);
         if let Some(ref relay) = self.relay_url {
             Tag::a_with_relay(
                 self.kind as u16,
@@ -392,7 +392,7 @@ impl NipMetadata for CalendarEventMetadata {
 
         // Day granularity tags (for time-based events)
         for day in &self.day_granularity {
-            tags.push(Tag::new(vec![String::from("d"), day.to_string()]));
+            tags.push(Tag::new(vec![String::from("D"), day.to_string()]));
         }
 
         // Calendar request tags (a-tags)
@@ -455,7 +455,7 @@ impl NipMetadata for CalendarEventMetadata {
         let mut geohash = None;
         let mut references = Vec::new();
         let mut hashtags = Vec::new();
-        let mut day_granularity = Vec::new();
+        let day_granularity = Vec::new();
         let mut calendar_requests = Vec::new();
         let mut participants = Vec::new();
 
@@ -700,7 +700,7 @@ impl NipMetadata for CalendarMetadata {
         let mut description = event.content.clone();
         let mut event_references = Vec::new();
         let mut hashtags = Vec::new();
-        let mut owner_pubkey = event.pubkey.clone();
+        let owner_pubkey = event.pubkey.clone();
 
         for tag in &event.tags {
             if tag.is_empty() {
@@ -991,4 +991,928 @@ pub fn generate_rsvp_d_tag(event_ref: &CalendarReference, responder_pubkey: &str
 pub fn calculate_auction_end_time(start_time: u64, base_duration: u64, extensions: &[u64]) -> u64 {
     let total_extensions: u64 = extensions.iter().sum();
     start_time + base_duration + total_extensions
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{RawNostrEvent, NipMetadata, NipKind, Tag};
+
+    const TEST_PUBKEY: &str = "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789";
+    const TEST_PUBKEY2: &str = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+
+    // ==================== Nip52Kind Tests ====================
+
+    #[test]
+    fn test_nip52_kind_kind_value() {
+        assert_eq!(Nip52Kind::DateEvent.kind_value(), 31922);
+        assert_eq!(Nip52Kind::TimeEvent.kind_value(), 31923);
+        assert_eq!(Nip52Kind::Calendar.kind_value(), 31924);
+        assert_eq!(Nip52Kind::RSVP.kind_value(), 31925);
+    }
+
+    // ==================== CalendarReference Tests ====================
+
+    #[test]
+    fn test_calendar_reference_new() {
+        let ref_ = CalendarReference::new(31922, TEST_PUBKEY, "my-d-id");
+        assert_eq!(ref_.kind, 31922);
+        assert_eq!(ref_.author_pubkey, TEST_PUBKEY);
+        assert_eq!(ref_.d_identifier, "my-d-id");
+        assert!(ref_.relay_url.is_none());
+    }
+
+    #[test]
+    fn test_calendar_reference_with_relay() {
+        let ref_ = CalendarReference::new(31923, TEST_PUBKEY, "event-1")
+            .with_relay("wss://relay.example.com");
+        assert_eq!(ref_.kind, 31923);
+        assert_eq!(ref_.author_pubkey, TEST_PUBKEY);
+        assert_eq!(ref_.d_identifier, "event-1");
+        assert_eq!(ref_.relay_url, Some("wss://relay.example.com".to_string()));
+    }
+
+    #[test]
+    fn test_calendar_reference_to_a_tag_no_relay() {
+        let ref_ = CalendarReference::new(31922, TEST_PUBKEY, "event-abc");
+        let tag = ref_.to_a_tag();
+        let inner: Vec<String> = tag.clone().into_inner();
+        assert_eq!(inner[0], "a");
+        assert_eq!(inner[1], "31922:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789:event-abc");
+        assert_eq!(inner.len(), 2);
+    }
+
+    #[test]
+    fn test_calendar_reference_to_a_tag_with_relay() {
+        let ref_ = CalendarReference::new(31923, TEST_PUBKEY, "event-xyz")
+            .with_relay("wss://relay.com");
+        let tag = ref_.to_a_tag();
+        let inner: Vec<String> = tag.clone().into_inner();
+        assert_eq!(inner[0], "a");
+        assert_eq!(inner[1], "31923:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789:event-xyz");
+        assert_eq!(inner[2], "wss://relay.com");
+        assert_eq!(inner.len(), 3);
+    }
+
+    #[test]
+    fn test_calendar_reference_from_a_tag_no_relay() {
+        let tag = Tag::a(31922, TEST_PUBKEY, "my-event");
+        let ref_ = CalendarReference::from_a_tag(&tag).unwrap();
+        assert_eq!(ref_.kind, 31922);
+        assert_eq!(ref_.author_pubkey, TEST_PUBKEY);
+        assert_eq!(ref_.d_identifier, "my-event");
+        assert!(ref_.relay_url.is_none());
+    }
+
+    #[test]
+    fn test_calendar_reference_from_a_tag_with_relay() {
+        let tag = Tag::a_with_relay(31923, TEST_PUBKEY, "evt-123", "wss://relay.example.com");
+        let ref_ = CalendarReference::from_a_tag(&tag).unwrap();
+        assert_eq!(ref_.kind, 31923);
+        assert_eq!(ref_.author_pubkey, TEST_PUBKEY);
+        assert_eq!(ref_.d_identifier, "evt-123");
+        assert_eq!(ref_.relay_url, Some("wss://relay.example.com".to_string()));
+    }
+
+    #[test]
+    fn test_calendar_reference_from_a_tag_invalid_format() {
+        let tag = Tag::new(vec!["a".to_string()]);
+        let result = CalendarReference::from_a_tag(&tag);
+        assert!(result.is_err());
+    }
+
+    // ==================== RSVPStatus Tests ====================
+
+    #[test]
+    fn test_rsvp_status_as_str() {
+        assert_eq!(RSVPStatus::Accepted.as_str(), "accepted");
+        assert_eq!(RSVPStatus::Declined.as_str(), "declined");
+        assert_eq!(RSVPStatus::Tentative.as_str(), "tentative");
+    }
+
+    // ==================== FreeBusyStatus Tests ====================
+
+    #[test]
+    fn test_free_busy_status_as_str() {
+        assert_eq!(FreeBusyStatus::Free.as_str(), "free");
+        assert_eq!(FreeBusyStatus::Busy.as_str(), "busy");
+    }
+
+    // ==================== EventType Tests ====================
+
+    #[test]
+    fn test_event_type_kind() {
+        assert_eq!(EventType::TimeBased.kind(), Nip52Kind::TimeEvent);
+        assert_eq!(EventType::DateBased.kind(), Nip52Kind::DateEvent);
+    }
+
+    // ==================== CalendarEventMetadata Tests ====================
+
+    #[test]
+    fn test_calendar_event_new_date_based() {
+        let meta = CalendarEventMetadata::new_date_based("my-d", "My Event", "content", 1000, 2000);
+        assert_eq!(meta.d_tag, "my-d");
+        assert_eq!(meta.title, "My Event");
+        assert_eq!(meta.content, "content");
+        assert_eq!(meta.start_time, 1000);
+        assert_eq!(meta.end_time, 2000);
+        assert_eq!(meta.event_type, EventType::DateBased);
+    }
+
+    #[test]
+    fn test_calendar_event_new_time_based() {
+        let meta = CalendarEventMetadata::new_time_based("d-123", "Time Event", "desc", 100, 200);
+        assert_eq!(meta.d_tag, "d-123");
+        assert_eq!(meta.title, "Time Event");
+        assert_eq!(meta.content, "desc");
+        assert_eq!(meta.start_time, 100);
+        assert_eq!(meta.end_time, 200);
+        assert_eq!(meta.event_type, EventType::TimeBased);
+    }
+
+    #[test]
+    fn test_calendar_event_builder_methods() {
+        let cal_ref = CalendarReference::new(31924, TEST_PUBKEY, "cal-1");
+        let meta = CalendarEventMetadata::new_date_based("d-1", "Event", "", 0, 10)
+            .with_summary("A summary")
+            .with_image("https://example.com/img.png")
+            .with_location("New York")
+            .with_location("London")
+            .with_geohash("9q8yy")
+            .with_reference("https://example.com")
+            .with_hashtag("meeting")
+            .with_hashtag("work")
+            .with_calendar_request(cal_ref)
+            .with_participant(TEST_PUBKEY2, Some("organizer".to_string()))
+            .with_participant("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", None);
+
+        assert_eq!(meta.summary, Some("A summary".to_string()));
+        assert_eq!(meta.image, Some("https://example.com/img.png".to_string()));
+        assert_eq!(meta.locations, vec!["New York", "London"]);
+        assert_eq!(meta.geohash, Some("9q8yy".to_string()));
+        assert_eq!(meta.references, vec!["https://example.com"]);
+        assert_eq!(meta.hashtags, vec!["meeting", "work"]);
+        assert_eq!(meta.calendar_requests.len(), 1);
+        assert_eq!(meta.participants.len(), 2);
+        assert_eq!(meta.participants[0].pubkey, TEST_PUBKEY2);
+        assert_eq!(meta.participants[0].role, Some("organizer".to_string()));
+        assert!(meta.participants[0].relay_url.is_none());
+        assert!(meta.participants[1].role.is_none());
+    }
+
+    #[test]
+    fn test_calendar_event_validate_passes() {
+        let meta = CalendarEventMetadata::new_time_based("d-ok", "Valid Event", "", 100, 200);
+        assert!(meta.validate().is_ok());
+    }
+
+    #[test]
+    fn test_calendar_event_validate_empty_d_tag() {
+        let meta = CalendarEventMetadata::new_time_based("", "Event", "", 100, 200);
+        assert!(meta.validate().is_err());
+    }
+
+    #[test]
+    fn test_calendar_event_validate_empty_title() {
+        let meta = CalendarEventMetadata::new_time_based("d-1", "", "", 100, 200);
+        assert!(meta.validate().is_err());
+    }
+
+    #[test]
+    fn test_calendar_event_validate_start_gt_end() {
+        let meta = CalendarEventMetadata::new_time_based("d-1", "Event", "", 200, 100);
+        assert!(meta.validate().is_err());
+    }
+
+    #[test]
+    fn test_calendar_event_to_tags() {
+        let cal_ref = CalendarReference::new(31924, TEST_PUBKEY, "cal-abc");
+        let meta = CalendarEventMetadata::new_time_based("my-id", "Test Event", "some content", 1000, 2000)
+            .with_summary("Short summary")
+            .with_image("https://img.url")
+            .with_location("Berlin")
+            .with_geohash("u33d")
+            .with_reference("https://ref.com")
+            .with_hashtag("conference")
+            .with_calendar_request(cal_ref)
+            .with_participant(TEST_PUBKEY2, Some("speaker".to_string()));
+
+        let tags = meta.to_tags();
+
+        // Check d tag
+        assert!(tags.iter().any(|t| t.as_slice() == ["d", "my-id"]));
+
+        // Check title tag
+        assert!(tags.iter().any(|t| t.as_slice() == ["title", "Test Event"]));
+
+        // Check summary tag
+        assert!(tags.iter().any(|t| t.as_slice() == ["summary", "Short summary"]));
+
+        // Check image tag
+        assert!(tags.iter().any(|t| t.as_slice() == ["image", "https://img.url"]));
+
+        // Check start/end
+        assert!(tags.iter().any(|t| t.as_slice() == ["start", "1000"]));
+        assert!(tags.iter().any(|t| t.as_slice() == ["end", "2000"]));
+
+        // Check location
+        assert!(tags.iter().any(|t| t.as_slice() == ["location", "Berlin"]));
+
+        // Check geohash
+        assert!(tags.iter().any(|t| t.as_slice() == ["g", "u33d"]));
+
+        // Check reference
+        assert!(tags.iter().any(|t| t.as_slice() == ["r", "https://ref.com"]));
+
+        // Check hashtag
+        assert!(tags.iter().any(|t| t.as_slice() == ["t", "conference"]));
+
+        // Check a-tag for calendar request
+        let expected_a = format!("31924:{}:cal-abc", TEST_PUBKEY);
+        assert!(tags.iter().any(|t| {
+            let s = t.as_slice();
+            s.len() >= 2 && s[0] == "a" && s[1] == expected_a
+        }));
+
+        // Check participant p-tag
+        assert!(tags.iter().any(|t| t.as_slice() == ["p", TEST_PUBKEY2]));
+
+        // Check role tag
+        assert!(tags.iter().any(|t| t.as_slice() == ["role", TEST_PUBKEY2, "speaker"]));
+    }
+
+    #[test]
+    fn test_calendar_event_d_tag() {
+        let meta = CalendarEventMetadata::new_date_based("my-d-tag", "Title", "", 0, 1);
+        assert_eq!(meta.d_tag(), Some("my-d-tag".to_string()));
+    }
+
+    #[test]
+    fn test_calendar_event_content() {
+        let meta = CalendarEventMetadata::new_date_based("d", "Title", "hello world", 0, 1);
+        assert_eq!(meta.content(), "hello world");
+    }
+
+    #[test]
+    fn test_calendar_event_kind() {
+        let date_based = CalendarEventMetadata::new_date_based("d", "T", "", 0, 1);
+        let time_based = CalendarEventMetadata::new_time_based("d", "T", "", 0, 1);
+        assert_eq!(Nip52Kind::DateEvent, date_based.kind());
+        assert_eq!(Nip52Kind::TimeEvent, time_based.kind());
+    }
+
+    #[test]
+    fn test_calendar_event_from_raw_event_date_based() {
+        let event = RawNostrEvent {
+            id: String::new(),
+            pubkey: TEST_PUBKEY.to_string(),
+            created_at: 0,
+            kind: 31922,
+            tags: vec![
+                vec!["d".to_string(), "evt-001".to_string()],
+                vec!["title".to_string(), "Date Event".to_string()],
+                vec!["start".to_string(), "1000".to_string()],
+                vec!["end".to_string(), "2000".to_string()],
+            ],
+            content: "event content".to_string(),
+            sig: String::new(),
+        };
+
+        let meta = CalendarEventMetadata::from_raw_event(&event).unwrap();
+        assert_eq!(meta.d_tag, "evt-001");
+        assert_eq!(meta.title, "Date Event");
+        assert_eq!(meta.event_type, EventType::DateBased);
+        assert_eq!(meta.start_time, 1000);
+        assert_eq!(meta.end_time, 2000);
+        assert_eq!(meta.content, "event content");
+    }
+
+    #[test]
+    fn test_calendar_event_from_raw_event_time_based() {
+        let event = RawNostrEvent {
+            id: String::new(),
+            pubkey: TEST_PUBKEY.to_string(),
+            created_at: 0,
+            kind: 31923,
+            tags: vec![
+                vec!["d".to_string(), "evt-002".to_string()],
+                vec!["title".to_string(), "Time Event".to_string()],
+                vec!["start".to_string(), "500".to_string()],
+                vec!["end".to_string(), "1500".to_string()],
+            ],
+            content: String::new(),
+            sig: String::new(),
+        };
+
+        let meta = CalendarEventMetadata::from_raw_event(&event).unwrap();
+        assert_eq!(meta.d_tag, "evt-002");
+        assert_eq!(meta.title, "Time Event");
+        assert_eq!(meta.event_type, EventType::TimeBased);
+        assert_eq!(meta.start_time, 500);
+        assert_eq!(meta.end_time, 1500);
+    }
+
+    #[test]
+    fn test_calendar_event_from_raw_event_wrong_kind() {
+        let event = RawNostrEvent {
+            id: String::new(),
+            pubkey: String::new(),
+            created_at: 0,
+            kind: 9999,
+            tags: vec![],
+            content: String::new(),
+            sig: String::new(),
+        };
+
+        let result = CalendarEventMetadata::from_raw_event(&event);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_calendar_event_from_raw_event_missing_d_tag() {
+        let event = RawNostrEvent {
+            id: String::new(),
+            pubkey: String::new(),
+            created_at: 0,
+            kind: 31922,
+            tags: vec![
+                vec!["title".to_string(), "No D Tag".to_string()],
+            ],
+            content: String::new(),
+            sig: String::new(),
+        };
+
+        let result = CalendarEventMetadata::from_raw_event(&event);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_calendar_event_from_raw_event_missing_title() {
+        let event = RawNostrEvent {
+            id: String::new(),
+            pubkey: String::new(),
+            created_at: 0,
+            kind: 31922,
+            tags: vec![
+                vec!["d".to_string(), "no-title".to_string()],
+            ],
+            content: String::new(),
+            sig: String::new(),
+        };
+
+        let result = CalendarEventMetadata::from_raw_event(&event);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_calendar_event_from_raw_event_with_all_tags() {
+        let event = RawNostrEvent {
+            id: String::new(),
+            pubkey: TEST_PUBKEY.to_string(),
+            created_at: 0,
+            kind: 31923,
+            tags: vec![
+                vec!["d".to_string(), "full-event".to_string()],
+                vec!["title".to_string(), "Full Event".to_string()],
+                vec!["summary".to_string(), "A full test".to_string()],
+                vec!["image".to_string(), "https://img.url".to_string()],
+                vec!["start".to_string(), "100".to_string()],
+                vec!["end".to_string(), "200".to_string()],
+                vec!["start_tzid".to_string(), "UTC".to_string()],
+                vec!["end_tzid".to_string(), "UTC".to_string()],
+                vec!["location".to_string(), "NYC".to_string()],
+                vec!["g".to_string(), "9q8yy".to_string()],
+                vec!["r".to_string(), "https://ref.co".to_string()],
+                vec!["t".to_string(), "test".to_string()],
+                vec!["a".to_string(), format!("31924:{}:cal-ref", TEST_PUBKEY)],
+                vec!["p".to_string(), TEST_PUBKEY2.to_string()],
+                vec!["role".to_string(), TEST_PUBKEY2.to_string(), "host".to_string()],
+            ],
+            content: "full content".to_string(),
+            sig: String::new(),
+        };
+
+        let meta = CalendarEventMetadata::from_raw_event(&event).unwrap();
+        assert_eq!(meta.d_tag, "full-event");
+        assert_eq!(meta.title, "Full Event");
+        assert_eq!(meta.summary, Some("A full test".to_string()));
+        assert_eq!(meta.image, Some("https://img.url".to_string()));
+        assert_eq!(meta.start_time, 100);
+        assert_eq!(meta.end_time, 200);
+        assert_eq!(meta.start_timezone, Some("UTC".to_string()));
+        assert_eq!(meta.end_timezone, Some("UTC".to_string()));
+        assert_eq!(meta.locations, vec!["NYC"]);
+        assert_eq!(meta.geohash, Some("9q8yy".to_string()));
+        assert_eq!(meta.references, vec!["https://ref.co"]);
+        assert_eq!(meta.hashtags, vec!["test"]);
+        assert_eq!(meta.calendar_requests.len(), 1);
+        assert_eq!(meta.calendar_requests[0].d_identifier, "cal-ref");
+        assert_eq!(meta.participants.len(), 1);
+        assert_eq!(meta.participants[0].pubkey, TEST_PUBKEY2);
+        assert_eq!(meta.participants[0].role, Some("host".to_string()));
+        assert_eq!(meta.content, "full content");
+    }
+
+    #[test]
+    fn test_calendar_event_from_raw_event_empty_tags_skipped() {
+        let event = RawNostrEvent {
+            id: String::new(),
+            pubkey: TEST_PUBKEY.to_string(),
+            created_at: 0,
+            kind: 31922,
+            tags: vec![
+                vec![], // empty tag - should be skipped
+                vec!["d".to_string(), "skip-test".to_string()],
+                vec!["title".to_string(), "Skip Test".to_string()],
+                vec!["start".to_string(), "0".to_string()],
+                vec!["end".to_string(), "1".to_string()],
+            ],
+            content: String::new(),
+            sig: String::new(),
+        };
+
+        let meta = CalendarEventMetadata::from_raw_event(&event).unwrap();
+        assert_eq!(meta.d_tag, "skip-test");
+    }
+
+    // ==================== CalendarMetadata Tests ====================
+
+    #[test]
+    fn test_calendar_metadata_new() {
+        let meta = CalendarMetadata::new("cal-d", "My Calendar", "Description", TEST_PUBKEY);
+        assert_eq!(meta.d_tag, "cal-d");
+        assert_eq!(meta.title, "My Calendar");
+        assert_eq!(meta.description, "Description");
+        assert_eq!(meta.owner_pubkey, TEST_PUBKEY);
+        assert!(meta.event_references.is_empty());
+        assert!(meta.hashtags.is_empty());
+    }
+
+    #[test]
+    fn test_calendar_metadata_builder() {
+        let ref1 = CalendarReference::new(31922, TEST_PUBKEY, "evt-1");
+        let ref2 = CalendarReference::new(31923, TEST_PUBKEY2, "evt-2");
+        let meta = CalendarMetadata::new("cal-1", "My Cal", "desc", TEST_PUBKEY)
+            .with_event_reference(ref1)
+            .with_event_reference(ref2)
+            .with_hashtag("sports")
+            .with_hashtag("news");
+
+        assert_eq!(meta.event_references.len(), 2);
+        assert_eq!(meta.hashtags, vec!["sports", "news"]);
+    }
+
+    #[test]
+    fn test_calendar_metadata_validate_passes() {
+        let meta = CalendarMetadata::new("valid-cal", "Valid Calendar", "desc", TEST_PUBKEY);
+        assert!(meta.validate().is_ok());
+    }
+
+    #[test]
+    fn test_calendar_metadata_validate_empty_d_tag() {
+        let meta = CalendarMetadata::new("", "Calendar", "desc", TEST_PUBKEY);
+        assert!(meta.validate().is_err());
+    }
+
+    #[test]
+    fn test_calendar_metadata_validate_empty_title() {
+        let meta = CalendarMetadata::new("d-1", "", "desc", TEST_PUBKEY);
+        assert!(meta.validate().is_err());
+    }
+
+    #[test]
+    fn test_calendar_metadata_to_tags() {
+        let ref1 = CalendarReference::new(31922, TEST_PUBKEY, "event-abc");
+        let meta = CalendarMetadata::new("cal-id", "My Calendar", "A description", TEST_PUBKEY)
+            .with_event_reference(ref1)
+            .with_hashtag("important");
+
+        let tags = meta.to_tags();
+
+        // Check d tag
+        assert!(tags.iter().any(|t| t.as_slice() == ["d", "cal-id"]));
+
+        // Check title tag
+        assert!(tags.iter().any(|t| t.as_slice() == ["title", "My Calendar"]));
+
+        // Check description tag
+        assert!(tags.iter().any(|t| t.as_slice() == ["description", "A description"]));
+
+        // Check a-tag for event reference
+        let expected_a = format!("31922:{}:event-abc", TEST_PUBKEY);
+        assert!(tags.iter().any(|t| {
+            let s = t.as_slice();
+            s.len() >= 2 && s[0] == "a" && s[1] == expected_a
+        }));
+
+        // Check hashtag
+        assert!(tags.iter().any(|t| t.as_slice() == ["t", "important"]));
+    }
+
+    #[test]
+    fn test_calendar_metadata_content() {
+        let meta = CalendarMetadata::new("d", "Title", "my description", TEST_PUBKEY);
+        assert_eq!(meta.content(), "my description");
+    }
+
+    #[test]
+    fn test_calendar_metadata_d_tag() {
+        let meta = CalendarMetadata::new("my-d-tag", "Title", "desc", TEST_PUBKEY);
+        assert_eq!(meta.d_tag(), Some("my-d-tag".to_string()));
+    }
+
+    #[test]
+    fn test_calendar_metadata_kind() {
+        let meta = CalendarMetadata::new("d", "T", "desc", TEST_PUBKEY);
+        assert_eq!(meta.kind(), Nip52Kind::Calendar);
+    }
+
+    #[test]
+    fn test_calendar_metadata_from_raw_event() {
+        let event = RawNostrEvent {
+            id: String::new(),
+            pubkey: TEST_PUBKEY.to_string(),
+            created_at: 0,
+            kind: 31924,
+            tags: vec![
+                vec!["d".to_string(), "cal-001".to_string()],
+                vec!["title".to_string(), "Test Calendar".to_string()],
+                vec!["description".to_string(), "A test calendar".to_string()],
+                vec!["a".to_string(), format!("31922:{}:evt-ref", TEST_PUBKEY)],
+                vec!["t".to_string(), "calendar".to_string()],
+            ],
+            content: "A test calendar".to_string(),
+            sig: String::new(),
+        };
+
+        let meta = CalendarMetadata::from_raw_event(&event).unwrap();
+        assert_eq!(meta.d_tag, "cal-001");
+        assert_eq!(meta.title, "Test Calendar");
+        assert_eq!(meta.description, "A test calendar");
+        assert_eq!(meta.owner_pubkey, TEST_PUBKEY);
+        assert_eq!(meta.event_references.len(), 1);
+        assert_eq!(meta.event_references[0].d_identifier, "evt-ref");
+        assert_eq!(meta.hashtags, vec!["calendar"]);
+    }
+
+    #[test]
+    fn test_calendar_metadata_from_raw_event_wrong_kind() {
+        let event = RawNostrEvent {
+            id: String::new(),
+            pubkey: String::new(),
+            created_at: 0,
+            kind: 31922,
+            tags: vec![],
+            content: String::new(),
+            sig: String::new(),
+        };
+
+        let result = CalendarMetadata::from_raw_event(&event);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_calendar_metadata_from_raw_event_missing_d_tag() {
+        let event = RawNostrEvent {
+            id: String::new(),
+            pubkey: TEST_PUBKEY.to_string(),
+            created_at: 0,
+            kind: 31924,
+            tags: vec![
+                vec!["title".to_string(), "Calendar".to_string()],
+            ],
+            content: String::new(),
+            sig: String::new(),
+        };
+
+        let result = CalendarMetadata::from_raw_event(&event);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_calendar_metadata_from_raw_event_missing_title() {
+        let event = RawNostrEvent {
+            id: String::new(),
+            pubkey: TEST_PUBKEY.to_string(),
+            created_at: 0,
+            kind: 31924,
+            tags: vec![
+                vec!["d".to_string(), "no-title".to_string()],
+            ],
+            content: String::new(),
+            sig: String::new(),
+        };
+
+        let result = CalendarMetadata::from_raw_event(&event);
+        assert!(result.is_err());
+    }
+
+    // ==================== RSVPMetadata Tests ====================
+
+    fn make_event_ref() -> CalendarReference {
+        CalendarReference::new(31923, TEST_PUBKEY, "event-d-id")
+    }
+
+    fn make_event_ref_with_relay() -> CalendarReference {
+        CalendarReference::new(31923, TEST_PUBKEY, "event-d-id")
+            .with_relay("wss://relay.example.com")
+    }
+
+    #[test]
+    fn test_rsvp_metadata_new() {
+        let event_ref = make_event_ref();
+        let rsvp = RSVPMetadata::new("rsvp-d", event_ref.clone(), RSVPStatus::Accepted);
+        assert_eq!(rsvp.d_tag, "rsvp-d");
+        assert_eq!(rsvp.event_reference.kind, 31923);
+        assert_eq!(rsvp.event_reference.author_pubkey, TEST_PUBKEY);
+        assert_eq!(rsvp.event_reference.d_identifier, "event-d-id");
+        assert_eq!(rsvp.status, RSVPStatus::Accepted);
+        assert!(rsvp.event_id.is_none());
+        assert!(rsvp.free_busy.is_none());
+        assert!(rsvp.note.is_none());
+        assert!(rsvp.event_author_pubkey.is_none());
+    }
+
+    #[test]
+    fn test_rsvp_metadata_builder() {
+        let event_ref = make_event_ref();
+        let rsvp = RSVPMetadata::new("rsvp-id", event_ref, RSVPStatus::Tentative)
+            .with_event_id("event-abc-123")
+            .with_free_busy(FreeBusyStatus::Busy)
+            .with_note("Maybe attending")
+            .with_event_author(TEST_PUBKEY2);
+
+        assert_eq!(rsvp.event_id, Some("event-abc-123".to_string()));
+        assert_eq!(rsvp.free_busy, Some(FreeBusyStatus::Busy));
+        assert_eq!(rsvp.note, Some("Maybe attending".to_string()));
+        assert_eq!(rsvp.event_author_pubkey, Some(TEST_PUBKEY2.to_string()));
+    }
+
+    #[test]
+    fn test_rsvp_metadata_validate_passes() {
+        let event_ref = make_event_ref();
+        let rsvp = RSVPMetadata::new("d-ok", event_ref, RSVPStatus::Accepted);
+        assert!(rsvp.validate().is_ok());
+    }
+
+    #[test]
+    fn test_rsvp_metadata_validate_empty_d_tag() {
+        let event_ref = make_event_ref();
+        let rsvp = RSVPMetadata::new("", event_ref, RSVPStatus::Accepted);
+        assert!(rsvp.validate().is_err());
+    }
+
+    #[test]
+    fn test_rsvp_metadata_validate_empty_author_pubkey() {
+        let event_ref = CalendarReference::new(31923, "", "event-id");
+        let rsvp = RSVPMetadata::new("d-1", event_ref, RSVPStatus::Accepted);
+        assert!(rsvp.validate().is_err());
+    }
+
+    #[test]
+    fn test_rsvp_metadata_validate_empty_d_identifier() {
+        let event_ref = CalendarReference::new(31923, TEST_PUBKEY, "");
+        let rsvp = RSVPMetadata::new("d-1", event_ref, RSVPStatus::Accepted);
+        assert!(rsvp.validate().is_err());
+    }
+
+    #[test]
+    fn test_rsvp_metadata_to_tags() {
+        let event_ref = make_event_ref_with_relay();
+        let rsvp = RSVPMetadata::new("my-rsvp", event_ref, RSVPStatus::Declined)
+            .with_event_id("evt-id-001")
+            .with_free_busy(FreeBusyStatus::Free)
+            .with_event_author(TEST_PUBKEY2);
+
+        let tags = rsvp.to_tags();
+
+        // Check d tag
+        assert!(tags.iter().any(|t| t.as_slice() == ["d", "my-rsvp"]));
+
+        // Check a tag (event reference with relay)
+        let expected_a = format!("31923:{}:event-d-id", TEST_PUBKEY);
+        assert!(tags.iter().any(|t| {
+            let s = t.as_slice();
+            s.len() >= 2 && s[0] == "a" && s[1] == expected_a
+        }));
+
+        // Check e tag
+        assert!(tags.iter().any(|t| t.as_slice() == ["e", "evt-id-001"]));
+
+        // Check p tag (event author)
+        assert!(tags.iter().any(|t| t.as_slice() == ["p", TEST_PUBKEY2]));
+
+        // Check status l-tag
+        assert!(tags.iter().any(|t| t.as_slice() == ["l", "declined", "status"]));
+
+        // Check freebusy l-tag
+        assert!(tags.iter().any(|t| t.as_slice() == ["l", "free", "freebusy"]));
+    }
+
+    #[test]
+    fn test_rsvp_metadata_content() {
+        let event_ref = make_event_ref();
+        // with note
+        let rsvp = RSVPMetadata::new("d", event_ref.clone(), RSVPStatus::Accepted)
+            .with_note("My note");
+        assert_eq!(rsvp.content(), "My note");
+
+        // without note
+        let rsvp2 = RSVPMetadata::new("d", event_ref, RSVPStatus::Accepted);
+        assert_eq!(rsvp2.content(), "");
+    }
+
+    #[test]
+    fn test_rsvp_metadata_d_tag() {
+        let event_ref = make_event_ref();
+        let rsvp = RSVPMetadata::new("my-rsvp-d", event_ref, RSVPStatus::Accepted);
+        assert_eq!(rsvp.d_tag(), Some("my-rsvp-d".to_string()));
+    }
+
+    #[test]
+    fn test_rsvp_metadata_kind() {
+        let event_ref = make_event_ref();
+        let rsvp = RSVPMetadata::new("d", event_ref, RSVPStatus::Accepted);
+        assert_eq!(rsvp.kind(), Nip52Kind::RSVP);
+    }
+
+    #[test]
+    fn test_rsvp_metadata_from_raw_event_accepted() {
+        let event = RawNostrEvent {
+            id: String::new(),
+            pubkey: TEST_PUBKEY.to_string(),
+            created_at: 0,
+            kind: 31925,
+            tags: vec![
+                vec!["d".to_string(), "rsvp-001".to_string()],
+                vec!["a".to_string(), format!("31923:{}:event-abc", TEST_PUBKEY)],
+                vec!["e".to_string(), "event-id-123".to_string()],
+                vec!["p".to_string(), TEST_PUBKEY2.to_string()],
+                vec!["l".to_string(), "accepted".to_string(), "status".to_string()],
+            ],
+            content: "See you there!".to_string(),
+            sig: String::new(),
+        };
+
+        let rsvp = RSVPMetadata::from_raw_event(&event).unwrap();
+        assert_eq!(rsvp.d_tag, "rsvp-001");
+        assert_eq!(rsvp.event_reference.d_identifier, "event-abc");
+        assert_eq!(rsvp.status, RSVPStatus::Accepted);
+        assert_eq!(rsvp.event_id, Some("event-id-123".to_string()));
+        assert_eq!(rsvp.event_author_pubkey, Some(TEST_PUBKEY2.to_string()));
+        assert_eq!(rsvp.note, Some("See you there!".to_string()));
+    }
+
+    #[test]
+    fn test_rsvp_metadata_from_raw_event_tentative() {
+        let event = RawNostrEvent {
+            id: String::new(),
+            pubkey: TEST_PUBKEY.to_string(),
+            created_at: 0,
+            kind: 31925,
+            tags: vec![
+                vec!["d".to_string(), "rsvp-tent".to_string()],
+                vec!["a".to_string(), format!("31923:{}:event-xyz", TEST_PUBKEY)],
+                vec!["l".to_string(), "tentative".to_string(), "status".to_string()],
+                vec!["l".to_string(), "busy".to_string(), "freebusy".to_string()],
+            ],
+            content: String::new(),
+            sig: String::new(),
+        };
+
+        let rsvp = RSVPMetadata::from_raw_event(&event).unwrap();
+        assert_eq!(rsvp.d_tag, "rsvp-tent");
+        assert_eq!(rsvp.status, RSVPStatus::Tentative);
+        assert_eq!(rsvp.free_busy, Some(FreeBusyStatus::Busy));
+        assert!(rsvp.note.is_none());
+    }
+
+    #[test]
+    fn test_rsvp_metadata_from_raw_event_wrong_kind() {
+        let event = RawNostrEvent {
+            id: String::new(),
+            pubkey: String::new(),
+            created_at: 0,
+            kind: 31922,
+            tags: vec![],
+            content: String::new(),
+            sig: String::new(),
+        };
+
+        let result = RSVPMetadata::from_raw_event(&event);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_rsvp_metadata_from_raw_event_missing_d_tag() {
+        let event = RawNostrEvent {
+            id: String::new(),
+            pubkey: String::new(),
+            created_at: 0,
+            kind: 31925,
+            tags: vec![
+                vec!["a".to_string(), format!("31923:{}:e", TEST_PUBKEY)],
+            ],
+            content: String::new(),
+            sig: String::new(),
+        };
+
+        let result = RSVPMetadata::from_raw_event(&event);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_rsvp_metadata_from_raw_event_missing_event_reference() {
+        let event = RawNostrEvent {
+            id: String::new(),
+            pubkey: String::new(),
+            created_at: 0,
+            kind: 31925,
+            tags: vec![
+                vec!["d".to_string(), "rsvp-no-ref".to_string()],
+            ],
+            content: String::new(),
+            sig: String::new(),
+        };
+
+        let result = RSVPMetadata::from_raw_event(&event);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_rsvp_metadata_from_raw_event_missing_status() {
+        let event = RawNostrEvent {
+            id: String::new(),
+            pubkey: String::new(),
+            created_at: 0,
+            kind: 31925,
+            tags: vec![
+                vec!["d".to_string(), "rsvp-no-status".to_string()],
+                vec!["a".to_string(), format!("31923:{}:e", TEST_PUBKEY)],
+            ],
+            content: String::new(),
+            sig: String::new(),
+        };
+
+        let result = RSVPMetadata::from_raw_event(&event);
+        assert!(result.is_err());
+    }
+
+    // ==================== Helper Function Tests ====================
+
+    #[test]
+    fn test_generate_event_d_tag() {
+        let d_tag = generate_event_d_tag("My Event", 1234567890);
+        assert_eq!(d_tag.len(), 16);
+        // Verify it's hex
+        assert!(d_tag.chars().all(|c| c.is_ascii_hexdigit()));
+    }
+
+    #[test]
+    fn test_generate_event_d_tag_deterministic() {
+        let d_tag1 = generate_event_d_tag("Same Event", 1000);
+        let d_tag2 = generate_event_d_tag("Same Event", 1000);
+        assert_eq!(d_tag1, d_tag2);
+    }
+
+    #[test]
+    fn test_generate_event_d_tag_different_inputs() {
+        let d_tag1 = generate_event_d_tag("Event A", 1000);
+        let d_tag2 = generate_event_d_tag("Event B", 1000);
+        assert_ne!(d_tag1, d_tag2);
+    }
+
+    #[test]
+    fn test_generate_rsvp_d_tag() {
+        let event_ref = CalendarReference::new(31922, TEST_PUBKEY, "event-id");
+        let d_tag = generate_rsvp_d_tag(&event_ref, TEST_PUBKEY2);
+        assert_eq!(d_tag.len(), 16);
+        assert!(d_tag.chars().all(|c| c.is_ascii_hexdigit()));
+    }
+
+    #[test]
+    fn test_generate_rsvp_d_tag_deterministic() {
+        let event_ref = CalendarReference::new(31922, TEST_PUBKEY, "event-id");
+        let d_tag1 = generate_rsvp_d_tag(&event_ref, TEST_PUBKEY2);
+        let d_tag2 = generate_rsvp_d_tag(&event_ref, TEST_PUBKEY2);
+        assert_eq!(d_tag1, d_tag2);
+    }
+
+    #[test]
+    fn test_calculate_auction_end_time_no_extensions() {
+        let end = calculate_auction_end_time(1000, 3600, &[]);
+        assert_eq!(end, 4600);
+    }
+
+    #[test]
+    fn test_calculate_auction_end_time_with_extensions() {
+        let end = calculate_auction_end_time(1000, 3600, &[60, 120, 30]);
+        assert_eq!(end, 4810); // 1000 + 3600 + 60 + 120 + 30
+    }
+
+    #[test]
+    fn test_calculate_auction_end_time_single_extension() {
+        let end = calculate_auction_end_time(500, 300, &[100]);
+        assert_eq!(end, 900);
+    }
 }

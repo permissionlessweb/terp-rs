@@ -86,3 +86,158 @@ impl TagBuilder {
         self.tags
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new_creates_empty_builder() {
+        let builder = TagBuilder::new();
+        let tags = builder.build();
+        assert_eq!(tags.len(), 0);
+    }
+
+    #[test]
+    fn test_default_creates_empty_builder() {
+        let builder = TagBuilder::default();
+        let tags = builder.build();
+        assert_eq!(tags.len(), 0);
+    }
+
+    #[test]
+    fn test_e_tag() {
+        let tags = TagBuilder::new().e("event123").build();
+        assert_eq!(tags.len(), 1);
+        assert_eq!(tags[0], Tag::e("event123"));
+    }
+
+    #[test]
+    fn test_e_with_relay_tag() {
+        let tags = TagBuilder::new()
+            .e_with_relay("event123", "wss://relay.example.com")
+            .build();
+        assert_eq!(tags.len(), 1);
+        assert_eq!(tags[0], Tag::e_with_relay("event123", "wss://relay.example.com"));
+    }
+
+    #[test]
+    fn test_e_full_tag() {
+        let tags = TagBuilder::new()
+            .e_full("event123", "wss://relay.example.com", "pubkey123")
+            .build();
+        assert_eq!(tags.len(), 1);
+        assert_eq!(tags[0], Tag::e_full("event123", "wss://relay.example.com", "pubkey123"));
+    }
+
+    #[test]
+    fn test_p_tag() {
+        let tags = TagBuilder::new().p("pubkey123").build();
+        assert_eq!(tags.len(), 1);
+        assert_eq!(tags[0], Tag::p("pubkey123"));
+    }
+
+    #[test]
+    fn test_p_with_relay_tag() {
+        let tags = TagBuilder::new()
+            .p_with_relay("pubkey123", "wss://relay.example.com")
+            .build();
+        assert_eq!(tags.len(), 1);
+        assert_eq!(tags[0], Tag::p_with_relay("pubkey123", "wss://relay.example.com"));
+    }
+
+    #[test]
+    fn test_a_tag() {
+        let tags = TagBuilder::new()
+            .a(30023, "pubkey123", "dvalue")
+            .build();
+        assert_eq!(tags.len(), 1);
+        assert_eq!(tags[0], Tag::a(30023, "pubkey123", "dvalue"));
+    }
+
+    #[test]
+    fn test_a_with_relay_tag() {
+        let tags = TagBuilder::new()
+            .a_with_relay(30023, "pubkey123", "dvalue", "wss://relay.example.com")
+            .build();
+        assert_eq!(tags.len(), 1);
+        assert_eq!(tags[0], Tag::a_with_relay(
+            30023,
+            "pubkey123",
+            "dvalue",
+            "wss://relay.example.com",
+        ));
+    }
+
+    #[test]
+    fn test_d_tag() {
+        let tags = TagBuilder::new().d("my-identifier").build();
+        assert_eq!(tags.len(), 1);
+        assert_eq!(tags[0], Tag::d("my-identifier"));
+    }
+
+    #[test]
+    fn test_t_tag() {
+        let tags = TagBuilder::new().t("nostr").build();
+        assert_eq!(tags.len(), 1);
+        assert_eq!(tags[0], Tag::t("nostr"));
+    }
+
+    #[test]
+    fn test_g_tag() {
+        let tags = TagBuilder::new().g("9q8yyz").build();
+        assert_eq!(tags.len(), 1);
+        assert_eq!(tags[0], Tag::g("9q8yyz"));
+    }
+
+    #[test]
+    fn test_r_tag() {
+        let tags = TagBuilder::new().r("https://example.com").build();
+        assert_eq!(tags.len(), 1);
+        assert_eq!(tags[0], Tag::r("https://example.com"));
+    }
+
+    #[test]
+    fn test_custom_tag() {
+        let custom = Tag::new(vec![
+            "my".to_string(),
+            "custom".to_string(),
+            "tag".to_string(),
+        ]);
+        let tags = TagBuilder::new().custom(custom.clone()).build();
+        assert_eq!(tags.len(), 1);
+        assert_eq!(tags[0], custom);
+    }
+
+    #[test]
+    fn test_fluent_chaining() {
+        let tags = TagBuilder::new()
+            .e("event1")
+            .p("pubkey1")
+            .t("nostr")
+            .build();
+        assert_eq!(tags.len(), 3);
+        assert_eq!(tags[0], Tag::e("event1"));
+        assert_eq!(tags[1], Tag::p("pubkey1"));
+        assert_eq!(tags[2], Tag::t("nostr"));
+    }
+
+    #[test]
+    fn test_build_returns_correct_number_of_tags() {
+        let tags = TagBuilder::new()
+            .e("e1")
+            .e_with_relay("e2", "relay1")
+            .e_full("e3", "relay2", "author1")
+            .p("p1")
+            .p_with_relay("p2", "relay3")
+            .a(1, "a-pubkey", "a-d")
+            .a_with_relay(2, "a2-pubkey", "a2-d", "relay4")
+            .d("d-value")
+            .t("hashtag")
+            .g("geohash")
+            .r("reference")
+            .custom(Tag::new(vec!["x".to_string()]))
+            .build();
+        assert_eq!(tags.len(), 12);
+    }
+}
