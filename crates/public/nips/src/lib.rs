@@ -34,6 +34,9 @@ pub mod nips;
 pub mod tags;
 pub mod types;
 
+#[cfg(feature = "cw")]
+pub mod cw;
+
 // Re-exports
 pub use error::{NipError, NipResult};
 pub use event::*;
@@ -176,7 +179,8 @@ impl RawNostrEvent {
 pub struct NostrEventBuilder;
 
 impl NostrEventBuilder {
-    /// Build a raw Nostr event from metadata
+    /// Build a raw Nostr event from metadata.
+    /// NOTE: DOES NOT SIGN EVENT, ONLY BUILDS.
     pub fn build<M: NipMetadata>(
         metadata: &M,
         pubkey: &PubKey,
@@ -215,7 +219,7 @@ impl NostrEventBuilder {
             kind,
             tags: tags.into_iter().map(|t| t.into_inner()).collect(),
             content,
-            sig: String::new(), // Must be signed separately
+            sig: String::new(),
         })
     }
 }

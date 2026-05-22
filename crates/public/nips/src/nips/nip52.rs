@@ -3,6 +3,7 @@ use crate::{
     types::*,
     NipKind, NipMetadata, RawNostrEvent, Tag,
 };
+
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use sha2::Digest as _;
@@ -31,7 +32,7 @@ impl NipKind for Nip52Kind {
 // ==================== NIP-52 Common Types ====================
 
 /// Reference to another calendar or event
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq)]
 pub struct CalendarReference {
     pub kind: u32,
     pub author_pubkey: String,
@@ -153,7 +154,7 @@ impl EventType {
 // ==================== NIP-52 Calendar Event (kind:31922/31923) ====================
 
 /// NIP-52 Calendar Event metadata
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct CalendarEventMetadata {
     /// d-tag: short unique identifier
     pub d_tag: String,
@@ -202,7 +203,7 @@ pub struct CalendarEventMetadata {
     pub participants: Vec<Participant>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq)]
 pub struct Participant {
     pub pubkey: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -996,7 +997,7 @@ pub fn calculate_auction_end_time(start_time: u64, base_duration: u64, extension
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{RawNostrEvent, NipMetadata, NipKind, Tag};
+    use crate::{NipKind, NipMetadata, RawNostrEvent, Tag};
 
     const TEST_PUBKEY: &str = "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789";
     const TEST_PUBKEY2: &str = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
@@ -1038,18 +1039,24 @@ mod tests {
         let tag = ref_.to_a_tag();
         let inner: Vec<String> = tag.clone().into_inner();
         assert_eq!(inner[0], "a");
-        assert_eq!(inner[1], "31922:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789:event-abc");
+        assert_eq!(
+            inner[1],
+            "31922:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789:event-abc"
+        );
         assert_eq!(inner.len(), 2);
     }
 
     #[test]
     fn test_calendar_reference_to_a_tag_with_relay() {
-        let ref_ = CalendarReference::new(31923, TEST_PUBKEY, "event-xyz")
-            .with_relay("wss://relay.com");
+        let ref_ =
+            CalendarReference::new(31923, TEST_PUBKEY, "event-xyz").with_relay("wss://relay.com");
         let tag = ref_.to_a_tag();
         let inner: Vec<String> = tag.clone().into_inner();
         assert_eq!(inner[0], "a");
-        assert_eq!(inner[1], "31923:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789:event-xyz");
+        assert_eq!(
+            inner[1],
+            "31923:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789:event-xyz"
+        );
         assert_eq!(inner[2], "wss://relay.com");
         assert_eq!(inner.len(), 3);
     }
@@ -1144,7 +1151,10 @@ mod tests {
             .with_hashtag("work")
             .with_calendar_request(cal_ref)
             .with_participant(TEST_PUBKEY2, Some("organizer".to_string()))
-            .with_participant("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", None);
+            .with_participant(
+                "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                None,
+            );
 
         assert_eq!(meta.summary, Some("A summary".to_string()));
         assert_eq!(meta.image, Some("https://example.com/img.png".to_string()));
@@ -1187,15 +1197,21 @@ mod tests {
     #[test]
     fn test_calendar_event_to_tags() {
         let cal_ref = CalendarReference::new(31924, TEST_PUBKEY, "cal-abc");
-        let meta = CalendarEventMetadata::new_time_based("my-id", "Test Event", "some content", 1000, 2000)
-            .with_summary("Short summary")
-            .with_image("https://img.url")
-            .with_location("Berlin")
-            .with_geohash("u33d")
-            .with_reference("https://ref.com")
-            .with_hashtag("conference")
-            .with_calendar_request(cal_ref)
-            .with_participant(TEST_PUBKEY2, Some("speaker".to_string()));
+        let meta = CalendarEventMetadata::new_time_based(
+            "my-id",
+            "Test Event",
+            "some content",
+            1000,
+            2000,
+        )
+        .with_summary("Short summary")
+        .with_image("https://img.url")
+        .with_location("Berlin")
+        .with_geohash("u33d")
+        .with_reference("https://ref.com")
+        .with_hashtag("conference")
+        .with_calendar_request(cal_ref)
+        .with_participant(TEST_PUBKEY2, Some("speaker".to_string()));
 
         let tags = meta.to_tags();
 
@@ -1206,10 +1222,14 @@ mod tests {
         assert!(tags.iter().any(|t| t.as_slice() == ["title", "Test Event"]));
 
         // Check summary tag
-        assert!(tags.iter().any(|t| t.as_slice() == ["summary", "Short summary"]));
+        assert!(tags
+            .iter()
+            .any(|t| t.as_slice() == ["summary", "Short summary"]));
 
         // Check image tag
-        assert!(tags.iter().any(|t| t.as_slice() == ["image", "https://img.url"]));
+        assert!(tags
+            .iter()
+            .any(|t| t.as_slice() == ["image", "https://img.url"]));
 
         // Check start/end
         assert!(tags.iter().any(|t| t.as_slice() == ["start", "1000"]));
@@ -1222,7 +1242,9 @@ mod tests {
         assert!(tags.iter().any(|t| t.as_slice() == ["g", "u33d"]));
 
         // Check reference
-        assert!(tags.iter().any(|t| t.as_slice() == ["r", "https://ref.com"]));
+        assert!(tags
+            .iter()
+            .any(|t| t.as_slice() == ["r", "https://ref.com"]));
 
         // Check hashtag
         assert!(tags.iter().any(|t| t.as_slice() == ["t", "conference"]));
@@ -1238,7 +1260,9 @@ mod tests {
         assert!(tags.iter().any(|t| t.as_slice() == ["p", TEST_PUBKEY2]));
 
         // Check role tag
-        assert!(tags.iter().any(|t| t.as_slice() == ["role", TEST_PUBKEY2, "speaker"]));
+        assert!(tags
+            .iter()
+            .any(|t| t.as_slice() == ["role", TEST_PUBKEY2, "speaker"]));
     }
 
     #[test]
@@ -1335,9 +1359,7 @@ mod tests {
             pubkey: String::new(),
             created_at: 0,
             kind: 31922,
-            tags: vec![
-                vec!["title".to_string(), "No D Tag".to_string()],
-            ],
+            tags: vec![vec!["title".to_string(), "No D Tag".to_string()]],
             content: String::new(),
             sig: String::new(),
         };
@@ -1353,9 +1375,7 @@ mod tests {
             pubkey: String::new(),
             created_at: 0,
             kind: 31922,
-            tags: vec![
-                vec!["d".to_string(), "no-title".to_string()],
-            ],
+            tags: vec![vec!["d".to_string(), "no-title".to_string()]],
             content: String::new(),
             sig: String::new(),
         };
@@ -1386,7 +1406,11 @@ mod tests {
                 vec!["t".to_string(), "test".to_string()],
                 vec!["a".to_string(), format!("31924:{}:cal-ref", TEST_PUBKEY)],
                 vec!["p".to_string(), TEST_PUBKEY2.to_string()],
-                vec!["role".to_string(), TEST_PUBKEY2.to_string(), "host".to_string()],
+                vec![
+                    "role".to_string(),
+                    TEST_PUBKEY2.to_string(),
+                    "host".to_string(),
+                ],
             ],
             content: "full content".to_string(),
             sig: String::new(),
@@ -1493,10 +1517,14 @@ mod tests {
         assert!(tags.iter().any(|t| t.as_slice() == ["d", "cal-id"]));
 
         // Check title tag
-        assert!(tags.iter().any(|t| t.as_slice() == ["title", "My Calendar"]));
+        assert!(tags
+            .iter()
+            .any(|t| t.as_slice() == ["title", "My Calendar"]));
 
         // Check description tag
-        assert!(tags.iter().any(|t| t.as_slice() == ["description", "A description"]));
+        assert!(tags
+            .iter()
+            .any(|t| t.as_slice() == ["description", "A description"]));
 
         // Check a-tag for event reference
         let expected_a = format!("31922:{}:event-abc", TEST_PUBKEY);
@@ -1578,9 +1606,7 @@ mod tests {
             pubkey: TEST_PUBKEY.to_string(),
             created_at: 0,
             kind: 31924,
-            tags: vec![
-                vec!["title".to_string(), "Calendar".to_string()],
-            ],
+            tags: vec![vec!["title".to_string(), "Calendar".to_string()]],
             content: String::new(),
             sig: String::new(),
         };
@@ -1596,9 +1622,7 @@ mod tests {
             pubkey: TEST_PUBKEY.to_string(),
             created_at: 0,
             kind: 31924,
-            tags: vec![
-                vec!["d".to_string(), "no-title".to_string()],
-            ],
+            tags: vec![vec!["d".to_string(), "no-title".to_string()]],
             content: String::new(),
             sig: String::new(),
         };
@@ -1703,18 +1727,22 @@ mod tests {
         assert!(tags.iter().any(|t| t.as_slice() == ["p", TEST_PUBKEY2]));
 
         // Check status l-tag
-        assert!(tags.iter().any(|t| t.as_slice() == ["l", "declined", "status"]));
+        assert!(tags
+            .iter()
+            .any(|t| t.as_slice() == ["l", "declined", "status"]));
 
         // Check freebusy l-tag
-        assert!(tags.iter().any(|t| t.as_slice() == ["l", "free", "freebusy"]));
+        assert!(tags
+            .iter()
+            .any(|t| t.as_slice() == ["l", "free", "freebusy"]));
     }
 
     #[test]
     fn test_rsvp_metadata_content() {
         let event_ref = make_event_ref();
         // with note
-        let rsvp = RSVPMetadata::new("d", event_ref.clone(), RSVPStatus::Accepted)
-            .with_note("My note");
+        let rsvp =
+            RSVPMetadata::new("d", event_ref.clone(), RSVPStatus::Accepted).with_note("My note");
         assert_eq!(rsvp.content(), "My note");
 
         // without note
@@ -1748,7 +1776,11 @@ mod tests {
                 vec!["a".to_string(), format!("31923:{}:event-abc", TEST_PUBKEY)],
                 vec!["e".to_string(), "event-id-123".to_string()],
                 vec!["p".to_string(), TEST_PUBKEY2.to_string()],
-                vec!["l".to_string(), "accepted".to_string(), "status".to_string()],
+                vec![
+                    "l".to_string(),
+                    "accepted".to_string(),
+                    "status".to_string(),
+                ],
             ],
             content: "See you there!".to_string(),
             sig: String::new(),
@@ -1773,7 +1805,11 @@ mod tests {
             tags: vec![
                 vec!["d".to_string(), "rsvp-tent".to_string()],
                 vec!["a".to_string(), format!("31923:{}:event-xyz", TEST_PUBKEY)],
-                vec!["l".to_string(), "tentative".to_string(), "status".to_string()],
+                vec![
+                    "l".to_string(),
+                    "tentative".to_string(),
+                    "status".to_string(),
+                ],
                 vec!["l".to_string(), "busy".to_string(), "freebusy".to_string()],
             ],
             content: String::new(),
@@ -1810,9 +1846,7 @@ mod tests {
             pubkey: String::new(),
             created_at: 0,
             kind: 31925,
-            tags: vec![
-                vec!["a".to_string(), format!("31923:{}:e", TEST_PUBKEY)],
-            ],
+            tags: vec![vec!["a".to_string(), format!("31923:{}:e", TEST_PUBKEY)]],
             content: String::new(),
             sig: String::new(),
         };
@@ -1828,9 +1862,7 @@ mod tests {
             pubkey: String::new(),
             created_at: 0,
             kind: 31925,
-            tags: vec![
-                vec!["d".to_string(), "rsvp-no-ref".to_string()],
-            ],
+            tags: vec![vec!["d".to_string(), "rsvp-no-ref".to_string()]],
             content: String::new(),
             sig: String::new(),
         };

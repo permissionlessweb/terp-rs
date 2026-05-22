@@ -55,13 +55,7 @@ pub trait NostrExt:
 /// {"location": "off_chain", "cid": "Qm...", "kind": 31922, ...}
 /// ```
 #[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Eq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema,
+    Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
 )]
 #[serde(tag = "location", rename_all = "snake_case")]
 pub enum NostrExtension {
@@ -156,7 +150,9 @@ impl NostrExt for NostrExtension {
 // ── Empty extension (no Nostr data) ──
 
 /// Placeholder type for contracts with no Nostr metadata.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
+#[derive(
+    Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
+)]
 pub struct EmptyNostrExtension;
 
 impl NostrExt for EmptyNostrExtension {
