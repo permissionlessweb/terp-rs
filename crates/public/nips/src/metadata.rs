@@ -15,16 +15,6 @@
 use crate::error::NipResult;
 use crate::RawNostrEvent;
 
-/// Location discriminator — where the actual Nostr event payload lives.
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
-)]
-#[serde(rename_all = "snake_case")]
-pub enum NostrLocation {
-    OnChain,
-    OffChain,
-}
-
 /// Interface for Nostr metadata in NFT/collection extensions.
 ///
 /// Generic code binds against this trait instead of cosmwasm_std types.
@@ -32,7 +22,7 @@ pub trait NostrExt:
     serde::Serialize + serde::de::DeserializeOwned + Clone + std::fmt::Debug + 'static
 {
     /// Whether the full Nostr event data lives on-chain or off-chain.
-    fn location(&self) -> NostrLocation;
+    fn location(&self) -> bool;
 
     /// The Nostr event kind (e.g. `31922` for a date-based calendar event).
     fn kind(&self) -> u16;
@@ -77,8 +67,8 @@ pub enum NostrExtension {
 // ── NostrExt impl for RawNostrEvent (always on-chain) ──
 
 impl NostrExt for RawNostrEvent {
-    fn location(&self) -> NostrLocation {
-        NostrLocation::OnChain
+    fn location(&self) -> bool {
+        true
     }
 
     fn kind(&self) -> u16 {
@@ -101,10 +91,10 @@ impl NostrExt for RawNostrEvent {
 // ── NostrExt impl for the unified enum ──
 
 impl NostrExt for NostrExtension {
-    fn location(&self) -> NostrLocation {
+    fn location(&self) -> bool {
         match self {
-            NostrExtension::OnChain(_) => NostrLocation::OnChain,
-            NostrExtension::OffChain { .. } => NostrLocation::OffChain,
+            NostrExtension::OnChain(raw_nostr_event) => true,
+            NostrExtension::OffChain { cid, kind, gateway } => false,
         }
     }
 
@@ -156,8 +146,8 @@ impl NostrExt for NostrExtension {
 pub struct EmptyNostrExtension;
 
 impl NostrExt for EmptyNostrExtension {
-    fn location(&self) -> NostrLocation {
-        NostrLocation::OnChain
+    fn location(&self) -> bool {
+        true
     }
 
     fn kind(&self) -> u16 {
@@ -191,7 +181,7 @@ mod tests {
             content: "hello".into(),
             sig: String::new(),
         };
-        assert_eq!(event.location(), NostrLocation::OnChain);
+        assert_eq!(event.location(), true);
         assert_eq!(event.kind(), 1);
         assert!(event.d_tag().is_none());
     }
@@ -208,7 +198,7 @@ mod tests {
             sig: "c".repeat(128),
         };
         let ext = NostrExtension::OnChain(event.clone());
-        assert_eq!(ext.location(), NostrLocation::OnChain);
+        assert_eq!(ext.location(), true);
         assert_eq!(ext.kind(), 31922);
         assert_eq!(ext.d_tag(), Some("my-event"));
     }
@@ -220,7 +210,7 @@ mod tests {
             kind: 31923,
             gateway: Some("https://ipfs.io/ipfs/".into()),
         };
-        assert_eq!(ext.location(), NostrLocation::OffChain);
+        assert_eq!(ext.location(), false);
         assert_eq!(ext.kind(), 31923);
         assert!(ext.d_tag().is_none());
     }
@@ -309,7 +299,7 @@ mod tests {
     #[test]
     fn test_empty_extension_full_coverage() {
         let empty = EmptyNostrExtension;
-        assert_eq!(empty.location(), NostrLocation::OnChain);
+        assert_eq!(empty.location(), true);
         assert_eq!(empty.kind(), 0);
         assert!(empty.d_tag().is_none());
     }

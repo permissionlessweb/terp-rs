@@ -40,7 +40,7 @@ pub mod cw;
 // Re-exports
 pub use error::{NipError, NipResult};
 pub use event::*;
-pub use metadata::{EmptyNostrExtension, NostrExt, NostrExtension, NostrLocation};
+pub use metadata::{EmptyNostrExtension, NostrExt, NostrExtension};
 use schemars::JsonSchema;
 use sha2::Digest as _;
 pub use tags::TagBuilder;
