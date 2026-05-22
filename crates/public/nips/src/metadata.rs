@@ -54,7 +54,15 @@ pub trait NostrExt:
 /// {"location": "on_chain", "id": "...", "pubkey": "...", ...}
 /// {"location": "off_chain", "cid": "Qm...", "kind": 31922, ...}
 /// ```
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema,
+)]
 #[serde(tag = "location", rename_all = "snake_case")]
 pub enum NostrExtension {
     /// Full Nostr event data stored on-chain.

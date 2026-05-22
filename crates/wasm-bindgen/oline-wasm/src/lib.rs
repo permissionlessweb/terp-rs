@@ -92,7 +92,7 @@ fn extract_vars(template: &str) -> Vec<String> {
 const ALL_FDS: &[Fd] = &[
     // default
     Fd { category: "default", key: "omnibus_image",  env_var: "OMNIBUS_IMAGE",            prompt: "Omnibus Image",             default: "ghcr.io/akash-network/cosmos-omnibus:v1.2.38-generic", secret: false },
-    Fd { category: "default", key: "sdl_dir",         env_var: "SDL_DIR",                  prompt: "SDL Templates folder",      default: "templates/sdls/oline", secret: false },
+    Fd { category: "default", key: "sdl_dir",         env_var: "SDL_DIR",                  prompt: "SDL Templates folder",      default: "~/.oline/templates/sdls/oline", secret: false },
     Fd { category: "default", key: "binary",          env_var: "OLINE_BINARY",             prompt: "Cosmos daemon binary name", default: "terpd",                secret: false },
     // chain
     Fd { category: "chain", key: "chain_id",         env_var: "OLINE_CHAIN_ID",           prompt: "Chain ID",                  default: "morocco-1", secret: false },

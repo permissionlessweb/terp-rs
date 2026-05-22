@@ -1,0 +1,267 @@
+# Sync oline repo to a remote device and install the binary.
+# First ensures SSH key access via ssh-copy-id, then rsyncs the repo,
+# then builds + installs oline on the remote.
+# Usage:
+#   just sync-client user@host              # default port 22
+#   just sync-client user@host:2210         # custom port
+#   just sync-client user@host -i ~/.ssh/id_ed25519   # specific key
+sync-client dest *args="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    DEST="{{dest}}"
+    ARGS="{{args}}"
+    # Parse -i <key> from extra args
+    KEY=""
+    while [[ $# -gt 0 || -n "$ARGS" ]]; do
+        set -- $ARGS; ARGS=""
+        while [[ $# -gt 0 ]]; do
+            case "$1" in
+                -i) KEY="$2"; shift 2 ;;
+                *)  shift ;;
+            esac
+        done
+    done
+    # Parse user@host:port
+    if [[ "$DEST" =~ :[0-9]+$ ]]; then
+        HOST="${DEST%:*}"
+        PORT="${DEST##*:}"
+    else
+        HOST="$DEST"
+        PORT="22"
+    fi
+
+    # SSH multiplexing — one connection, reuse for all steps.
+    # Password entered once (if needed); socket shared by rsync + ssh.
+    CTRL_PATH="/tmp/oline-sync-$$-%r@%h:%p"
+    SSH_OPTS="-p $PORT -o StrictHostKeyChecking=accept-new"
+    SSH_OPTS="$SSH_OPTS -o ControlMaster=auto -o ControlPath=$CTRL_PATH -o ControlPersist=300"
+    [[ -n "$KEY" ]] && SSH_OPTS="$SSH_OPTS -i $KEY"
+
+    cleanup() { ssh -O exit -o ControlPath="$CTRL_PATH" "$HOST" 2>/dev/null || true; }
+    trap cleanup EXIT
+
+    # 1. Ensure SSH key access (opens master connection)
+    echo "=== [1/3] Ensuring SSH key access to $HOST (port $PORT) ..."
+    if ssh $SSH_OPTS "$HOST" "echo ok" &>/dev/null; then
+        echo "  Key access already works."
+    else
+        echo "  Installing SSH key via ssh-copy-id ..."
+        ssh-copy-id -p "$PORT" ${KEY:+-i "$KEY"} "$HOST"
+        # Open master connection now that key is installed
+        ssh $SSH_OPTS "$HOST" "echo ok" &>/dev/null
+    fi
+
+    # 2. Rsync the repo (reuses master connection — no password prompt)
+    echo "=== [2/3] Syncing repo to $HOST:~/abstract/ (port $PORT) ..."
+    rsync -az --progress --delete \
+        --exclude='.git' \
+        --exclude='target/' \
+        --exclude='vendor/' \
+        --exclude='*.env' \
+        --exclude='*.lz4' \
+        --exclude='*.tar.gz' \
+        --exclude='*.tar.*' \
+        --exclude='*.zst' \
+        --exclude='node-data' \
+        --exclude='node_modules' \
+        --exclude='secrets' \
+        --exclude='.DS_Store' \
+        --exclude='deploy-config.json' \
+        --exclude='build/' \
+        --exclude='dist/' \
+        -e "ssh $SSH_OPTS" \
+        "./" \
+        "$HOST:~/abstract/"
+
+
+    echo "=== Done."
+
+# ─── Dependency Management ────────────────────────────────────────────────
+# Switch ALL forked deps to crates.io versions
+deps-stable:
+    python3 _scripts/dep-switch.py switch stable
+
+# Switch ALL forked deps to git remotes (for v3 release)
+deps-git:
+    python3 _scripts/dep-switch.py switch git
+
+# Switch ALL forked deps to local paths (for development)
+deps-local:
+    python3 _scripts/dep-switch.py switch local
+
+# Switch ALL forked deps to ZK fork git remotes
+deps-zk-git:
+    python3 _scripts/dep-switch.py switch zk_git
+
+# Switch ALL forked deps to ZK fork local paths
+deps-zk-local:
+    python3 _scripts/dep-switch.py switch zk_local
+
+# Switch a single crate: just deps-switch git --crate cosmwasm-std
+deps-switch mode *args="":
+    python3 _scripts/dep-switch.py switch {{mode}} {{args}}
+
+# Preview changes without writing (dry run)
+deps-dry-run mode *args="":
+    python3 _scripts/dep-switch.py switch {{mode}} --dry-run {{args}}
+
+# Show current dependency modes across all Cargo.toml files
+deps-status:
+    python3 _scripts/dep-switch.py status
+
+# ─── Dependency Analysis ────────────────────────────────────────────────
+# Scan all Cargo.tomls and report dependency status
+deps-scrape:
+    python3 _scripts/dep-scrape.py
+
+# CI check: exits non-zero on warnings
+deps-scrape-check:
+    python3 _scripts/dep-scrape.py --check
+
+# Generate project overview markdown
+deps-overview:
+    python3 _scripts/dep-overview.py
+
+# Run full report (scrape + overview)
+deps-report:
+    python3 _scripts/dep-scrape.py
+    python3 _scripts/dep-overview.py
+
+# Show topological push order (push repos in this sequence)
+deps-order:
+    python3 _scripts/dep-graph.py --order
+
+# Generate dependency graph SVG
+deps-graph:
+    python3 _scripts/dep-graph.py --svg
+
+# Run cargo update across all repos in topological order
+deps-update:
+    python3 _scripts/dep-graph.py --update
+
+# Preview cargo update order (dry run)
+deps-update-dry:
+    python3 _scripts/dep-graph.py --update --dry-run
+
+# Git push all repos in topological order
+deps-push:
+    python3 _scripts/dep-graph.py --push
+
+# Preview git push order (dry run)
+deps-push-dry:
+    python3 _scripts/dep-graph.py --push --dry-run
+
+# ─── Cargo Update ────────────────────────────────────────────────────────
+# Update Cargo.lock in all tracked projects (re-resolves git deps to latest commits)
+cargo-update-all:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    PROJECTS=(
+        # Source / upstream forks
+        cw-minus cw-plus cw-plus-plus cw-asset cw-nfts
+        polytone polytone-evm cw-ibc-demo cw-ica-controller
+        wynddex wynd-lsd dao-contracts xion-account
+        abstract-cw-plus cw-packages proxy-accounts
+        # Infra / tooling forks
+        cosmos-rust ibc-proto-rs tendermint-rs ibc-rs ibc-middleware
+        ics23/rust cnidarium basecoin-rs tower-abci
+        cosmwasm cw-multi-test cw-multi-test-fork clone-cw-multi-test
+        hermes
+        # Chain-specific
+        neutron-std osmosis-rust osmosis-test-tube neutron-test-tube
+        namada
+        # Abstract workspaces
+        abstract/framework abstract/modules abstract/integrations abstract/interchain
+        # cw-orchestrator
+        cw-orchestrator
+    )
+    OK=0; FAIL=0; SKIP=0
+    for proj in "${PROJECTS[@]}"; do
+        lockfile="$proj/Cargo.lock"
+        if [[ ! -f "$lockfile" ]]; then
+            echo "SKIP $proj (no Cargo.lock)"
+            SKIP=$((SKIP + 1))
+            continue
+        fi
+        echo -n "Updating $proj ... "
+        if (cd "$proj" && cargo update 2>&1 | tail -1); then
+            OK=$((OK + 1))
+        else
+            echo "FAILED"
+            FAIL=$((FAIL + 1))
+        fi
+    done
+    echo ""
+    echo "Done: $OK updated, $FAIL failed, $SKIP skipped"
+
+# Update Cargo.lock for a single project: just cargo-update namada
+cargo-update proj:
+    cd {{proj}} && cargo update
+
+# Update a specific package across all tracked projects: just cargo-update-pkg ics23
+cargo-update-pkg pkg:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    PROJECTS=(
+        cw-minus cw-plus cw-plus-plus cw-asset cw-nfts
+        polytone polytone-evm cw-ibc-demo cw-ica-controller
+        wynddex wynd-lsd dao-contracts xion-account
+        abstract-cw-plus cw-packages proxy-accounts
+        cosmos-rust ibc-proto-rs tendermint-rs ibc-rs ibc-middleware
+        ics23/rust cnidarium basecoin-rs tower-abci
+        cosmwasm cw-multi-test cw-multi-test-fork clone-cw-multi-test
+        hermes
+        neutron-std osmosis-rust osmosis-test-tube neutron-test-tube
+        namada
+        abstract/framework abstract/modules abstract/integrations abstract/interchain
+        cw-orchestrator
+    )
+    for proj in "${PROJECTS[@]}"; do
+        lockfile="$proj/Cargo.lock"
+        [[ ! -f "$lockfile" ]] && continue
+        echo -n "$proj: "
+        (cd "$proj" && cargo update -p {{pkg}} 2>&1 | tail -1) || echo "SKIP (not in tree)"
+    done
+
+# ─── Migration Checks ─────────────────────────────────────────────────────
+# Run cargo check on all critical workspaces
+check-all:
+    #!/usr/bin/env bash
+    set -e
+    WORKSPACES=(cw-minus cw-plus cw-plus-plus cw-asset cw-nfts polytone cw-ibc-demo \
+                wynddex wynd-lsd dao-contracts xion-account abstract-cw-plus cw-packages \
+                cosmos-rust ibc-proto-rs tendermint-rs neutron-std osmosis-rust \
+                osmosis-test-tube neutron-test-tube cw-multi-test-fork clone-cw-multi-test \
+                cw-orchestrator)
+    for ws in "${WORKSPACES[@]}"; do
+        echo "=== Checking $ws ==="
+        (cd "$ws" && cargo check 2>&1 | tail -3) || echo "  FAILED: $ws"
+        echo
+    done
+    echo "=== Checking abstract/framework ==="
+    (cd abstract/framework && cargo check 2>&1 | tail -3) || echo "  FAILED: abstract"
+
+# Run cargo test on all critical workspaces
+test-all:
+    #!/usr/bin/env bash
+    set -e
+    WORKSPACES=(cw-minus cw-plus cw-plus-plus cw-asset cw-nfts polytone cw-ibc-demo \
+                wynddex wynd-lsd dao-contracts xion-account abstract-cw-plus cw-packages \
+                cw-orchestrator)
+    FAILED=()
+    for ws in "${WORKSPACES[@]}"; do
+        echo "=== Testing $ws ==="
+        if ! (cd "$ws" && cargo test 2>&1 | tail -5); then
+            FAILED+=("$ws")
+        fi
+        echo
+    done
+    echo "=== Testing abstract/framework ==="
+    if ! (cd abstract/framework && cargo test 2>&1 | tail -5); then
+        FAILED+=("abstract")
+    fi
+    if [ ${#FAILED[@]} -gt 0 ]; then
+        echo "FAILED workspaces: ${FAILED[*]}"
+        exit 1
+    fi
+    echo "All tests passed!"

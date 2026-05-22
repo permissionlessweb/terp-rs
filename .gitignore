@@ -22,3 +22,7 @@ lerna-debug.log
 tsconfig.tsbuildinfo
 #proto
 proto/vendor
+crates/zk/headstash/
+__pycache__
+.claude
+_scripts
