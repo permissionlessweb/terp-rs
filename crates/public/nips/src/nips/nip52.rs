@@ -151,10 +151,8 @@ impl EventType {
     }
 }
 
-// ==================== NIP-52 Calendar Event (kind:31922/31923) ====================
-
 /// NIP-52 Calendar Event metadata
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq)]
 pub struct CalendarEventMetadata {
     /// d-tag: short unique identifier
     pub d_tag: String,
