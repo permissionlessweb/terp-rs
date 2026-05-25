@@ -1,7 +1,45 @@
-// encrypted payload: https://nips.nostr.com/44
-
-//! NIP-44 v2: Encrypted Payloads (Versioned)
-//! https://github.com/nostr-protocol/nips/blob/master/44.md
+//! ## NIP-44 Encrypted Payloads (v2)
+//!
+//! This library provides first-class support for **NIP-44 version 2** encrypted payloads.
+//! All `NipMetadata` implementations can easily encrypt/decrypt their `content()` field.
+//!
+//! ### Quick Start Example
+//!
+//! ```rust
+//! use cw721_nips::nips::nip44;
+//! use secp256k1::{SecretKey, XOnlyPublicKey};
+//! use cw721_nips::{NipMetadata, RawNostrEvent, NostrEventBuilder};
+//!
+//! # fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! // 1. Your keys
+//! let my_privkey = SecretKey::from_slice(&[0x01; 32])?;
+//! let their_pubkey = XOnlyPublicKey::from_slice(&[0x02; 32])?;
+//!
+//! // 2. Create metadata (any NIP type)
+//! let mut metadata = MyCalendarEvent { /* ... */ };
+//!
+//! // 3. Encrypt content for recipient (before building event)
+//! metadata.encrypt_content_for(&my_privkey, &their_pubkey)?;
+//!
+//! // 4. Build signed Nostr event (content is now encrypted)
+//! let event = NostrEventBuilder::build(&metadata, &PubKey::new(/*...*/)?, 1730000000)?;
+//!
+//! // 5. Recipient decrypts
+//! let decrypted = metadata.decrypt_content_from(&their_privkey, &my_pubkey)?;
+//! println!("Decrypted: {}", decrypted);
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ### Features
+//!
+//! - Full NIP-44 v2 spec compliance (ECDH + HKDF + ChaCha20 + HMAC-SHA256 + custom padding)
+//! - Automatic integration with `NipMetadata` via extension trait
+//! - Constant-time MAC verification
+//! - Comprehensive test vectors from official NIP-44 suite
+//! - Zero-allocation where possible
+//!
+//! See [`nip44`] module for low-level primitives.
 
 use base64::Engine;
 use chacha20::cipher::{KeyIvInit, StreamCipher};
@@ -12,8 +50,62 @@ use rand_core::{OsRng, RngCore};
 use secp256k1::{ecdh::shared_secret_point, Parity, PublicKey, SecretKey, XOnlyPublicKey};
 use sha2::Sha256;
 use std::convert::TryInto;
-use crate::NipResult;
 
+// In src/nips/mod.rs or directly in lib.rs
+/// Extension trait for easy NIP-44 encryption on any metadata type
+pub trait NipMetadataEncrypt: crate::NipMetadata {
+    /// Encrypt the content field for a specific recipient before building event
+    fn encrypt_content_for(
+        &mut self,
+        sender_privkey: &secp256k1::SecretKey,
+        recipient_pubkey: &secp256k1::XOnlyPublicKey,
+    ) -> NipResult<()> {
+        let conv_key = get_conversation_key(sender_privkey, recipient_pubkey);
+        let plaintext = self.content();
+        let encrypted = encrypt(&conv_key, &plaintext)?;
+        self.set_encrypted_content(encrypted);
+        Ok(())
+    }
+
+    /// Decrypt content received from sender
+    fn decrypt_content_from(
+        &self,
+        recipient_privkey: &secp256k1::SecretKey,
+        sender_pubkey: &secp256k1::XOnlyPublicKey,
+    ) -> NipResult<String> {
+        let conv_key = get_conversation_key(recipient_privkey, sender_pubkey);
+        let payload = self.encrypted_content();
+        decrypt(&conv_key, payload).map_err(Into::into)
+    }
+
+    /// Get current (possibly encrypted) content
+    fn encrypted_content(&self) -> &str;
+
+    /// Set encrypted payload as content
+    fn set_encrypted_content(&mut self, payload: String);
+}
+
+/// A derive-style macro to implement `NipMetadataEncrypt` for types where
+/// `encrypted_content()` maps to `.content` (the common case).
+///
+/// # Example
+/// ```ignore
+/// impl_nip44_encrypt_content!(MyCalendarEvent);
+/// ```
+#[macro_export]
+macro_rules! impl_nip44_encrypt_content {
+    ($ty:ty) => {
+        impl $crate::nips::nip44::NipMetadataEncrypt for $ty {
+            fn encrypted_content(&self) -> &str {
+                &self.content
+            }
+
+            fn set_encrypted_content(&mut self, payload: String) {
+                self.content = payload;
+            }
+        }
+    };
+}
 
 /// Re-export for convenience
 pub type Nip44Result<T> = Result<T, Nip44Error>;
@@ -198,8 +290,13 @@ pub fn decrypt_for_event(
 
 use thiserror::Error;
 
+use crate::NipResult;
+
 #[derive(Debug, Error)]
 pub enum Nip44Error {
+    #[error("Base64 decode: {0}")]
+    NipError(#[from] crate::NipError),
+
     #[error("Base64 decode: {0}")]
     Base64Decode(#[from] base64::DecodeError),
 

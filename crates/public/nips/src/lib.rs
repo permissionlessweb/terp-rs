@@ -48,6 +48,8 @@ pub use types::*;
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
+use crate::nips::nip73::Nip73Ext as _;
+
 // ==================== Core Traits ====================
 
 /// Marker trait for NIP event kinds
@@ -189,6 +191,9 @@ impl NostrEventBuilder {
         metadata.validate()?;
 
         let mut tags = metadata.to_tags();
+
+        // NIP-73: Add external content ID tags
+        tags = metadata.with_external_ids_tags(tags);
 
         // Add d-tag for addressable events
         if let Some(d_tag) = metadata.d_tag() {

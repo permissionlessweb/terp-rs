@@ -93,8 +93,8 @@ impl NostrExt for RawNostrEvent {
 impl NostrExt for NostrExtension {
     fn location(&self) -> bool {
         match self {
-            NostrExtension::OnChain(raw_nostr_event) => true,
-            NostrExtension::OffChain { cid, kind, gateway } => false,
+            NostrExtension::OnChain(..) => true,
+            NostrExtension::OffChain { .. } => false,
         }
     }
 

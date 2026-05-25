@@ -74,6 +74,12 @@ fn main() -> anyhow::Result<()> {
                 tz_out: entry.tz_out.clone(),
                 tz_heuristics: entry.tz_heuristics.clone(),
                 tz_episodes: entry.tz_episodes.clone(),
+                unified: cli.unified,
+                unified_base: if cli.unified {
+                    Some(config_dir.to_path_buf())
+                } else {
+                    None
+                },
             };
 
             let project_steps = entry
@@ -111,6 +117,12 @@ fn main() -> anyhow::Result<()> {
         tz_out: None,
         tz_heuristics: None,
         tz_episodes: None,
+        unified: cli.unified,
+        unified_base: if cli.unified {
+            Some(std::env::current_dir().unwrap_or_default())
+        } else {
+            None
+        },
     };
 
     let ctx = build_context(&cli.workspace_root, &overrides, cli.output_dir.clone())?;

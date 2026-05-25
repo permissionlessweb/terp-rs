@@ -16,7 +16,7 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::marker::PhantomData;
 
-use crate::{nips, NipKind, NipMetadata, NostrExt, NostrExtension, RawNostrEvent};
+use crate::{nips, NipKind, NipMetadata, RawNostrEvent};
 
 /// Core trait for Nostr-compatible cw721 extensions.
 ///
@@ -64,7 +64,8 @@ impl<T: NipMetadata> NostrCw721Ext for T {
         Ok(vec![
             Attribute {
                 key: "nip_kind".to_string(),
-                value: to_json_binary(&self.kind().kind_value()).map_err(|e| Cw721ContractError::Std(e))?,
+                value: to_json_binary(&self.kind().kind_value())
+                    .map_err(|e| Cw721ContractError::Std(e))?,
             },
             Attribute {
                 key: "nip_data".to_string(),
@@ -74,17 +75,19 @@ impl<T: NipMetadata> NostrCw721Ext for T {
     }
 
     fn from_attributes(attrs: &[Attribute]) -> Result<Self, Cw721ContractError> {
-        let data_attr = attrs.iter().find(|a| a.key == "nip_data").ok_or_else(|| {
-            Cw721ContractError::Std(StdError::msg("Missing nip_data attribute"))
-        })?;
+        let data_attr = attrs
+            .iter()
+            .find(|a| a.key == "nip_data")
+            .ok_or_else(|| Cw721ContractError::Std(StdError::msg("Missing nip_data attribute")))?;
 
         Self::from_storage_binary(&data_attr.value)
     }
 
     fn validate_cw721(&self, block_time: u64) -> Result<(), Cw721ContractError> {
         // NIP-specific validation
-        self.validate()
-            .map_err(|e| Cw721ContractError::Std(StdError::msg(format!("NIP validation failed: {:?}", e))))?;
+        self.validate().map_err(|e| {
+            Cw721ContractError::Std(StdError::msg(format!("NIP validation failed: {:?}", e)))
+        })?;
 
         // Override in specific impls for cw721-specific rules
         let _ = block_time;
@@ -130,7 +133,11 @@ impl MetadataExt {
     }
 
     /// Create with event tracking
-    pub fn with_event<T: NostrCw721Ext>(metadata: &T, event_id: String, author: String) -> StdResult<Self> {
+    pub fn with_event<T: NostrCw721Ext>(
+        metadata: &T,
+        event_id: String,
+        author: String,
+    ) -> StdResult<Self> {
         Ok(Self {
             kind: metadata.kind().kind_value(),
             data: metadata.to_storage_binary()?,
@@ -162,7 +169,11 @@ impl MetadataExt {
 
     /// Add an indexed field for querying.
     /// Values are JSON-encoded automatically.
-    pub fn with_index(mut self, key: impl Into<String>, value: impl Into<String>) -> StdResult<Self> {
+    pub fn with_index(
+        mut self,
+        key: impl Into<String>,
+        value: impl Into<String>,
+    ) -> StdResult<Self> {
         self.indexed.push(Attribute {
             key: key.into(),
             value: to_json_binary(&value.into())?,
@@ -233,9 +244,7 @@ impl<T: NostrCw721Ext> std::fmt::Debug for TypedMetadataExt<T> {
 
 impl<T: NostrCw721Ext> PartialEq for TypedMetadataExt<T> {
     fn eq(&self, other: &Self) -> bool {
-        self.data == other.data
-            && self.event_id == other.event_id
-            && self.author == other.author
+        self.data == other.data && self.event_id == other.event_id && self.author == other.author
     }
 }
 
@@ -556,9 +565,7 @@ impl<T: NostrCw721Ext> FromAttributesState for TypedMetadataExt<T> {
         }
 
         if data.is_empty() {
-            return Err(Cw721ContractError::Std(StdError::msg(
-                "Missing nip_data",
-            )));
+            return Err(Cw721ContractError::Std(StdError::msg("Missing nip_data")));
         }
 
         // Validate it decodes correctly
@@ -656,9 +663,7 @@ impl MetadataExtBuilder {
 
 pub mod nip52 {
     use super::*;
-    use crate::nips::nip52::{
-        CalendarEventMetadata, CalendarMetadata, RSVPMetadata,
-    };
+    use crate::nips::nip52::{CalendarEventMetadata, CalendarMetadata, RSVPMetadata};
 
     /// Type-safe calendar event extension (kind 31922 or 31923).
     pub type CalendarEventExt = TypedMetadataExt<CalendarEventMetadata>;

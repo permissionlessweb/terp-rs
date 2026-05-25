@@ -222,7 +222,52 @@ gen-zod-all:
 gen-go-all:
     cargo run -- --config gen-tools.yaml --all --steps go-gen-tools
 
-# ── Full lifecycle ─────────────────────────────────────────────────────────
+# ── Unified output mode (all artifacts → terp-api/<lang>/) ──────────────────
+
+# Run default pipeline on current dir, output to terp-api/<lang>/
+gen-unified:
+    cargo run -- --steps all --unified
+
+# Run all configured projects, output all to terp-api/<lang>/ under gen-tools root
+gen-unified-all:
+    cargo run -- --config gen-tools.yaml --all --unified --skip-schema
+
+# Unified, per-step variants
+gen-unified-schema:
+    cargo run -- --steps schema --unified
+
+gen-unified-ts:
+    cargo run -- --steps ts-codegen --unified
+
+gen-unified-proto:
+    cargo run -- --steps proto-gen --unified
+
+gen-unified-python:
+    cargo run -- --steps python-gen --unified
+
+gen-unified-zod:
+    cargo run -- --steps zod-gen --unified
+
+gen-unified-go:
+    cargo run -- --steps go-gen --unified
+
+gen-unified-readme:
+    cargo run -- --steps readme-api --unified
+
+gen-unified-openapi:
+    cargo run -- --steps openapi --unified
+
+gen-unified-trailmark:
+    cargo run -- --steps trailmark --unified
+
+gen-unified-tensorzero:
+    cargo run -- --steps tensorzero --unified
+
+gen-unified-all-trailmark:
+    cargo run -- --config gen-tools.yaml --all --unified --steps trailmark
+
+gen-unified-all-tensorzero:
+    cargo run -- --config gen-tools.yaml --all --unified --steps tensorzero
 
 # Full cycle: fmt -> check -> test -> lint -> build-release
 all: fmt check test lint build-release

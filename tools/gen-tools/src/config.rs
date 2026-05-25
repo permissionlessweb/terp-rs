@@ -116,6 +116,25 @@ pub struct Cli {
     /// Verbose output.
     #[arg(short = 'v', long)]
     pub verbose: bool,
+
+    /// Generate ALL outputs into a single terp-api/<lang>/ directory
+    /// within the gen-tools crate root.
+    ///
+    /// When set:
+    ///   - ts-codegen → terp-api/ts/
+    ///   - Python     → terp-api/python/
+    ///   - Zod        → terp-api/zod/
+    ///   - Proto      → terp-api/proto/
+    ///   - Go         → terp-api/go/
+    ///   - OpenAPI    → terp-api/openapi/
+    ///   - TZ         → terp-api/tz/
+    ///   - Readme     → terp-api/readme/
+    ///
+    /// This flag overrides all per-project output dirs and consolidates
+    /// all generated artifacts into one place. Compatible with justfile
+    /// commands (e.g. `just gen-unified-ts`).
+    #[arg(long, short = 'u')]
+    pub unified: bool,
 }
 
 // ---------------------------------------------------------------------------
@@ -318,6 +337,12 @@ pub struct ProjectOverrides {
     pub tz_out: Option<PathBuf>,
     pub tz_heuristics: Option<PathBuf>,
     pub tz_episodes: Option<PathBuf>,
+    /// When true, all output dirs resolve against unified_base
+    /// instead of workspace_root. All generated artifacts go into
+    /// a single terp-api/<lang>/ directory.
+    pub unified: bool,
+    /// Base path for unified output dirs (the gen-tools crate root).
+    pub unified_base: Option<PathBuf>,
 }
 
 impl Cli {
@@ -337,6 +362,12 @@ impl Cli {
             tz_out: None,
             tz_heuristics: None,
             tz_episodes: None,
+            unified: self.unified,
+            unified_base: if self.unified {
+                Some(std::env::current_dir().unwrap_or_default())
+            } else {
+                None
+            },
         };
         build_context(&workspace_root, &overrides, self.output_dir)
     }
@@ -350,16 +381,51 @@ pub fn build_context(
     overrides: &ProjectOverrides,
     output_dir_override: Option<PathBuf>,
 ) -> anyhow::Result<GenerationContext> {
+    // In unified mode, all output dirs resolve against unified_base
+    // (the gen-tools crate root) instead of workspace_root.
+    let root_for_output = if overrides.unified {
+        overrides
+            .unified_base
+            .as_deref()
+            .unwrap_or(workspace_root)
+    } else {
+        workspace_root
+    };
+
     let output_dir = output_dir_override
         .clone()
-        .unwrap_or_else(|| workspace_root.join("generated"));
+        .unwrap_or_else(|| root_for_output.join("terp-api"));
 
-    let ts_out = resolve_dir(overrides.ts_out.as_ref(), workspace_root, &["terp-api", "ts"]);
-    let py_out = resolve_dir(overrides.py_out.as_ref(), workspace_root, &["terp-api", "python"]);
-    let zod_out = resolve_dir(overrides.zod_out.as_ref(), workspace_root, &["terp-api", "zod"]);
-    let proto_out = resolve_dir(overrides.proto_out.as_ref(), workspace_root, &["terp-api", "proto"]);
-    let go_out = resolve_dir(overrides.go_out.as_ref(), workspace_root, &["terp-api", "go"]);
-    let openapi_out = resolve_dir(overrides.openapi_out.as_ref(), workspace_root, &["terp-api", "openapi"]);
+    let ts_out = resolve_dir(
+        overrides.ts_out.as_ref(),
+        root_for_output,
+        &["terp-api", "ts"],
+    );
+    let py_out = resolve_dir(
+        overrides.py_out.as_ref(),
+        root_for_output,
+        &["terp-api", "python"],
+    );
+    let zod_out = resolve_dir(
+        overrides.zod_out.as_ref(),
+        root_for_output,
+        &["terp-api", "zod"],
+    );
+    let proto_out = resolve_dir(
+        overrides.proto_out.as_ref(),
+        root_for_output,
+        &["terp-api", "proto"],
+    );
+    let go_out = resolve_dir(
+        overrides.go_out.as_ref(),
+        root_for_output,
+        &["terp-api", "go"],
+    );
+    let openapi_out = resolve_dir(
+        overrides.openapi_out.as_ref(),
+        root_for_output,
+        &["terp-api", "openapi"],
+    );
 
     let tz_out = overrides
         .tz_out
@@ -368,12 +434,13 @@ pub fn build_context(
             if p.is_absolute() {
                 p.clone()
             } else {
-                workspace_root.join(p)
+                root_for_output.join(p)
             }
         })
         .or_else(|| {
-            // Default TZ outputs to terp-api/tz within the workspace
-            Some(workspace_root.join("terp-api").join("tz"))
+            // Default TZ outputs to terp-api/tz (relative to root_for_output
+            // in unified mode, or workspace_root otherwise)
+            Some(root_for_output.join("terp-api").join("tz"))
         });
 
     let proto_modules: Vec<String> = overrides

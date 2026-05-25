@@ -138,9 +138,34 @@ pub type UnixTimestamp = u64;
 
 /// Tag array - each tag is a vector of strings
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Tag(Vec<String>);
+pub struct Tag(pub Vec<String>);
 
 impl Tag {
+    // ==================== NIP-73 Helpers ====================
+
+    /// Add an `i` + `k` tag pair for external content ID (NIP-73)
+    pub fn i(id: impl Into<String>, kind: impl Into<String>) -> (Self, Self) {
+        (
+            Tag(vec!["i".to_string(), id.into()]),
+            Tag(vec!["k".to_string(), kind.into()]),
+        )
+    }
+
+    /// Add `i` tag with optional URL hint
+    pub fn i_with_hint(
+        id: impl Into<String>,
+        kind: impl Into<String>,
+        url_hint: Option<String>,
+    ) -> Vec<Self> {
+        let mut tags = vec![
+            Tag(vec!["i".to_string(), id.into()]),
+            Tag(vec!["k".to_string(), kind.into()]),
+        ];
+        if let Some(url) = url_hint {
+            tags.push(Tag(vec!["i".to_string(), url])); // second arg to i-tag
+        }
+        tags
+    }
     pub fn new(items: Vec<String>) -> Self {
         Self(items)
     }
@@ -218,6 +243,10 @@ impl Tag {
     /// Create an "alt" tag (alternative description)
     pub fn alt(value: impl Into<String>) -> Self {
         Self(vec![String::from("alt"), value.into()])
+    }
+
+    pub fn k(kind: impl Into<u16>) -> Self {
+        Self(vec!["k".to_string(), kind.into().to_string()])
     }
 
     /// Create a "g" tag (geohash)

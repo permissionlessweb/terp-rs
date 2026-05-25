@@ -7,6 +7,35 @@ pub struct TagBuilder {
 }
 
 impl TagBuilder {
+    pub fn add(mut self, tag: Tag) -> Self {
+        self.tags.push(tag);
+        self
+    }
+
+    pub fn extend(mut self, tags: Vec<Tag>) -> Self {
+        self.tags.extend(tags);
+        self
+    }
+
+    // NIP-73 convenience
+    pub fn external_id(mut self, id: impl Into<String>, k: impl Into<String>) -> Self {
+        let (i_tag, k_tag) = Tag::i(id, k);
+        self.tags.push(i_tag);
+        self.tags.push(k_tag);
+        self
+    }
+
+    pub fn external_id_with_hint(
+        mut self,
+        id: impl Into<String>,
+        k: impl Into<String>,
+        url_hint: Option<impl Into<String>>,
+    ) -> Self {
+        let mut extra = Tag::i_with_hint(id, k, url_hint.map(Into::into));
+        self.tags.append(&mut extra);
+        self
+    }
+
     pub fn new() -> Self {
         Self::default()
     }
@@ -118,7 +147,10 @@ mod tests {
             .e_with_relay("event123", "wss://relay.example.com")
             .build();
         assert_eq!(tags.len(), 1);
-        assert_eq!(tags[0], Tag::e_with_relay("event123", "wss://relay.example.com"));
+        assert_eq!(
+            tags[0],
+            Tag::e_with_relay("event123", "wss://relay.example.com")
+        );
     }
 
     #[test]
@@ -127,7 +159,10 @@ mod tests {
             .e_full("event123", "wss://relay.example.com", "pubkey123")
             .build();
         assert_eq!(tags.len(), 1);
-        assert_eq!(tags[0], Tag::e_full("event123", "wss://relay.example.com", "pubkey123"));
+        assert_eq!(
+            tags[0],
+            Tag::e_full("event123", "wss://relay.example.com", "pubkey123")
+        );
     }
 
     #[test]
@@ -143,14 +178,15 @@ mod tests {
             .p_with_relay("pubkey123", "wss://relay.example.com")
             .build();
         assert_eq!(tags.len(), 1);
-        assert_eq!(tags[0], Tag::p_with_relay("pubkey123", "wss://relay.example.com"));
+        assert_eq!(
+            tags[0],
+            Tag::p_with_relay("pubkey123", "wss://relay.example.com")
+        );
     }
 
     #[test]
     fn test_a_tag() {
-        let tags = TagBuilder::new()
-            .a(30023, "pubkey123", "dvalue")
-            .build();
+        let tags = TagBuilder::new().a(30023, "pubkey123", "dvalue").build();
         assert_eq!(tags.len(), 1);
         assert_eq!(tags[0], Tag::a(30023, "pubkey123", "dvalue"));
     }
@@ -161,12 +197,10 @@ mod tests {
             .a_with_relay(30023, "pubkey123", "dvalue", "wss://relay.example.com")
             .build();
         assert_eq!(tags.len(), 1);
-        assert_eq!(tags[0], Tag::a_with_relay(
-            30023,
-            "pubkey123",
-            "dvalue",
-            "wss://relay.example.com",
-        ));
+        assert_eq!(
+            tags[0],
+            Tag::a_with_relay(30023, "pubkey123", "dvalue", "wss://relay.example.com",)
+        );
     }
 
     #[test]

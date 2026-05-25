@@ -966,6 +966,16 @@ impl NipMetadata for RSVPMetadata {
     }
 }
 
+impl super::nip44::NipMetadataEncrypt for CalendarEventMetadata {
+    fn encrypted_content(&self) -> &str {
+        &self.content
+    }
+
+    fn set_encrypted_content(&mut self, payload: String) {
+        self.content = payload;
+    }
+}
+
 // ==================== NIP-52 Helper Functions ====================
 
 /// Generate a d-tag for a calendar event
