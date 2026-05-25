@@ -12,11 +12,11 @@ use cw721::Attribute;
 use schemars::gen::SchemaGenerator;
 use schemars::schema::{InstanceType, ObjectValidation, Schema, SchemaObject};
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::marker::PhantomData;
 
-use crate::{nips, NipKind, NipMetadata};
+use crate::{nips, NipKind, NipMetadata, NostrExt, NostrExtension, RawNostrEvent};
 
 /// Core trait for Nostr-compatible cw721 extensions.
 ///
@@ -692,5 +692,47 @@ pub mod nip52 {
                 0
             }
         }
+    }
+}
+
+/// Builder trait for constructing on-chain or off-chain cw721
+/// Nostr metadata extensions.
+///
+/// Every `NipMetadata` type gets a blanket impl that produces the
+/// universal [`MetadataExt`]. Concrete types can override to return
+/// a contract-specific extension type.
+pub trait NostrCw721Builder {
+    /// The output extension type.
+    type Extension: Serialize + DeserializeOwned + Clone;
+
+    /// Build on-chain metadata from a full Nostr event.
+    fn onchain_metadata(event: &RawNostrEvent) -> StdResult<Self::Extension>;
+
+    /// Build off-chain metadata with a CID pointer.
+    fn offchain_metadata(cid: String, kind: u16) -> StdResult<Self::Extension>;
+}
+
+/// Concrete impl for [`MetadataExt`] itself: constructs `Self` directly.
+impl NostrCw721Builder for MetadataExt {
+    type Extension = Self;
+
+    fn onchain_metadata(event: &RawNostrEvent) -> StdResult<Self> {
+        Ok(Self {
+            kind: event.kind,
+            data: to_json_binary(event)?,
+            event_id: Some(event.id.clone()),
+            author: Some(event.pubkey.clone()),
+            indexed: vec![],
+        })
+    }
+
+    fn offchain_metadata(cid: String, kind: u16) -> StdResult<Self> {
+        Ok(Self {
+            kind,
+            data: to_json_binary(&cid)?,
+            event_id: None,
+            author: None,
+            indexed: vec![],
+        })
     }
 }

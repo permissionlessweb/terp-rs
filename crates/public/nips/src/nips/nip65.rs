@@ -1,0 +1,1 @@
+// dedicate https://nips.nostr.com/65 for dao text record of relayer.

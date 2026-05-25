@@ -66,3 +66,8 @@ With `ict-rs`, we manage local nostr relayer and client containers alongside any
 | NIP-59 | Gift Wrap | 🎁 | Encrypted content |
 | NIP-65 | Relay List Metadata | 📋 | Relay management |
 | NIP-70 | Protected Events | 🔒 | Access control | -->
+
+
+## BUDS
+
+- https://github.com/hzrd149/blossom/blob/master/buds/01.md

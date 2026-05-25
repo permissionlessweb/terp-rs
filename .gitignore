@@ -25,4 +25,8 @@ proto/vendor
 crates/zk/headstash/
 __pycache__
 .claude
-_scripts
+.dep-mode
+dep-scrape.json
+dep-graph.dot
+dep-graph.svg
+REPORT.md

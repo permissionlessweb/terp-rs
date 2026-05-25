@@ -1,0 +1,41 @@
+{
+  "properties": {
+    "code_id": {
+      "description": "On-chain code ID",
+      "type": "integer"
+    },
+    "funds": {
+      "description": "Coins to send with instantiation",
+      "items": {
+        "properties": {
+          "amount": {
+            "type": "string"
+          },
+          "denom": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "denom",
+          "amount"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "label": {
+      "description": "Human-readable label",
+      "type": "string"
+    },
+    "msg": {
+      "description": "Instantiate message fields matching the contract schema",
+      "type": "object"
+    }
+  },
+  "required": [
+    "code_id",
+    "label",
+    "msg"
+  ],
+  "type": "object"
+}

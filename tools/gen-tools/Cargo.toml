@@ -1,0 +1,27 @@
+[workspace]
+
+[package]
+name = "gen-tools"
+version = "0.1.0"
+edition = "2021"
+description = "Unified Rust runtime for CosmWasm contract type generation: schema, TS-codegen, proto, Python, Zod, Go, Trailmark, OpenAPI, README docs"
+
+[[bin]]
+name = "gen-tools"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+toml = "0.8"
+clap = { version = "4", features = ["derive", "env"] }
+walkdir = "2"
+glob = "0.3"
+log = "0.4"
+env_logger = "0.11"
+tempfile = "3"
+tera = "1"              # template engine for OpenAPI, README generation
+pathdiff = "0.2"
+regex = "1"

@@ -1,0 +1,57 @@
+# ── gen-tools.yaml — Terp Network contract type generation config ────────
+#
+# Each project is a CosmWasm workspace within the terp-core monorepo.
+# Run:   gen-tools --config gen-tools.yaml --all
+# Or:    gen-tools --config gen-tools.yaml --project <name>
+#
+# base_path resolves from the directory this file lives in
+# (crates/terp-rs/tools/gen-tools/) up to the monorepo root (4 levels up).
+#
+# ALL output directories default to terp-api/<lang> within each project's
+# workspace root. Per-project overrides are removed to let these defaults
+# apply consistently. TZ outputs now go into terp-api/tz/ as well.
+
+base_path: "../../../.."
+
+projects:
+
+  - name: dao-contracts
+    path: "crates/dao-contracts"
+    proto_modules: "terp,cosmwasm,cosmos,ibc"
+    go_out: "terp-api/go-types"     # dedicated folder for dao-contracts auto-types
+    tz_heuristics: "../terp-rs/tools/gen-tools/tz-heuristics.toml"
+    tz_out: "terp-api/tz"
+
+  - name: abstract
+    path: "crates/abstract/framework"
+    tz_heuristics: "../../terp-rs/tools/gen-tools/tz-heuristics.toml"
+    tz_out: "terp-api/tz"
+
+  - name: terp-account-billboards
+    path: "crates/terp-account-billboards"
+    tz_heuristics: "../terp-rs/tools/gen-tools/tz-heuristics.toml"
+    tz_out: "terp-api/tz"
+
+  - name: cw-infuser
+    path: "crates/cw-infuser"
+    tz_heuristics: "../terp-rs/tools/gen-tools/tz-heuristics.toml"
+    tz_out: "terp-api/tz"
+
+  - name: shitstrap
+    path: "crates/shitstrap"
+    tz_heuristics: "../terp-rs/tools/gen-tools/tz-heuristics.toml"
+    tz_out: "terp-api/tz"
+
+  - name: polytone
+    path: "crates/polytone"
+    tz_heuristics: "../terp-rs/tools/gen-tools/tz-heuristics.toml"
+    tz_out: "terp-api/tz"
+
+  - name: cw-ica-controller
+    path: "crates/cw-ica-controller"
+    tz_heuristics: "../terp-rs/tools/gen-tools/tz-heuristics.toml"
+    tz_out: "terp-api/tz"
+
+  - name: akash-deploy-rs
+    path: "crates/akash-deploy-rs"
+    steps: "proto,python,go"

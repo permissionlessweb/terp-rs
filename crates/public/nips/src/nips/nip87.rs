@@ -1,0 +1,1 @@
+// https://nips.nostr.com/87

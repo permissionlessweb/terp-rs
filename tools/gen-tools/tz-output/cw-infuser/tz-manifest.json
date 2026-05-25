@@ -1,0 +1,133 @@
+{
+  "categories": [
+    "admin",
+    "cw",
+    "dao",
+    "execute",
+    "ibc",
+    "instantiate",
+    "query"
+  ],
+  "functions": [
+    {
+      "description": "cw-infuser",
+      "gateway_url": "http://localhost:3000/chat",
+      "name": "cw_infuser_cw_infuser",
+      "tags": [
+        "general"
+      ],
+      "template_paths": {
+        "args_schema": "functions/cw_infuser_cw_infuser/args_schema.json",
+        "system": "functions/cw_infuser_cw_infuser/system.minijinja",
+        "user": "functions/cw_infuser_cw_infuser/user.minijinja"
+      }
+    },
+    {
+      "description": "cw-infuser",
+      "gateway_url": "http://localhost:3000/chat",
+      "name": "cw_infuser_cw_infuser",
+      "tags": [
+        "general"
+      ],
+      "template_paths": {
+        "args_schema": "functions/cw_infuser_cw_infuser/args_schema.json",
+        "system": "functions/cw_infuser_cw_infuser/system.minijinja",
+        "user": "functions/cw_infuser_cw_infuser/user.minijinja"
+      }
+    },
+    {
+      "description": "cw-infusion-minter",
+      "gateway_url": "http://localhost:3000/chat",
+      "name": "cw_infuser_cw_infusion_minter",
+      "tags": [
+        "execute"
+      ],
+      "template_paths": {
+        "args_schema": "functions/cw_infuser_cw_infusion_minter/args_schema.json",
+        "system": "functions/cw_infuser_cw_infusion_minter/system.minijinja",
+        "user": "functions/cw_infuser_cw_infusion_minter/user.minijinja"
+      }
+    },
+    {
+      "description": "cw721-svg",
+      "gateway_url": "http://localhost:3000/chat",
+      "name": "cw721_svg_cw721_svg",
+      "tags": [
+        "cw"
+      ],
+      "template_paths": {
+        "args_schema": "functions/cw721_svg_cw721_svg/args_schema.json",
+        "system": "functions/cw721_svg_cw721_svg/system.minijinja",
+        "user": "functions/cw721_svg_cw721_svg/user.minijinja"
+      }
+    },
+    {
+      "description": "cw-svg-minter",
+      "gateway_url": "http://localhost:3000/chat",
+      "name": "cw721_svg_minter_cw_svg_minter",
+      "tags": [
+        "execute"
+      ],
+      "template_paths": {
+        "args_schema": "functions/cw721_svg_minter_cw_svg_minter/args_schema.json",
+        "system": "functions/cw721_svg_minter_cw_svg_minter/system.minijinja",
+        "user": "functions/cw721_svg_minter_cw_svg_minter/user.minijinja"
+      }
+    },
+    {
+      "description": "whitelist-mtree",
+      "gateway_url": "http://localhost:3000/chat",
+      "name": "whitelist_merkletree_whitelist_mtree",
+      "tags": [
+        "general"
+      ],
+      "template_paths": {
+        "args_schema": "functions/whitelist_merkletree_whitelist_mtree/args_schema.json",
+        "system": "functions/whitelist_merkletree_whitelist_mtree/system.minijinja",
+        "user": "functions/whitelist_merkletree_whitelist_mtree/user.minijinja"
+      }
+    },
+    {
+      "description": "Instantiate a CosmWasm contract with a code_id, label, and init msg",
+      "gateway_url": "http://localhost:3000/chat",
+      "name": "instantiate_contract",
+      "tags": [
+        "instantiate"
+      ],
+      "template_paths": {
+        "args_schema": "functions/instantiate_contract/args_schema.json",
+        "system": "functions/instantiate_contract/system.minijinja",
+        "user": "functions/instantiate_contract/user.minijinja"
+      }
+    },
+    {
+      "description": "Query a CosmWasm contract at a given address with a query message",
+      "gateway_url": "http://localhost:3000/chat",
+      "name": "query_contract",
+      "tags": [
+        "query"
+      ],
+      "template_paths": {
+        "args_schema": "functions/query_contract/args_schema.json",
+        "system": "functions/query_contract/system.minijinja",
+        "user": "functions/query_contract/user.minijinja"
+      }
+    }
+  ],
+  "functions_count": 8,
+  "generated_at": "02:18:05 UTC",
+  "generator": "gen-tools/tensorzero",
+  "model": {
+    "model_name": "gpt-4o",
+    "name": "cosmwasm-default",
+    "provider": "openai",
+    "routing": [
+      "default"
+    ]
+  },
+  "targets": [
+    "terpcli",
+    "terpd"
+  ],
+  "version": "1"
+}
