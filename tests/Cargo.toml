@@ -30,7 +30,7 @@ terp-account-scripts = { path = "../../terp-account-billboards/scripts" }
 zk-test-press = { path = "../../headstash/test-press", features = ["interface"] }
 
 # Container lifecycle
-ict-rs = { path = "../../ict-rs/ict-rs", features = ["docker", "terp", "testing"] }
+ict-rs = { path = "../../ict-rs/ict-rs", features = ["docker", "terp", "testing", "nostr"] }
 cw4 = { path = "../../cw-plus/packages/cw4" }
 
 # CLI + runtime

@@ -30,6 +30,8 @@ pub enum NipError {
     Nip15(String),
     #[error("NIP-52 error: {0}")]
     Nip52(String),
+    #[error("NIP-77: {0}")]
+    Nip77(String),
     #[error("NIP-87: {0}")]
     Nip87(String),
     #[error("Crypto error: {0}")]
