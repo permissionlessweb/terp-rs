@@ -1,3 +1,0 @@
-Execute: {{function_name}}({{args | tojson}})
-
-Description: Instantiate a CosmWasm contract with a code_id, label, and init msg

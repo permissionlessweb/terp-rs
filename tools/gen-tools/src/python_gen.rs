@@ -7,7 +7,8 @@
 use crate::config::GenerationContext;
 use crate::resolver::SourceResolver;
 use crate::{GenerationResult, Generator};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
+use serde_json::Value;
 
 pub struct PythonGenGenerator;
 
@@ -62,6 +63,39 @@ impl Generator for PythonGenGenerator {
     }
 }
 
+/// Recursively collect all type definitions from a merged schema.
+fn collect_schemas(merged: &Value) -> Vec<(String, Value)> {
+    let mut schemas = Vec::new();
+
+    // Top-level message types: instantiate, execute, query, migrate, sudo
+    let msg_keys = ["instantiate", "execute", "query", "migrate", "sudo"];
+    for key in &msg_keys {
+        if let Some(msg_val) = merged.get(*key) {
+            if !msg_val.is_null() {
+                schemas.push((key.to_string(), msg_val.clone()));
+            }
+        }
+    }
+
+    // Response types
+    if let Some(responses) = merged.get("responses").and_then(|v| v.as_object()) {
+        for (qname, resp_schema) in responses {
+            schemas.push((qname.clone(), resp_schema.clone()));
+        }
+    }
+
+    // Definitions in $defs or definitions
+    for defs_key in &["$defs", "definitions"] {
+        if let Some(defs) = merged.get(*defs_key).and_then(|v| v.as_object()) {
+            for (def_name, def_schema) in defs {
+                schemas.push((def_name.clone(), def_schema.clone()));
+            }
+        }
+    }
+
+    schemas
+}
+
 fn generate_python_module(
     schemas: &BTreeMap<String, serde_json::Value>,
     contract_name: &str,
@@ -75,92 +109,323 @@ fn generate_python_module(
     output.push_str("from __future__ import annotations\n\n");
     output.push_str("import json\n");
     output.push_str("from dataclasses import dataclass, field, asdict\n");
-    output.push_str("from typing import Any, List, Optional\n\n");
+    output.push_str("from typing import Any, Dict, List, Optional, Union\n\n");
 
-    for (type_name, schema) in schemas {
+    // Collect all type schemas from the merged contract schema
+    let mut all_schemas: Vec<(String, Value)> = Vec::new();
+    for (_stem, merged) in schemas {
+        all_schemas.extend(collect_schemas(merged));
+    }
+
+    // Track which top-level types we've generated
+    let mut generated_types = Vec::new();
+
+    for (type_name, schema) in &all_schemas {
         let class_name = schema
             .get("title")
             .and_then(|v| v.as_str())
             .unwrap_or(type_name);
-        let clean_name = class_name
-            .split(|c: char| !c.is_alphanumeric())
-            .filter(|s| !s.is_empty())
-            .collect::<Vec<_>>()
-            .join("");
+        let clean_name = clean_py_name(class_name);
+
+        if generated_types.contains(&clean_name) {
+            continue;
+        }
+        generated_types.push(clean_name.clone());
 
         if let Some(desc) = schema.get("description").and_then(|v| v.as_str()) {
             output.push_str(&format!("# {}\n", desc));
         }
 
-        match schema.get("type").and_then(|v| v.as_str()) {
-            Some("object") => {
-                output.push_str(&format!("@dataclass\nclass {}:\n", clean_name));
-                if let Some(props) = schema.get("properties").and_then(|v| v.as_object()) {
-                    for (field_name, field_schema) in props {
-                        let (py_type, py_default) = json_type_to_python(field_schema);
-                        output.push_str(&format!(
-                            "    {}: {} = {}\n",
-                            field_name, py_type, py_default
-                        ));
+        let schema_type = schema.get("type").and_then(|v| v.as_str());
+
+        // Check for oneOf/anyOf — these become Union types
+        if let Some(oneof) = schema.get("oneOf").or_else(|| schema.get("anyOf")).and_then(|v| v.as_array()) {
+            // Generate a Union type alias and individual variant dataclasses
+            let mut variant_names = Vec::new();
+            for (i, variant) in oneof.iter().enumerate() {
+                let var_name = variant
+                    .get("title")
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string())
+                    .unwrap_or_else(|| {
+                        // Try to get name from the first required property (discriminator)
+                        variant
+                            .get("required")
+                            .and_then(|v| v.as_array())
+                            .and_then(|a| a.first())
+                            .and_then(|v| v.as_str())
+                            .map(|s| s.to_string())
+                            .unwrap_or_else(|| format!("Variant{}", i + 1))
+                    });
+                let clean_var = clean_py_name(&var_name);
+                variant_names.push(clean_var.clone());
+
+                let type_of_variant = variant.get("type").and_then(|v| v.as_str());
+                if type_of_variant == Some("object") || variant.get("properties").is_some() {
+                    // Generate a dataclass for this variant
+                    output.push_str(&format!("@dataclass\nclass {}:\n", clean_var));
+                    if let Some(props) = variant.get("properties").and_then(|v| v.as_object()) {
+                        let required_set: Vec<&str> = variant
+                            .get("required")
+                            .and_then(|v| v.as_array())
+                            .map(|a| a.iter().filter_map(|r| r.as_str()).collect())
+                            .unwrap_or_default();
+                        for (field_name, field_schema) in props {
+                            let (py_type, py_default) = json_type_to_python(field_schema, &all_schemas);
+                            if required_set.contains(&field_name.as_str()) {
+                                output.push_str(&format!("    {}: {}\n", field_name, py_type));
+                            } else {
+                                output.push_str(&format!("    {}: {} = {}\n", field_name, py_type, py_default));
+                            }
+                        }
+                    }
+                    output.push('\n');
+                } else if let Some(enum_vals) = variant.get("enum").and_then(|v| v.as_array()) {
+                    // String enum variant
+                    output.push_str("from enum import Enum\n\n");
+                    output.push_str(&format!("class {}(str, Enum):\n", clean_var));
+                    for val in enum_vals {
+                        if let Some(s) = val.as_str() {
+                            let var_name = s.to_uppercase().replace('-', "_");
+                            output.push_str(&format!("    {} = '{}'\n", var_name, s));
+                        }
+                    }
+                    output.push('\n');
+                } else {
+                    // Simple type alias
+                    let (py_type, _) = json_type_to_python(variant, &all_schemas);
+                    output.push_str(&format!("{} = {}\n\n", clean_var, py_type));
+                }
+            }
+
+            // Emit the Union type alias
+            output.push_str(&format!(
+                "{} = Union[{}]\n\n",
+                clean_name,
+                variant_names.join(", ")
+            ));
+
+            // Emit encode/decode helper for the union type
+            output.push_str(&format!(
+                "def encode_{}(msg: {}) -> bytes:\n",
+                clean_name.to_lowercase(),
+                clean_name,
+            ));
+            output.push_str("    from contract_proto._native import encode_message\n");
+            output.push_str(&format!(
+                "    type_url = '/{}.{}.v1.{}'\n",
+                contract_name.replace('-', "_"),
+                contract_name.replace('-', "_"),
+                clean_name
+            ));
+            output.push_str("    return encode_message(type_url, json.dumps(asdict(msg) if hasattr(msg, '__dataclass_fields__') else msg).encode())\n\n");
+
+            output.push_str(&format!(
+                "def decode_{}(data: bytes) -> {}:\n",
+                clean_name.to_lowercase(),
+                clean_name,
+            ));
+            output.push_str("    from contract_proto._native import decode_message\n");
+            output.push_str(&format!(
+                "    type_url = '/{}.{}.v1.{}'\n",
+                contract_name.replace('-', "_"),
+                contract_name.replace('-', "_"),
+                clean_name
+            ));
+            output.push_str("    decoded = json.loads(decode_message(type_url, data))\n");
+            output.push_str("    # Dispatch to the right variant based on discriminator key\n");
+            output.push_str("    if isinstance(decoded, dict):\n");
+            for variant_name in &variant_names {
+                output.push_str(&format!(
+                    "        if '{}' in decoded: return {}(**decoded['{}'])\n",
+                    variant_name.to_lowercase(),
+                    variant_name,
+                    variant_name.to_lowercase()
+                ));
+            }
+            output.push_str("    return decoded\n\n");
+
+            continue;
+        }
+
+        // Handle allOf — merge properties
+        if let Some(allof) = schema.get("allOf").and_then(|v| v.as_array()) {
+            let mut merged_props: BTreeMap<String, Value> = BTreeMap::new();
+            for sub in allof {
+                if let Some(props) = sub.get("properties").and_then(|v| v.as_object()) {
+                    for (k, v) in props {
+                        merged_props.entry(k.clone()).or_insert_with(|| v.clone());
                     }
                 }
-                output.push_str(&format!(
-                    "    TYPE_URL: str = field(default='/{}/{}.v1.{}', init=False, repr=False)\n\n",
-                    contract_name.replace('-', "_"),
-                    contract_name.replace('-', "_"),
-                    clean_name
-                ));
-
-                // Encode/decode methods
-                output.push_str("    def encode(self) -> bytes:\n");
-                output.push_str("        from contract_proto._native import encode_message\n");
-                output.push_str("        return encode_message(self.TYPE_URL, json.dumps(asdict(self)).encode())\n\n");
-                output.push_str("    @classmethod\n");
-                output.push_str(&format!("    def decode(cls, data: bytes) -> '{}':\n", clean_name));
-                output.push_str("        from contract_proto._native import decode_message\n");
-                output.push_str("        return cls(**json.loads(decode_message(cls.TYPE_URL, data)))\n\n");
-            }
-            Some("string") if schema.get("enum").is_some() => {
-                // String enum -> Python enum + str
-                output.push_str("from enum import Enum\n\n");
-                output.push_str(&format!("class {}(str, Enum):\n", clean_name));
-                if let Some(variants) = schema.get("enum").and_then(|v| v.as_array()) {
-                    for variant in variants {
-                        if let Some(v) = variant.as_str() {
-                            let var_name = v.to_uppercase().replace('-', "_");
-                            output.push_str(&format!("    {} = '{}'\n", var_name, v));
+                // Also merge $ref targets
+                if let Some(ref_path) = sub.get("$ref").and_then(|v| v.as_str()) {
+                    if let Some(target) = resolve_ref(ref_path, &all_schemas) {
+                        if let Some(props) = target.get("properties").and_then(|v| v.as_object()) {
+                            for (k, v) in props {
+                                merged_props.entry(k.clone()).or_insert_with(|| v.clone());
+                            }
                         }
                     }
                 }
-                output.push('\n');
             }
-            _ => {
-                // Type alias
-                let (py_type, _) = json_type_to_python(schema);
-                output.push_str(&format!("{} = {}\n\n", clean_name, py_type));
+
+            output.push_str(&format!("@dataclass\nclass {}:\n", clean_name));
+            let required_set: Vec<&str> = schema
+                .get("required")
+                .and_then(|v| v.as_array())
+                .map(|a| a.iter().filter_map(|r| r.as_str()).collect())
+                .unwrap_or_default();
+            for (field_name, field_schema) in &merged_props {
+                let (py_type, py_default) = json_type_to_python(field_schema, &all_schemas);
+                if required_set.contains(&field_name.as_str()) {
+                    output.push_str(&format!("    {}: {}\n", field_name, py_type));
+                } else {
+                    output.push_str(&format!("    {}: {} = {}\n", field_name, py_type, py_default));
+                }
             }
+            output.push('\n');
+            continue;
         }
+
+        // Handle $ref at the top level
+        if let Some(ref_path) = schema.get("$ref").and_then(|v| v.as_str()) {
+            let ref_name = ref_path.rsplit('/').next().unwrap_or(ref_path);
+            let clean_ref = clean_py_name(ref_name);
+            output.push_str(&format!("{} = {}\n\n", clean_name, clean_ref));
+            continue;
+        }
+
+        // Handle regular objects
+        if schema_type == Some("object") || schema.get("properties").is_some() {
+            output.push_str(&format!("@dataclass\nclass {}:\n", clean_name));
+            if let Some(props) = schema.get("properties").and_then(|v| v.as_object()) {
+                let required_set: Vec<&str> = schema
+                    .get("required")
+                    .and_then(|v| v.as_array())
+                    .map(|a| a.iter().filter_map(|r| r.as_str()).collect())
+                    .unwrap_or_default();
+                for (field_name, field_schema) in props {
+                    let (py_type, py_default) = json_type_to_python(field_schema, &all_schemas);
+                    if required_set.contains(&field_name.as_str()) {
+                        output.push_str(&format!("    {}: {}\n", field_name, py_type));
+                    } else {
+                        output.push_str(&format!("    {}: {} = {}\n", field_name, py_type, py_default));
+                    }
+                }
+            }
+            output.push_str(&format!(
+                "    TYPE_URL: str = field(default='/{}/{}.v1.{}', init=False, repr=False)\n\n",
+                contract_name.replace('-', "_"),
+                contract_name.replace('-', "_"),
+                clean_name
+            ));
+
+            // Encode/decode methods
+            output.push_str("    def encode(self) -> bytes:\n");
+            output.push_str("        from contract_proto._native import encode_message\n");
+            output.push_str("        return encode_message(self.TYPE_URL, json.dumps(asdict(self)).encode())\n\n");
+            output.push_str("    @classmethod\n");
+            output.push_str(&format!("    def decode(cls, data: bytes) -> '{}':\n", clean_name));
+            output.push_str("        from contract_proto._native import decode_message\n");
+            output.push_str("        return cls(**json.loads(decode_message(cls.TYPE_URL, data)))\n\n");
+            continue;
+        }
+
+        // String enum
+        if schema_type == Some("string") && schema.get("enum").is_some() {
+            output.push_str("from enum import Enum\n\n");
+            output.push_str(&format!("class {}(str, Enum):\n", clean_name));
+            if let Some(variants) = schema.get("enum").and_then(|v| v.as_array()) {
+                for variant in variants {
+                    if let Some(v) = variant.as_str() {
+                        let var_name = v.to_uppercase().replace('-', "_");
+                        output.push_str(&format!("    {} = '{}'\n", var_name, v));
+                    }
+                }
+            }
+            output.push('\n');
+            continue;
+        }
+
+        // Default: type alias
+        let (py_type, _) = json_type_to_python(&schema, &all_schemas);
+        output.push_str(&format!("{} = {}\n\n", clean_name, py_type));
     }
 
     Ok(output)
 }
 
+fn clean_py_name(name: &str) -> String {
+    name.split(|c: char| !c.is_alphanumeric() && c != '_')
+        .filter(|s| !s.is_empty())
+        .collect::<Vec<_>>()
+        .join("")
+}
+
+/// Resolve a `$ref` like `#/definitions/Foo` against the collected schemas.
+fn resolve_ref<'a>(ref_path: &str, schemas: &'a [(String, Value)]) -> Option<&'a Value> {
+    let target_name = ref_path.rsplit('/').next()?;
+    schemas.iter()
+        .find(|(name, _)| name == target_name || name.ends_with(target_name))
+        .map(|(_, v)| v)
+}
+
 /// Map JSON schema types to Python type annotations and defaults.
-fn json_type_to_python(schema: &serde_json::Value) -> (String, String) {
+fn json_type_to_python(schema: &serde_json::Value, all_schemas: &[(String, Value)]) -> (String, String) {
     // $ref
     if let Some(ref_path) = schema.get("$ref").and_then(|v| v.as_str()) {
         let ref_name = ref_path.rsplit('/').next().unwrap_or(ref_path);
-        let clean = ref_name
-            .split(|c: char| !c.is_alphanumeric())
-            .filter(|s| !s.is_empty())
-            .collect::<Vec<_>>()
-            .join("");
+        let clean = clean_py_name(ref_name);
         return ("Optional[".to_string() + &clean + "]", "None".to_string());
     }
 
-    // oneOf/anyOf -> Any
-    if let Some(_) = schema.get("oneOf").or_else(|| schema.get("anyOf")) {
-        return ("Any".to_string(), "None".to_string());
+    // oneOf/anyOf — generate Union type
+    if let Some(oneof) = schema.get("oneOf").or_else(|| schema.get("anyOf")).and_then(|v| v.as_array()) {
+        if oneof.is_empty() {
+            return ("Any".to_string(), "None".to_string());
+        }
+        let types: Vec<String> = oneof.iter()
+            .map(|v| {
+                let (t, _) = json_type_to_python(v, all_schemas);
+                t
+            })
+            .collect();
+        if types.len() == 1 {
+            return (format!("Optional[{}]", types[0]), "None".to_string());
+        }
+        return (format!("Union[{}]", types.join(", ")), "None".to_string());
+    }
+
+    // allOf — Dict[str, Any] for simplicity
+    if schema.get("allOf").is_some() {
+        return ("Dict[str, Any]".to_string(), "field(default_factory=dict)".to_string());
+    }
+
+    // Type array (e.g., ["string", "null"])
+    if let Some(types) = schema.get("type").and_then(|v| v.as_array()) {
+        let mut py_types: Vec<String> = Vec::new();
+        let mut nullable = false;
+        for t in types {
+            match t.as_str() {
+                Some("null") => nullable = true,
+                Some(t) => py_types.push(simple_type_to_py(t, schema, all_schemas)),
+                None => {}
+            }
+        }
+        if py_types.is_empty() {
+            py_types.push("Any".to_string());
+        }
+        let joined = py_types.join(", ");
+        if nullable {
+            if py_types.len() == 1 {
+                return (format!("Optional[{}]", py_types[0]), "None".to_string());
+            }
+            return (format!("Union[{}, None]", joined), "None".to_string());
+        }
+        if py_types.len() == 1 {
+            return (py_types[0].clone(), "None".to_string());
+        }
+        return (format!("Union[{}]", joined), "None".to_string());
     }
 
     match schema.get("type").and_then(|v| v.as_str()) {
@@ -177,7 +442,7 @@ fn json_type_to_python(schema: &serde_json::Value) -> (String, String) {
         Some("boolean") => ("bool".to_string(), "False".to_string()),
         Some("array") => {
             if let Some(items) = schema.get("items") {
-                let (inner_type, _) = json_type_to_python(items);
+                let (inner_type, _) = json_type_to_python(items, all_schemas);
                 (
                     format!("List[{}]", inner_type),
                     "field(default_factory=list)".to_string(),
@@ -189,7 +454,38 @@ fn json_type_to_python(schema: &serde_json::Value) -> (String, String) {
                 )
             }
         }
+        Some("object") => {
+            // Inline nested object — generate Dict[str, Any]
+            ("Dict[str, Any]".to_string(), "field(default_factory=dict)".to_string())
+        }
         Some("null") => ("None".to_string(), "None".to_string()),
         _ => ("Any".to_string(), "None".to_string()),
+    }
+}
+
+fn simple_type_to_py(t: &str, schema: &Value, all_schemas: &[(String, Value)]) -> String {
+    match t {
+        "string" => {
+            if schema.get("enum").is_some() {
+                // Enum reference by title
+                schema.get("title").and_then(|v| v.as_str()).map(|s| clean_py_name(s)).unwrap_or_else(|| "str".to_string())
+            } else {
+                "str".to_string()
+            }
+        }
+        "integer" => "int".to_string(),
+        "number" => "float".to_string(),
+        "boolean" => "bool".to_string(),
+        "array" => {
+            if let Some(items) = schema.get("items") {
+                let (inner, _) = json_type_to_python(items, all_schemas);
+                format!("List[{}]", inner)
+            } else {
+                "List[Any]".to_string()
+            }
+        }
+        "object" => "Dict[str, Any]".to_string(),
+        "null" => "None".to_string(),
+        _ => "Any".to_string(),
     }
 }

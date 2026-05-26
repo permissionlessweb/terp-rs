@@ -48,6 +48,17 @@ impl Generator for TsBundlesGenerator {
 
             let cname = pascal_case(contract_name);
 
+            // Skip non-contract entries (e.g. raw response types that don't have Execute/Query)
+            let has_exec = message_types.iter().any(|(t, _)| t == "ExecuteMsg");
+            let has_query = message_types.iter().any(|(t, _)| t == "QueryMsg");
+            if !has_exec && !has_query {
+                // Still generate Zod for definition types
+                let zod = generate_co_located_zod(&cname, &all_defs);
+                std::fs::write(ts_out.join(format!("{}.zod.ts", cname)), &zod)?;
+                total_files += 1;
+                continue;
+            }
+
             let zod = generate_co_located_zod(&cname, &all_defs);
             std::fs::write(ts_out.join(format!("{}.zod.ts", cname)), &zod)?;
             total_files += 1;
@@ -218,7 +229,7 @@ fn generate_js_bundle(cname: &str, message_types: &[(String, Value)]) -> String 
 fn generate_transact_client(cname: &str, message_types: &[(String, Value)], response_types: &[(String, Value)]) -> String {
     let mut out = String::new();
     out.push_str(&format!(
-        "import type {{ {} as {}Type }} from './{}.types';\n", cname, cname, cname));
+        "import type {{ ExecuteMsg, QueryMsg }} from './{}.types';\n", cname));
     out.push_str("import type { CosmWasmClient, SigningCosmWasmClient } from '@cosmjs/cosmwasm-stargate';\n");
     out.push_str("import type { Coin } from '@cosmjs/amino';\n\n");
 
@@ -240,17 +251,17 @@ fn generate_transact_client(cname: &str, message_types: &[(String, Value)], resp
     for v in &query_variants {
         let m = camel_case(v);
         let rt = qrm.get(&m).cloned().unwrap_or_else(|| "unknown".into());
-        out.push_str(&format!(
-            "  async {}(params: Extract<{}Type, {{ {}: unknown }}>): Promise<{}> {{\n", m, cname, v, rt));
-        out.push_str(&format!(
-            "    return this.client.queryContractSmart(this.contractAddress, {{ {}: params }});\n", v));
+out.push_str(&format!(
+            "  async {}(params: QueryMsg[keyof QueryMsg]): Promise<{}> {{\n",
+            m, rt
+        ));
         out.push_str("  }\n\n");
     }
 
     for v in &exec_variants {
         let m = camel_case(v);
         out.push_str(&format!(
-            "  async {}Tx(msg: Extract<{}Type, {{ {}: unknown }}>, funds?: Coin[]): Promise<string> {{\n", m, cname, v));
+            "  async {}Tx(msg: ExecuteMsg[keyof ExecuteMsg], funds?: Coin[]): Promise<string> {{\n", m));
         out.push_str("    if (!this.sender) throw new Error('sender required');\n");
         out.push_str(&format!(
             "    const r = await this.client.execute(this.sender, this.contractAddress, {{ {}: msg }}, funds || []);\n", v));

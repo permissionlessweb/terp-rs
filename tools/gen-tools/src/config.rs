@@ -99,6 +99,10 @@ pub struct Cli {
     #[arg(long)]
     pub go_out: Option<PathBuf>,
 
+    /// Rust crate output directory.
+    #[arg(long)]
+    pub rust_out: Option<PathBuf>,
+
     /// OpenAPI output directory.
     #[arg(long)]
     pub openapi_out: Option<PathBuf>,
@@ -183,6 +187,8 @@ pub struct ProjectEntry {
     #[serde(default)]
     pub go_out: Option<PathBuf>,
     #[serde(default)]
+    pub rust_out: Option<PathBuf>,
+    #[serde(default)]
     pub openapi_out: Option<PathBuf>,
 
     /// Proto module filter for this project.
@@ -196,6 +202,12 @@ pub struct ProjectEntry {
     /// Path to episode markdown files (relative to project root).
     #[serde(default)]
     pub tz_episodes: Option<PathBuf>,
+    /// Path to TZ recipes directory (relative to project root).
+    #[serde(default)]
+    pub tz_recipes_dir: Option<PathBuf>,
+    /// Path to TZ profiles directory (relative to project root).
+    #[serde(default)]
+    pub tz_profiles_dir: Option<PathBuf>,
     /// Output directory for TZ recipes (relative to project root).
     #[serde(default)]
     pub tz_out: Option<PathBuf>,
@@ -272,6 +284,7 @@ pub struct GenerationContext {
     pub zod_out: PathBuf,
     pub proto_out: PathBuf,
     pub go_out: PathBuf,
+    pub rust_out: PathBuf,
     pub openapi_out: PathBuf,
 
     /// Proto module filter.
@@ -283,9 +296,13 @@ pub struct GenerationContext {
     /// TensorZero heuristics file path (relative to workspace root).
     pub tz_heuristics_path: Option<PathBuf>,
 
-    /// TensorZero episodes directory path (relative to workspace root).
+/// TensorZero episodes directory path (relative to workspace root).
     pub tz_episodes_dir: Option<PathBuf>,
-
+    /// TensorZero recipes directory path (relative to workspace root).
+    pub tz_recipes_dir: Option<PathBuf>,
+    /// TensorZero profiles directory path (relative to workspace root).
+    pub tz_profiles_dir: Option<PathBuf>,
+    /// Whether to skip invoking `cargo schema`.
     /// Whether to skip invoking `cargo schema`.
     pub skip_schema: bool,
 
@@ -333,10 +350,13 @@ pub struct ProjectOverrides {
     pub zod_out: Option<PathBuf>,
     pub proto_out: Option<PathBuf>,
     pub go_out: Option<PathBuf>,
+    pub rust_out: Option<PathBuf>,
     pub openapi_out: Option<PathBuf>,
     pub tz_out: Option<PathBuf>,
     pub tz_heuristics: Option<PathBuf>,
     pub tz_episodes: Option<PathBuf>,
+    pub tz_recipes_dir: Option<PathBuf>,
+    pub tz_profiles_dir: Option<PathBuf>,
     /// When true, all output dirs resolve against unified_base
     /// instead of workspace_root. All generated artifacts go into
     /// a single terp-api/<lang>/ directory.
@@ -358,10 +378,13 @@ impl Cli {
             zod_out: self.zod_out,
             proto_out: self.proto_out,
             go_out: self.go_out,
+            rust_out: self.rust_out,
             openapi_out: self.openapi_out,
             tz_out: None,
             tz_heuristics: None,
             tz_episodes: None,
+            tz_recipes_dir: None,
+            tz_profiles_dir: None,
             unified: self.unified,
             unified_base: if self.unified {
                 Some(std::env::current_dir().unwrap_or_default())
@@ -421,6 +444,11 @@ pub fn build_context(
         root_for_output,
         &["terp-api", "go"],
     );
+    let rust_out = resolve_dir(
+        overrides.rust_out.as_ref(),
+        root_for_output,
+        &["terp-api", "rust"],
+    );
     let openapi_out = resolve_dir(
         overrides.openapi_out.as_ref(),
         root_for_output,
@@ -466,11 +494,14 @@ pub fn build_context(
         zod_out,
         proto_out,
         go_out,
+        rust_out,
         openapi_out,
         proto_modules,
         tz_out,
         tz_heuristics_path: overrides.tz_heuristics.clone(),
         tz_episodes_dir: overrides.tz_episodes.clone(),
+        tz_recipes_dir: overrides.tz_recipes_dir.clone(),
+        tz_profiles_dir: overrides.tz_profiles_dir.clone(),
         skip_schema: overrides.skip_schema,
         is_library,
         workspace_members,
@@ -628,7 +659,7 @@ fn inspect_contract(
 pub fn parse_steps(steps: &str) -> (Vec<String>, Vec<String>) {
     if steps == "default" {
         let defaults = vec![
-            "schema", "ts-codegen", "ts-bundles", "proto", "python", "zod", "go", "readme", "openapi",
+"schema", "ts-codegen", "ts-bundles", "proto", "python", "zod", "go", "rust", "readme", "openapi", "tensorzero",
         ];
         return (defaults.iter().map(|s| s.to_string()).collect(), Vec::new());
     }

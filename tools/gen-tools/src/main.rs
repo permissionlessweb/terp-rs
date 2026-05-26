@@ -70,10 +70,13 @@ fn main() -> anyhow::Result<()> {
                 zod_out: entry.zod_out.clone().or_else(|| cli.zod_out.clone()),
                 proto_out: entry.proto_out.clone().or_else(|| cli.proto_out.clone()),
                 go_out: entry.go_out.clone().or_else(|| cli.go_out.clone()),
+                rust_out: entry.rust_out.clone().or_else(|| cli.rust_out.clone()),
                 openapi_out: entry.openapi_out.clone().or_else(|| cli.openapi_out.clone()),
                 tz_out: entry.tz_out.clone(),
                 tz_heuristics: entry.tz_heuristics.clone(),
                 tz_episodes: entry.tz_episodes.clone(),
+                tz_recipes_dir: entry.tz_recipes_dir.clone(),
+                tz_profiles_dir: entry.tz_profiles_dir.clone(),
                 unified: cli.unified,
                 unified_base: if cli.unified {
                     Some(config_dir.to_path_buf())
@@ -113,10 +116,13 @@ fn main() -> anyhow::Result<()> {
         zod_out: cli.zod_out.clone(),
         proto_out: cli.proto_out.clone(),
         go_out: cli.go_out.clone(),
+        rust_out: cli.rust_out.clone(),
         openapi_out: cli.openapi_out.clone(),
         tz_out: None,
         tz_heuristics: None,
         tz_episodes: None,
+        tz_recipes_dir: None,
+        tz_profiles_dir: None,
         unified: cli.unified,
         unified_base: if cli.unified {
             Some(std::env::current_dir().unwrap_or_default())

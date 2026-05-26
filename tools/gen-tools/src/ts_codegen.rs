@@ -88,8 +88,7 @@ impl Generator for TsCodegenGenerator {
             let barrel_dir = ts_out.join("_entry");
             std::fs::create_dir_all(&barrel_dir)?;
             let barrel_ts = format!(
-                "export * from '../{}.types';\nexport * from '../{}.client';\nexport * from '../{}.message-composer';\n",
-                cname, cname, cname
+                "export * from '../{cname}.types';\nexport * from '../{cname}.client';\nexport * from '../{cname}.message-composer';\nexport * from '../{cname}.zod';\nexport * from '../{cname}.bundle.mjs';\nexport * from '../{cname}.filters';\nexport * from '../{cname}.argus';\n",
             );
             std::fs::write(barrel_dir.join(format!("{}.ts", contract_name)), &barrel_ts)?;
             total_files += 1;
@@ -181,7 +180,7 @@ fn collect_definitions(schema: &Value, defs: &mut HashMap<String, Value>) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 fn generate_types_file(
-    _cname: &str,
+    cname: &str,
     message_types: &[(String, Value)],
     response_types: &[(String, Value)],
     all_defs: &HashMap<String, Value>,
@@ -228,6 +227,12 @@ fn generate_types_file(
             output.push('\n');
             emitted.insert(title.clone());
         }
+    }
+
+    // 4. Emit top-level contract type as union of all message types
+    if !message_types.is_empty() {
+        let msg_type_names: Vec<&str> = message_types.iter().map(|(t, _)| t.as_str()).collect();
+        output.push_str(&format!("export type {} = {};\n", cname, msg_type_names.join(" | ")));
     }
 
     Ok(output)
@@ -306,7 +311,7 @@ fn def_to_ts_type(name: &str, val: &Value, all_defs: &HashMap<String, Value>) ->
                 let arr = val.get("oneOf").or_else(|| val.get("anyOf")).and_then(|v| v.as_array()).unwrap();
                 for (i, v) in arr.iter().enumerate() {
                     let t = json_schema_to_ts(v, all_defs);
-                    let d = if i < arr.len() - 1 { " |" } else { ";" };
+                    let d = if i < arr.len() - 1 { "" } else { ";" };
                     out.push_str(&format!("  | {}{}\n", t, d));
                 }
                 Some(out)
@@ -338,7 +343,7 @@ fn schema_to_union_type(
         out.push_str(&format!("export type {} =\n", pname));
         for (i, variant) in variants.iter().enumerate() {
             let variant_type = variant_oneof_to_type(variant, all_defs);
-            let delim = if i < variants.len() - 1 { " |" } else { ";" };
+            let delim = if i < variants.len() - 1 { "" } else { ";" };
             out.push_str(&format!("  | {}{}\n", variant_type, delim));
         }
         return Some(out);

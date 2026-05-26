@@ -880,11 +880,14 @@ message WithRepeated {
             zod_out: tmp.path().join("zod"),
             proto_out: tmp.path().join("proto"),
             go_out: tmp.path().join("go"),
+            rust_out: tmp.path().join("rust"),
             openapi_out: tmp.path().join("openapi"),
             proto_modules: vec![],
             tz_out: None,
             tz_heuristics_path: None,
             tz_episodes_dir: None,
+            tz_recipes_dir: None,
+            tz_profiles_dir: None,
         };
         let (label, schemas) = SourceResolver::resolve(&ctx);
         assert!(label.is_empty());

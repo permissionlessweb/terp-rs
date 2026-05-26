@@ -2,6 +2,7 @@
 
 use crate::config::{parse_steps, GenerationContext};
 use crate::go_gen::GoGenGenerator;
+use crate::rust_gen::RustGenGenerator;
 use crate::openapi::OpenApiGenerator;
 use crate::placeholders::{IndexerGenerator, MermaidGenerator, TzEpisodesGenerator};
 use crate::proto_gen::ProtoGenGenerator;
@@ -36,6 +37,7 @@ impl Pipeline {
             Box::new(PythonGenGenerator),
             Box::new(ZodGenGenerator),
             Box::new(GoGenGenerator),
+            Box::new(RustGenGenerator),
             Box::new(TrailmarkGenerator),
             Box::new(ReadmeApiGenerator),
             Box::new(OpenApiGenerator),

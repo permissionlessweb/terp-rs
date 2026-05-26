@@ -1,3 +1,0 @@
-Execute: {{function_name}}({{args | tojson}})
-
-Description: Query a CosmWasm contract at a given address with a query message

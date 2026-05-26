@@ -14,6 +14,7 @@ pub mod proto_gen;
 pub mod python_gen;
 pub mod zod_gen;
 pub mod go_gen;
+pub mod rust_gen;
 pub mod trailmark;
 pub mod readme_api;
 pub mod openapi;

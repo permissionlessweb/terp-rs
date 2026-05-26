@@ -1,3 +1,0 @@
-Execute: {{function_name}}({{args | tojson}})
-
-Description: cw-infusion-minter

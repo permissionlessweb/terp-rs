@@ -30,3 +30,4 @@ dep-scrape.json
 dep-graph.dot
 dep-graph.svg
 REPORT.md
+terp-api
