@@ -231,6 +231,7 @@ impl Generator for TensorZeroGenerator {
         } else {
             ctx.workspace_root.join("recipes/tz-contracts")
         };
+        let output_dir = output_dir.join(&ctx.project_name);
         std::fs::create_dir_all(&output_dir)?;
 
         // 3. Generate function specs from resolver types

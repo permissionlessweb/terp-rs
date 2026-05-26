@@ -18,7 +18,6 @@ projects:
   - name: dao-contracts
     path: "crates/dao-contracts"
     proto_modules: "terp,cosmwasm,cosmos,ibc"
-    go_out: "terp-api/go-types"     # dedicated folder for dao-contracts auto-types
     tz_heuristics: "../terp-rs/tools/gen-tools/tz-heuristics.toml"
     tz_episodes_dir: "../terp-rs/tools/gen-tools/tz-episodes"
     tz_recipes_dir: "../terp-rs/tools/gen-tools/tz-recipes"

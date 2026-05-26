@@ -30,8 +30,8 @@ impl Generator for GoGenGenerator {
     }
 
     fn generate(&self, ctx: &GenerationContext) -> anyhow::Result<GenerationResult> {
-        let go_out = &ctx.go_out;
-        std::fs::create_dir_all(go_out)?;
+        let go_out = ctx.go_out.join(&ctx.project_name);
+        std::fs::create_dir_all(&go_out)?;
 
         let (_label, groups) = SourceResolver::resolve_grouped(ctx);
         if groups.is_empty() {
@@ -90,6 +90,15 @@ impl Generator for GoGenGenerator {
                     }
                 }
 
+// Skip writing if no types actually generated — avoids stub files
+                let has_content = !all_defs.is_empty()
+                    || !message_types.is_empty()
+                    || !response_types.is_empty();
+                if !has_content {
+                    log::info!("[go] Skipping {:?} — no types in output", contract_name);
+                    continue;
+                }
+
                 // Generate Go types from definitions (sorted for stability)
                 let mut def_names: Vec<String> = all_defs.keys().cloned().collect();
                 def_names.sort();
@@ -97,21 +106,21 @@ impl Generator for GoGenGenerator {
                     let schema = &all_defs[name];
                     let go_type = def_to_go_type(name, schema, &all_defs);
                     output.push_str(&go_type);
-                    output.push('\n');
+output.push('\n');
                 }
 
                 // Generate message types — these are oneOf enums, rendered as struct
                 for (title, schema) in &message_types {
                     let go_type = def_to_go_type(title, schema, &all_defs);
                     output.push_str(&go_type);
-                    output.push('\n');
+output.push('\n');
                 }
 
                 // Generate response types
                 for (title, schema) in &response_types {
                     let go_type = def_to_go_type(title, schema, &all_defs);
                     output.push_str(&go_type);
-                    output.push('\n');
+output.push('\n');
                 }
 
                 // Write file

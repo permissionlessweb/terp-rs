@@ -17,8 +17,8 @@ impl Generator for ZodGenGenerator {
     fn enabled_by_default(&self) -> bool { true }
 
     fn generate(&self, ctx: &GenerationContext) -> anyhow::Result<GenerationResult> {
-        let zod_out = &ctx.zod_out;
-        std::fs::create_dir_all(zod_out)?;
+        let zod_out = ctx.zod_out.join(&ctx.project_name);
+        std::fs::create_dir_all(&zod_out)?;
         let mut total_files = 0;
         let (_label, groups) = SourceResolver::resolve_grouped(ctx);
         if groups.is_empty() {

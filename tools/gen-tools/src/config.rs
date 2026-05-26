@@ -432,7 +432,7 @@ pub fn build_context(
     let zod_out = resolve_dir(
         overrides.zod_out.as_ref(),
         root_for_output,
-        &["terp-api", "zod"],
+        &["terp-api", "ts"],
     );
     let proto_out = resolve_dir(
         overrides.proto_out.as_ref(),

@@ -12,7 +12,9 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-default = []
+default = ["docker", "nostr"]
+docker = []
+nostr = []
 # dao = ["dep:dao-testing"]
 
 [dependencies]

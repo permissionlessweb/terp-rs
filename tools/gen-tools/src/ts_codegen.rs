@@ -34,8 +34,8 @@ impl Generator for TsCodegenGenerator {
     }
 
     fn generate(&self, ctx: &GenerationContext) -> anyhow::Result<GenerationResult> {
-        let ts_out = &ctx.ts_out;
-        std::fs::create_dir_all(ts_out)?;
+        let ts_out = ctx.ts_out.join(&ctx.project_name);
+        std::fs::create_dir_all(&ts_out)?;
 
         let mut total_files = 0;
         let mut contracts_processed = 0;

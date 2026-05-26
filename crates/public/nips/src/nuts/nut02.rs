@@ -1,0 +1,1 @@
+//  keysets and fees spec: https://github.com/cashubtc/nuts/blob/main/02.md

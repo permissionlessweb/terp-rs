@@ -21,8 +21,8 @@ impl Generator for OpenApiGenerator {
     }
 
     fn generate(&self, ctx: &GenerationContext) -> anyhow::Result<GenerationResult> {
-        let openapi_out = &ctx.openapi_out;
-        std::fs::create_dir_all(openapi_out)?;
+        let openapi_out = ctx.openapi_out.join(&ctx.project_name);
+        std::fs::create_dir_all(&openapi_out)?;
 
         let mut total_files = 0;
 

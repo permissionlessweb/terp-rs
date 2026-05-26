@@ -21,8 +21,8 @@ impl Generator for ProtoGenGenerator {
     }
 
     fn generate(&self, ctx: &GenerationContext) -> anyhow::Result<GenerationResult> {
-        let proto_out = &ctx.proto_out;
-        std::fs::create_dir_all(proto_out)?;
+        let proto_out = ctx.proto_out.join(&ctx.project_name);
+        std::fs::create_dir_all(&proto_out)?;
 
         let mut total_files = 0;
 
@@ -43,7 +43,7 @@ impl Generator for ProtoGenGenerator {
 
         // Also generate a cosmos-sdk style type URL registry
         if total_files > 0 {
-            let registry = generate_type_url_registry(proto_out)?;
+            let registry = generate_type_url_registry(&proto_out)?;
             let reg_path = proto_out.join("type_url_registry.rs");
             std::fs::write(&reg_path, &registry)?;
             total_files += 1;
@@ -109,6 +109,10 @@ fn generate_proto_from_schemas(
                     for (idx, (field_name, field_schema)) in props.iter().enumerate() {
                         let field_num = (idx + 1) as u32;
                         let proto_type = json_type_to_proto(field_schema, &schemas);
+                        let safe_name: String = field_name
+                            .chars()
+                            .map(|c| if c.is_alphanumeric() || c == '_' { c } else { '_' })
+                            .collect();
                         let optional = if !required.contains(&field_name.as_str()) {
                             "optional "
                         } else {
@@ -116,7 +120,7 @@ fn generate_proto_from_schemas(
                         };
                         output.push_str(&format!(
                             "  {} {} {} = {};\n",
-                            optional, proto_type, field_name, field_num
+                            optional, proto_type, safe_name, field_num
                         ));
                     }
                 }
