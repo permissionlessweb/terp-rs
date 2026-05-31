@@ -1,10 +1,12 @@
-[workspace]
-
 [package]
 name = "gen-tools"
 version = "0.1.0"
 edition = "2021"
 description = "Unified Rust runtime for CosmWasm contract type generation: schema, TS-codegen, proto, Python, Zod, Go, Trailmark, OpenAPI, README docs"
+
+[lib]
+name = "gen_tools"
+path = "src/lib.rs"
 
 [[bin]]
 name = "gen-tools"

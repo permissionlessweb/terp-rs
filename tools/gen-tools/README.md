@@ -1,5 +1,13 @@
 # gen-tools — Terp Network contract type generation runtime
 
+## TODO: generate all artifacts
+- wasm contracts
+- circuits
+- runtime binaries
+- docker containers
+- metadata files
+
+
 **gen-tools** is a single Rust binary + library that drives a configurable
 pipeline of code generators against one or more CosmWasm workspace roots within
 the [Terp Network](https://terp.network) monorepo.

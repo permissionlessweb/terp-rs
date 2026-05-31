@@ -218,6 +218,27 @@ py-build:
 py-dev:
     cd proto && maturin develop --features python
 
+# ---------------------------------------------------------------------------
+# API client library generation (gen-tools)
+# ---------------------------------------------------------------------------
+
+# Generate all API client libraries for all CosmWasm workspaces.
+# Runs gen-tools pipeline on every project in gen-tools.yaml.
+gen-api:
+    cargo run --package gen-api
+
+# Generate API client libraries for a single project.
+gen-api-project name:
+    cargo run --package gen-api -- --project {{name}}
+
+# Generate only specific pipeline steps (comma-separated).
+gen-api-filter filter:
+    cargo run --package gen-api -- --filter {{filter}}
+
+# Regenerate schemas + generate all API client libraries.
+gen-api-full:
+    cargo run --package gen-api
+
 # Full pipeline: Rust types → Zod → Python
 gen-all source="": (gen) (zod) (py-gen)
 

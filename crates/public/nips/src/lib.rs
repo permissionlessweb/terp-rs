@@ -31,6 +31,7 @@ pub mod error;
 pub mod event;
 pub mod metadata;
 pub mod nips;
+pub mod buds;
 pub mod tags;
 pub mod types;
 

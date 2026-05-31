@@ -3,6 +3,7 @@
 use super::Custody;
 use anyhow::{Context, Result};
 use async_trait::async_trait;
+use k256::ecdsa::signature::hazmat::PrehashSigner as _;
 
 /// Secp256k1 local custody using `k256`.
 pub struct LocalSecp256k1 {
@@ -32,8 +33,8 @@ impl LocalSecp256k1 {
 #[async_trait]
 impl Custody for LocalSecp256k1 {
     async fn sign(&self, msg: &[u8]) -> Result<Vec<u8>> {
-        use k256::ecdsa::{signature::Signer, Signature};
-        let sig: Signature = self.sk.sign(msg);
+        use k256::ecdsa::Signature;
+        let sig: Signature = self.sk.sign_prehash(msg)?;
         Ok(sig.to_bytes().to_vec())
     }
 

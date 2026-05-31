@@ -5,7 +5,8 @@
 //!   2. Use `Environment<Daemon>` for contract operations
 //!   3. Use NostrClient to publish/subscribe events
 //!   4. Use ChainEventWatcher to bridge chain events to Nostr
-//!   5. Cleanup
+//!   5. Bridge a chain event to Nostr (kind 31922 calendar event)
+//!   6. Cleanup
 //!
 //! ## Requirements
 //!
@@ -15,9 +16,9 @@
 //!
 //! Run with: `cargo test --test nostr_orch_suite -- --nocapture --ignored`
 
-use std::time::Duration;
 use cw_orch::environment::Environment;
 use cw_orch::prelude::TxHandler;
+use std::time::Duration;
 
 // ---------------------------------------------------------------------------
 // Helper: skip test if relay is unreachable
@@ -34,26 +35,34 @@ async fn try_connect_nostr(url: &str) -> Option<ict_rs::nostr::NostrClient> {
 }
 
 // ---------------------------------------------------------------------------
-// Test 1: Full suite lifecycle
+// Test 1: Full end-to-end lifecycle
 // ---------------------------------------------------------------------------
 
-/// Proves that NostrTestEnv can be created, provides a Daemon through
-/// Environment<Daemon>, and the Nostr relay is operational.
+/// Comprehensive end-to-end test that exercises the full nostr+calendar workflow:
+///
+///   - Creates a `NostrTestEnv` with a local chain + Nostr relay
+///   - Verifies chain WS URL and Nostr URL formation
+///   - Accesses `Environment<Daemon>` and verifies chain info + sender address
+///   - Publishes a Nostr event and subscribes to receive it back
+///   - Bridges a chain event (wasm-execute) to a Nostr kind-31922 calendar event
+///     and publishes it on the relay
+///   - Connects a `ChainEventWatcher` (gracefully skips if no chain is running)
+///   - Stops the relay cleanly
 #[tokio::test]
 #[ignore] // requires Docker + local chain
-async fn test_suite_lifecycle() {
+async fn test_full_lifecycle() {
     let _ = env_logger::try_init();
 
-    // Build chain info for a local test node
-    let chain_info = scripts::nostr_env::NostrTestEnv::local_terp_chain_info(
+    // ── Build chain info for a local test node ──────────────────────
+    let chain_info = scripts::environments::nostr::NostrTestEnv::local_terp_chain_info(
         "terp-test-1",
         "http://127.0.0.1:9090",
         "uterp",
     );
 
-    // Start the environment
-    let env = scripts::nostr_env::NostrTestEnv::start(
-        "suite-lifecycle",
+    // ── Start the environment ───────────────────────────────────────
+    let env = scripts::environments::nostr::NostrTestEnv::start(
+        "full-lifecycle",
         chain_info,
         "chapter wrist alcohol shine angry noise mercy simple rebel recycle vehicle wrap \
          morning giraffe lazy outdoor noise blood ginger sort reunion boss crowd dutch",
@@ -61,39 +70,47 @@ async fn test_suite_lifecycle() {
     .await
     .expect("Failed to start NostrTestEnv");
 
-    // Verify chain WS URL is formed
+    // ── Verify chain WS URL ─────────────────────────────────────────
     assert!(
         env.chain_ws_url().contains("/websocket"),
         "Chain WS URL should end with /websocket"
     );
 
-    // Verify Nostr URL is formed
+    // ── Verify Nostr URL ────────────────────────────────────────────
     assert!(
         env.nostr_ws_url().starts_with("ws://"),
         "Nostr URL should start with ws://"
     );
 
-    // Access the Daemon through Environment<Daemon>
+    // ── Access Daemon via Environment<Daemon> ───────────────────────
     let daemon = env.environment();
-    assert_eq!(
-        daemon.chain_info().grpc_urls[0],
-        "http://127.0.0.1:9090"
-    );
+    assert_eq!(daemon.chain_info().grpc_urls[0], "http://127.0.0.1:9090");
 
-    // Connect NostrClient to the relay
+    // Verify the daemon has a sender address (daemon isolation check)
+    let addr = daemon.sender_addr();
+    assert!(
+        !addr.to_string().is_empty(),
+        "Daemon should have a sender address"
+    );
+    eprintln!("Daemon sender: {addr}");
+
+    // Verify chain info is accessible
+    assert_eq!(daemon.chain_info().chain_id, "terp-test-1");
+
+    // ── Connect NostrClient to the relay ────────────────────────────
     let mut client = match try_connect_nostr(env.nostr_ws_url()).await {
         Some(c) => c,
         None => return,
     };
 
-    // Publish a test event
+    // ── Publish a generic test event ─────────────────────────────────
     let event = ict_rs::nostr::NostrEvent {
         id: "lifecycle_test_id".to_string(),
         pubkey: "test_pubkey".to_string(),
         created_at: 1700000000,
         kind: 1,
         tags: vec![vec!["t".to_string(), "lifecycle".to_string()]],
-        content: "Suite lifecycle test event".to_string(),
+        content: "Full lifecycle test event".to_string(),
         sig: "00".repeat(32),
     };
     let ok = client
@@ -102,12 +119,15 @@ async fn test_suite_lifecycle() {
         .expect("Failed to publish event");
     assert!(ok, "Relay should accept the event");
 
-    // Subscribe and verify we can receive it back
+    // ── Subscribe and verify we can receive it back ─────────────────
     let filters = vec![serde_json::json!({
         "kinds": [1],
         "limit": 5,
     })];
-    let sub_id = client.subscribe(filters).await.expect("Failed to subscribe");
+    let sub_id = client
+        .subscribe(filters)
+        .await
+        .expect("Failed to subscribe");
     eprintln!("Subscribed with id: {sub_id}");
 
     let received = tokio::time::timeout(Duration::from_secs(5), client.recv_event())
@@ -121,7 +141,60 @@ async fn test_suite_lifecycle() {
         received.content
     );
 
-    // Connect a chain event watcher (requires chain to be running)
+    // ── Bridge a chain event to a Nostr calendar event ──────────────
+    let attrs = vec![
+        ("action".into(), "wasm-execute".into()),
+        ("_contract_address".into(), "terp1contract123".into()),
+        ("sender".into(), "terp1sender456".into()),
+    ];
+
+    let bridged_ev = scripts::environments::nostr::chain_event_to_nostr(
+        &attrs,
+        42,
+        Some("wasm-execute"),
+        Some("terp1contract123"),
+        "nostr_pubkey_test",
+    );
+
+    // Verify the bridged event structure
+    assert_eq!(bridged_ev.kind, 31922, "Calendar Date-Based Event kind");
+    assert_eq!(bridged_ev.pubkey, "nostr_pubkey_test");
+
+    let content: serde_json::Value =
+        serde_json::from_str(&bridged_ev.content).expect("Content should be valid JSON");
+    assert_eq!(content["chain_height"], 42);
+    assert_eq!(content["action"], "wasm-execute");
+
+    // Publish the bridged event to the relay
+    let ok = client
+        .send_event(bridged_ev)
+        .await
+        .expect("Failed to publish bridged event");
+    assert!(ok, "Relay should accept the bridged chain event");
+
+    // Subscribe and verify we can receive the calendar event
+    let filters = vec![serde_json::json!({
+        "kinds": [31922],
+        "limit": 5,
+    })];
+    let _ = client
+        .subscribe(filters)
+        .await
+        .expect("Failed to subscribe");
+
+    let cal_received = tokio::time::timeout(Duration::from_secs(5), client.recv_event())
+        .await
+        .expect("Timeout waiting for Nostr calendar event")
+        .expect("Failed to receive Nostr calendar event");
+
+    assert_eq!(cal_received.kind, 31922, "Should receive kind 31922");
+    assert!(
+        cal_received.content.contains(r#""chain_height":42"#),
+        "Should contain chain_height: 42 in {}",
+        cal_received.content
+    );
+
+    // ── Connect a chain event watcher ───────────────────────────────
     match env.event_watcher().await {
         Ok(watcher) => {
             eprintln!("ChainEventWatcher connected successfully");
@@ -132,97 +205,13 @@ async fn test_suite_lifecycle() {
         }
     }
 
-    // Properly stop the relay
+    // ── Stop the relay ──────────────────────────────────────────────
     let mut env = env;
     env.stop().await.expect("Failed to stop Nostr relay");
 }
 
 // ---------------------------------------------------------------------------
-// Test 2: Chain event to Nostr relay bridge
-// ---------------------------------------------------------------------------
-
-/// Demonstrates the bridge pattern: chain events → Nostr events → published
-/// on the relay.
-#[tokio::test]
-#[ignore] // requires Docker + local chain
-async fn test_chain_event_bridge() {
-    let _ = env_logger::try_init();
-
-    let chain_info = scripts::nostr_env::NostrTestEnv::local_terp_chain_info(
-        "terp-test-1",
-        "http://127.0.0.1:9090",
-        "uterp",
-    );
-
-    let env = scripts::nostr_env::NostrTestEnv::start(
-        "chain-bridge",
-        chain_info,
-        "chapter wrist alcohol shine angry noise mercy simple rebel recycle vehicle wrap \
-         morning giraffe lazy outdoor noise blood ginger sort reunion boss crowd dutch",
-    )
-    .await
-    .expect("Failed to start NostrTestEnv");
-
-    let mut client = match try_connect_nostr(env.nostr_ws_url()).await {
-        Some(c) => c,
-        None => return,
-    };
-
-    // ── Create a chain event and bridge it to a Nostr event ──────────
-    let attrs = vec![
-        ("action".into(), "wasm-execute".into()),
-        ("_contract_address".into(), "terp1contract123".into()),
-        ("sender".into(), "terp1sender456".into()),
-    ];
-
-    let nostr_ev = scripts::nostr_env::chain_event_to_nostr(
-        &attrs,
-        42,
-        Some("wasm-execute"),
-        Some("terp1contract123"),
-        "nostr_pubkey_test",
-    );
-
-    // Verify the bridged event
-    assert_eq!(nostr_ev.kind, 31922, "Calendar Date-Based Event kind");
-    assert_eq!(nostr_ev.pubkey, "nostr_pubkey_test");
-
-    let content: serde_json::Value =
-        serde_json::from_str(&nostr_ev.content).expect("Content should be valid JSON");
-    assert_eq!(content["chain_height"], 42);
-    assert_eq!(content["action"], "wasm-execute");
-
-    // Publish the bridged event to the relay
-    let ok = client
-        .send_event(nostr_ev)
-        .await
-        .expect("Failed to publish bridged event");
-    assert!(ok, "Relay should accept the bridged chain event");
-
-    // Subscribe and verify we can receive it
-    let filters = vec![serde_json::json!({
-        "kinds": [31922],
-        "limit": 5,
-    })];
-    let _ = client.subscribe(filters).await.expect("Failed to subscribe");
-
-    let received = tokio::time::timeout(Duration::from_secs(5), client.recv_event())
-        .await
-        .expect("Timeout waiting for Nostr event")
-        .expect("Failed to receive Nostr event");
-
-    assert_eq!(received.kind, 31922, "Should receive kind 31922");
-    assert!(
-        received.content.contains(r#""chain_height":42"#) || received.content.contains(r#""chain_height":42"#),
-        "Should contain chain_height: 42"
-    );
-
-    let mut env = env;
-    env.stop().await.expect("Failed to stop Nostr relay");
-}
-
-// ---------------------------------------------------------------------------
-// Test 3: Mock backend verification (no Docker required)
+// Test 2: Mock backend verification (no Docker required)
 // ---------------------------------------------------------------------------
 
 /// Verifies that NostrRelayerManager works correctly with the mock runtime
@@ -248,42 +237,4 @@ async fn test_mock_backend_relay() {
 
     relay.stop().await.expect("Mock relay should stop");
     assert_eq!(relay.host_port(), 0, "Port should be reset after stop");
-}
-
-// ---------------------------------------------------------------------------
-// Test 4: Environment<Daemon> isolation
-// ---------------------------------------------------------------------------
-
-/// Verifies that Environment<Daemon> can be used to set different senders
-/// and that the Nostr relay is independent from chain operations.
-#[tokio::test]
-#[ignore] // requires Docker + local chain
-async fn test_daemon_isolation() {
-    let _ = env_logger::try_init();
-
-    let chain_info = scripts::nostr_env::NostrTestEnv::local_terp_chain_info(
-        "terp-test-1",
-        "http://127.0.0.1:9090",
-        "uterp",
-    );
-
-    let daemon_only = cw_orch::daemon::DaemonBuilder::new(chain_info)
-        .handle(&tokio::runtime::Handle::current())
-        .mnemonic("chapter wrist alcohol shine angry noise mercy simple rebel recycle vehicle wrap \
-                    morning giraffe lazy outdoor noise blood ginger sort reunion boss crowd dutch")
-        .is_test(true)
-        .build()
-        .expect("Failed to build Daemon");
-
-    // The daemon should be connected and have a sender
-    let addr = daemon_only.sender_addr();
-    assert!(
-        !addr.to_string().is_empty(),
-        "Daemon should have a sender address"
-    );
-    eprintln!("Daemon sender: {addr}");
-
-    // Verify chain info is accessible
-    let info = daemon_only.chain_info();
-    assert_eq!(info.chain_id, "terp-test-1");
 }

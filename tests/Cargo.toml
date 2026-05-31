@@ -1,13 +1,5 @@
-
 [package]
 name = "scripts"
-version.workspace = true
-edition.workspace = true
-[workspace]
-members = ["."]
-resolver = "2"
-
-[workspace.package]
 version = "0.1.0"
 edition = "2021"
 
@@ -21,20 +13,28 @@ nostr = []
 cosmwasm-std = { path = "../../cosmwasm/packages/std" }
 # Chain orchestration
 cw-orch = { path = "../../cw-orchestrator/cw-orch", features = ["daemon"] }
-
+cw-orch-interchain = { path = "../../cw-orchestrator/cw-orch-interchain" }
+sha2 = "0.10"
 # Sub-suite crates
 cw-headstash = { path = "../../headstash/contract/cw-headstash", features = ["interface"] }
 cw-headstash-manifold = { path = "../../headstash/contract/manifold", features = ["interface"] }
 cw-infuser-scripts = { path = "../../cw-infuser/scripts" }
 dao-testing = { path = "../../dao-contracts/packages/dao-testing" }
+dao-calendar = { path = "../../dao-contracts/contracts/proposal/dao-calendar", features = ["interface"] }
 shit-scripts = { path = "../../shitstrap/scripts/shit-scripts" }
 terp-account-scripts = { path = "../../terp-account-billboards/scripts" }
 zk-test-press = { path = "../../headstash/test-press", features = ["interface"] }
 
+
 # Container lifecycle
 ict-rs = { path = "../../ict-rs/ict-rs", features = ["docker", "terp", "testing", "nostr"] }
 cw4 = { path = "../../cw-plus/packages/cw4" }
-
+cw-utils = { path = "../../cw-minus/packages/cw-utils" }
+cosmrs = { path = "../../cosmos-rust/cosmrs" }
+cosmos-sdk-proto = { path = "../../cosmos-rust/cosmos-sdk-proto" }
+cosmwasm-schema = { path = "../../cosmwasm/packages/schema" }
+hash-market = { path = "../tools/hash-market", features = ["server", "client", "ve", "blossom"] }
+axum = { version = "0.7" }
 # CLI + runtime
 anyhow = "1.0"
 base64 = "0.22"
@@ -42,11 +42,28 @@ clap = { version = "4", features = ["derive"] }
 dotenv = "0.15"
 env_logger = "0.11"
 hex = "0.4"
-rustls = { version = "0.23", features = ["ring"] }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
+tempfile = "3.27.0"
+toml = "1.1.2"
+which = "8.0.2"
+reqwest = "0.13.4"
+rand = { version = "0.10.1", default-features = false, features = ["thread_rng"] }
+async-trait = "0.1.89"
+k256 = "0.13.4"
+csv = "1.4.0"
+log = "0.4.30"
+tracing-subscriber = "0.3.23"
 
+[[bin]]
+name = "delegations"
+path = "bin/delegations.rs"
+
+[[bin]]
+name = "e2e"
+path = "bin/e2e.rs"
 
 # Override transitive git deps from zk-cosmwasm with local paths

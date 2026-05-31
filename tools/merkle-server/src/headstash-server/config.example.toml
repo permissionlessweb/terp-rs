@@ -1,7 +1,0 @@
-# headstash-server configuration
-
-# Address to bind the HTTP server
-bind = "0.0.0.0:8080"
-
-# Directory for file-based storage
-data_dir = "./data"

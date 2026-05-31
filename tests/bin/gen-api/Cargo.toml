@@ -1,0 +1,16 @@
+[package]
+name = "gen-api"
+version = "0.1.0"
+edition = "2021"
+description = "Terp Network API client library generator — invokes gen-tools pipeline across all CosmWasm workspaces"
+
+[[bin]]
+name = "gen-api"
+path = "src/main.rs"
+
+[dependencies]
+gen-tools = { path = "../../tools/gen-tools" }
+anyhow = "1"
+log = "0.4"
+env_logger = "0.11"
+clap = { version = "4", features = ["derive"] }

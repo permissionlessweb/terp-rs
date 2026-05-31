@@ -9,7 +9,7 @@ use anybuf::{Anybuf, Bufany};
 // ---------------------------------------------------------------------------
 
 /// Payload validators include in their ABCI++ vote extensions.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct VoteExtensionHashData {
     /// field 1: runtime identifier
     pub runtime_id: String,
@@ -58,7 +58,7 @@ impl VoteExtensionHashData {
 // HashRoot — confirmed foreign-chain state root after quorum
 // ---------------------------------------------------------------------------
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct HashRoot {
     /// field 1
     pub chain_uid: String,
@@ -167,21 +167,9 @@ pub fn transport_merkle_root(leaves: &[PallasLeaf]) -> String {
         return hex::encode([0u8; 32]);
     }
 
-    // Simple SHA-256 binary merkle tree
+    use sha2::Digest;
     fn sha256(data: &[u8]) -> [u8; 32] {
-        // Use a minimal SHA-256 for the transport layer.
-        // When the `ve` or `server` feature is active, sha2 crate is available,
-        // but here we keep it self-contained with a hand-rolled approach.
-        // Actually, we just use the raw bytes hashing from the anybuf dependency
-        // context — but since we only have anybuf, we do a simple XOR-fold
-        // placeholder. In production, wire in sha2::Sha256.
-        //
-        // For now, we use a deterministic hash that is good enough for transport.
-        let mut out = [0u8; 32];
-        for (i, &b) in data.iter().enumerate() {
-            out[i % 32] ^= b;
-        }
-        out
+        sha2::Sha256::digest(data).into()
     }
 
     let mut queue: VecDeque<[u8; 32]> = leaves.iter().map(|l| l.0).collect();

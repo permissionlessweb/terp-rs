@@ -966,6 +966,7 @@ impl NipMetadata for RSVPMetadata {
     }
 }
 
+#[cfg(feature = "nip44")]
 impl super::nip44::NipMetadataEncrypt for CalendarEventMetadata {
     fn encrypted_content(&self) -> &str {
         &self.content

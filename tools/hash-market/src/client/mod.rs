@@ -1,8 +1,25 @@
+//! HashMerchantClient trait — uniform interface for consuming hashmerchant roots.
+//!
+//! Three default implementations:
+//! - `MinioIpfsClient` — local Kubo RPC + MinIO for CID fetch/pin
+//! - `NostrRelayClient` — connects to Nostr relay via NEG-OPEN + fetches roots
+//! - `HttpWebhookClient` — POSTs root confirmations to HTTP endpoints
+
 //! Client polling loop: eth_getProof → Pallas transform → encode → POST to sidecar.
 
-use crate::eth::EthClient;
+pub mod eth;
+pub mod hashmerchant;
+pub mod minio_ipfs;
+pub mod nostr;
+pub mod ve;
+
+pub use hashmerchant::{HashMerchantClient, RootConfirmation};
+pub use minio_ipfs::MinioIpfsClient;
+
+use crate::fields::pasta;
+
 use crate::msg::VoteExtensionHashData;
-use crate::pallas;
+use crate::EthClient;
 use anyhow::{Context, Result};
 
 /// Run the ETH proof polling loop.
@@ -73,7 +90,7 @@ async fn poll_once(
 
     // Transform storage hash to Pallas
     let state_root = block.state_root_bytes()?;
-    let pallas_leaves = pallas::transform_proofs(&[state_root.clone()]);
+    let pallas_leaves = pasta::transform_proofs(&[state_root.clone()]);
     let root = if let Some(leaf) = pallas_leaves.first() {
         leaf.0.to_vec()
     } else {

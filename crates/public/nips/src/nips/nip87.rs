@@ -299,7 +299,7 @@ impl NipMetadata for CashuMintMetadata {
 // Similar struct for FedimintMetadata...
 
 // ==================== NIP-44 Encryption Support ====================
-
+#[cfg(feature = "nip44")]
 impl crate::nips::nip44::NipMetadataEncrypt for MintRecommendation {
     fn encrypted_content(&self) -> &str {
         &self.content
@@ -309,7 +309,7 @@ impl crate::nips::nip44::NipMetadataEncrypt for MintRecommendation {
         self.content = payload;
     }
 }
-
+#[cfg(feature = "nip44")]
 impl crate::nips::nip44::NipMetadataEncrypt for CashuMintMetadata {
     fn encrypted_content(&self) -> &str {
         &self.content

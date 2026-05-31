@@ -24,7 +24,7 @@ hkdf = {version = "0.12", optional = true}
 hmac = {version = "0.12", optional = true}
 uuid = {version = "1.23.1", optional = true, deafult-features = false}
 rand_core = { version = "0.6", features = ["getrandom"] , optional = true }
-secp256k1 = { version = "0.29", features = ["rand", "serde"], optional = true }
+axum = { version = "0.7" }
 
 [features]
 default = ["full"]
@@ -32,7 +32,6 @@ nip01 = []
 nip15 = []
 nip52 = []
 nip77 = ["dep:uuid"]
-nip06 = ["dep:hmac", "dep:secp256k1"]
-nip44 = ["dep:secp256k1","dep:rand_core","dep:hmac","dep:hkdf","dep:constant_time_eq","dep:chacha20","dep:base64"]
+nip44 = ["dep:rand_core","dep:hmac","dep:hkdf","dep:constant_time_eq","dep:chacha20","dep:base64"]
 cw = ["dep:cosmwasm-std","dep:cosmwasm-schema", "dep:cw721"]
-full = ["cw","nip01", "nip15", "nip52","nip44","nip06", "nip77"]
+full = ["cw","nip01", "nip15", "nip52", "nip77"]
