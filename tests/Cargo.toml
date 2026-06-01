@@ -13,11 +13,11 @@ nostr = []
 cosmwasm-std = { path = "../../cosmwasm/packages/std" }
 # Chain orchestration
 cw-orch = { path = "../../cw-orchestrator/cw-orch", features = ["daemon"] }
-cw-orch-interchain = { path = "../../cw-orchestrator/cw-orch-interchain" }
+cw-orch-interchain = { path = "../../cw-orchestrator/cw-orch-interchain", features = ["daemon"] }
 sha2 = "0.10"
 # Sub-suite crates
-cw-headstash = { path = "../../headstash/contract/cw-headstash", features = ["interface"] }
-cw-headstash-manifold = { path = "../../headstash/contract/manifold", features = ["interface"] }
+cw-headstash = { path = "../../headstash/contracts/cw-headstash", features = ["interface"] }
+cw-headstash-manifold = { path = "../../headstash/contracts/manifold", features = ["interface"] }
 cw-infuser-scripts = { path = "../../cw-infuser/scripts" }
 dao-testing = { path = "../../dao-contracts/packages/dao-testing" }
 dao-calendar = { path = "../../dao-contracts/contracts/proposal/dao-calendar", features = ["interface"] }
@@ -65,5 +65,8 @@ path = "bin/delegations.rs"
 [[bin]]
 name = "e2e"
 path = "bin/e2e.rs"
+[[bin]]
+name = "ibc"
+path = "bin/ibc_info.rs"
 
 # Override transitive git deps from zk-cosmwasm with local paths

@@ -3,6 +3,17 @@
 Date: 2026-05-30
 
 ---
+ TODO:
+- use our blossom clent traits for types fetching from hashmerchant server (replaces manual format url fetch keys)
+- spawn anvil and wire in actual ingest and production workflow using hashmerchant
+# nostr client tests:
+- 
+- ensure relayer functionality of chain -> argus -> hash-merchant -> nostr relatyer of dao-calendar event. we do this by using a dao to use a dao-lcalendar module using nip-52 events and confirm dao-calendar events emitted are:
+    - picked up by argus formula (indexer queries and caches smart contract data from contract)
+    - argus exporter webhook event sent out to hashmerchant relayer (indexer configured via webhook || websocket to do things when events happen )
+    - argus can retrieve information from hashmerchant relayers via cid (testing sanity of retrieveing offchain data via cid)
+    - hashmerchant relayer relays event to nostr relayer container (hashmerchant relayer is sound and compatible to broader nostr network)
+
 
 ## What this workspace is
 

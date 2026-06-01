@@ -31,6 +31,7 @@
 //! - Proper handling of jailed/unbonded validators
 //! - Final state verification
 //! - Batch broadcasting with 32 msgs per transaction
+
 use std::{collections::HashMap, fs::File, io::Write, str::FromStr};
 
 use anyhow::anyhow;
@@ -60,7 +61,6 @@ pub const NEW_DELS_FILE: &str = "./src/bin/data/new-delegations.csv";
 pub const RAW_MSG_JSON: &str = "delegation_messages.json";
 pub const MNEMONIC: &str =
         "garage dial step tourist hint select patient eternal lesson raccoon shaft palace flee purpose vivid spend place year file life cliff winter race fox";
-
 
 #[cw_serde]
 struct DelegationDaoEntity {
@@ -144,24 +144,6 @@ struct MessageExport {
     delegations: Delegations,
     undelegates: Undelegations,
 }
-
-pub const TERPNETWORK_NETWORK: NetworkInfo = NetworkInfo {
-    chain_name: "Terp",
-    pub_address_prefix: "terp",
-    coin_type: 118u32,
-};
-
-pub const TERPNETWORK_MAINNET: ChainInfo = ChainInfo {
-    kind: ChainKind::Mainnet,
-    chain_id: "morocco-1",
-    gas_denom: "uthiol",
-    gas_price: 0.05,
-    grpc_urls: &["http://192.168.1.104:9090"],
-    network_info: TERPNETWORK_NETWORK,
-    lcd_url: None,
-    fcd_url: None,
-};
-
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -269,7 +251,8 @@ async fn realign_delegations(
         csv_mode = true;
         unbonded_vals = vec![];
         unbonding_vals = vec![];
-        val_historical = cosmos_sdk_proto::cosmos::staking::v1beta1::QueryHistoricalInfoResponse::default();
+        val_historical =
+            cosmos_sdk_proto::cosmos::staking::v1beta1::QueryHistoricalInfoResponse::default();
         to_redelegate = load_unbond_delegations(csv, dao_addrs, "uthiol");
         println!(
             "Total loaded from CSV: {} uthiol ({} entries)",
@@ -953,11 +936,7 @@ fn load_new_delegations(fp: &str, has_header: bool) -> AllAlignedDelegations {
 /// - Header is auto-detected — if first field is "validator" or "operator", it's skipped.
 /// - No header required; plain `validator,amount` lines are fine.
 /// - Delegator address is filled from the DAO address list (first DAO used).
-fn load_unbond_delegations(
-    fp: &str,
-    dao_addrs: &[String],
-    denom: &str,
-) -> Vec<Delegation> {
+fn load_unbond_delegations(fp: &str, dao_addrs: &[String], denom: &str) -> Vec<Delegation> {
     let default_dao = dao_addrs.first().cloned().unwrap_or_default();
     eprintln!(
         "[CSV] Loading unbond delegations from '{}' (delegator: {})",
@@ -986,7 +965,10 @@ fn load_unbond_delegations(
 
     for record in &records[start_idx..] {
         if record.len() < 2 {
-            eprintln!("[CSV] Skipping invalid record (need 2 fields): {:?}", record);
+            eprintln!(
+                "[CSV] Skipping invalid record (need 2 fields): {:?}",
+                record
+            );
             continue;
         }
         let validator = record[0].trim().to_string();
@@ -1055,7 +1037,9 @@ fn distribute_redelegated_greedy(
         .collect();
 
     if deficits.is_empty() {
-        println!("⚠️  No active validator has a deficit — all delegations will be undelegated directly");
+        println!(
+            "⚠️  No active validator has a deficit — all delegations will be undelegated directly"
+        );
         let undelegate_msgs: Vec<MsgUndelegate> = to_redelegate
             .iter()
             .map(|src| MsgUndelegate {
@@ -1327,10 +1311,7 @@ fn verify_final_state(
             .get(&undel.validator_address)
             .copied()
             .unwrap_or(Uint128::zero());
-        final_state.insert(
-            undel.validator_address.clone(),
-            cur.saturating_sub(amount),
-        );
+        final_state.insert(undel.validator_address.clone(), cur.saturating_sub(amount));
     }
 
     // Verify the final state matches the obligated state

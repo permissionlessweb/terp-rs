@@ -28,11 +28,14 @@
 //! docker images terpnetwork/terp-core:local-zk
 //! cargo build --bin e2e -p scripts --features docker,nostr
 //! ```
+//!
 
 use std::collections::HashMap;
 use std::sync::Arc;
 
 use anyhow::{Context, Result};
+use cw_orch::daemon::networks::terp::TERP_LOCAL_CHAIN_ID;
+use cw_orch::daemon::networks::TERP_LOCALNET;
 use cw_orch::daemon::DaemonBuilder;
 use cw_orch::environment::{ChainInfoOwned, ChainKind, NetworkInfo, TxHandler};
 use cw_orch::prelude::*;
@@ -40,8 +43,8 @@ use hex;
 use ict_rs::prelude::*;
 use ict_rs::testing::TestEnv;
 use log::info;
-use scripts::suite::{HealthStatus, SidecarFleet};
 use scripts::suite::TerpNetworkDeployData;
+use scripts::suite::{HealthStatus, SidecarFleet};
 use sha2;
 use sha2::Digest;
 use tokio::signal;
@@ -51,44 +54,12 @@ use tokio::signal;
 // ---------------------------------------------------------------------------
 const TEST_MNEMONIC: &str = "insane foam pony state ethics latin marriage fame book cliff crime joke elite catch deposit rent window sun repair weapon shuffle rose fossil bean";
 const TEST_NAME: &str = "e2e-full";
-const CHAIN_A_ID: &str = "terp-test-1";
-const CHAIN_B_ID: &str = "terp-test-2";
 const IMAGE_REPO: &str = "terpnetwork/terp-core";
 const IMAGE_TAG: &str = "v5.2.0-zk-localterp";
 
 // ---------------------------------------------------------------------------
 // Chain configs
 // ---------------------------------------------------------------------------
-
-pub const LOCAL_TERP_A: ChainInfo = ChainInfo {
-    kind: ChainKind::Local,
-    chain_id: CHAIN_A_ID,
-    gas_denom: "uterp",
-    gas_price: 0.025,
-    grpc_urls: &[],
-    network_info: NetworkInfo {
-        chain_name: "terp",
-        pub_address_prefix: "terp",
-        coin_type: 118,
-    },
-    lcd_url: None,
-    fcd_url: None,
-};
-
-pub const LOCAL_TERP_B: ChainInfo = ChainInfo {
-    kind: ChainKind::Local,
-    chain_id: CHAIN_B_ID,
-    gas_denom: "uterp",
-    gas_price: 0.025,
-    grpc_urls: &[],
-    network_info: NetworkInfo {
-        chain_name: "terp",
-        pub_address_prefix: "terp",
-        coin_type: 118,
-    },
-    lcd_url: None,
-    fcd_url: None,
-};
 
 fn main() -> Result<()> {
     rustls::crypto::aws_lc_rs::default_provider()
@@ -124,11 +95,11 @@ fn main() -> Result<()> {
 }
 
 fn build_chain_info(c: &dyn Chain, id: &str) -> ChainInfoOwned {
-    let mut info: ChainInfoOwned = match id {
-        CHAIN_A_ID => LOCAL_TERP_A.into(),
-        _ => LOCAL_TERP_B.into(),
+    let mut info: ChainInfoOwned = TERP_LOCALNET.into();
+    info.chain_id = match id {
+        "240u-1" => TERP_LOCAL_CHAIN_ID.into(),
+        _ => "240u-2".to_string(),
     };
-    info.chain_id = c.chain_id().to_string();
     info.gas_denom = "uterp".into();
     info.gas_price = 0.25;
     info.grpc_urls = vec![c.host_grpc_address().to_string()];
@@ -179,8 +150,9 @@ pub async fn spawn_dual_chain(
 }
 
 async fn run() -> Result<()> {
-    let network_id = format!("ict-{TEST_NAME}");
     clean_docker()?;
+    let network_id = format!("ict-{TEST_NAME}");
+    let mut infos: Vec<(&str, ChainInfoOwned)> = Vec::new();
     println!("═══ Terp Network E2E Suite ═══");
     println!("Chains: {CHAIN_A_ID}, {CHAIN_B_ID}");
     println!("Image: {IMAGE_REPO}:{IMAGE_TAG}");
@@ -190,9 +162,7 @@ async fn run() -> Result<()> {
         .context("Docker rt creation failed")?;
     rt.create_network(&network_id).await?;
     let mut ic = spawn_dual_chain(CHAIN_A_ID, CHAIN_B_ID, &network_id, rt.clone()).await?;
-    println!("spawn");
 
-    let mut infos: Vec<(&str, ChainInfoOwned)> = Vec::new();
     for id in [CHAIN_A_ID, CHAIN_B_ID] {
         let c = ic.get_chain(id).expect("chain exists");
         c.build_wallet("shitter", TEST_MNEMONIC).await?;
@@ -244,51 +214,7 @@ async fn run() -> Result<()> {
     info!("Deployer: {}", sender);
 
     println!("\n--- Patching website config.json ---");
-    let website_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .unwrap()
-        .parent()
-        .unwrap()
-        .join("websites/terp.network");
-    let config_path = website_root.join("public/config.json");
-    if config_path.exists() {
-        let raw = std::fs::read_to_string(&config_path)?;
-        if let Ok(mut config) = serde_json::from_str::<serde_json::Value>(&raw) {
-            let home = std::env::var("HOME").unwrap_or_else(|_| "/root".into());
-            let state_path = std::path::PathBuf::from(home).join(".cw-orchestrator/state.json");
-            if state_path.exists() {
-                let state_raw = std::fs::read_to_string(&state_path)?;
-                if let Ok(state) = serde_json::from_str::<serde_json::Value>(&state_raw) {
-                    if let Some(chain_entry) = state.get(CHAIN_A_ID) {
-                        if let Some(defaults) = chain_entry.get("default") {
-                            let addrs: Vec<(String, String)> = defaults
-                                .as_object()
-                                .unwrap()
-                                .iter()
-                                .map(|(k, v)| (k.clone(), v.as_str().unwrap_or("?").to_string()))
-                                .collect();
-                            let chains = config["chains"].as_object_mut().unwrap();
-                            let entry = chains
-                                .entry(CHAIN_A_ID.to_string())
-                                .or_insert(serde_json::json!({}));
-                            if !entry.as_object().unwrap().contains_key("contracts") {
-                                entry["contracts"] = serde_json::json!({});
-                            }
-                            let contracts = entry["contracts"].as_object_mut().unwrap();
-                            for (k, v) in &addrs {
-                                contracts.insert(k.clone(), serde_json::json!(v));
-                                println!("  {k}: {v}");
-                            }
-                            let updated = serde_json::to_string_pretty(&config)?;
-                            std::fs::write(&config_path, updated)?;
-                            println!("  config.json patched with {} contracts", addrs.len());
-                        }
-                    }
-                }
-            }
-        }
-    }
-    println!("  IBC path: transfer");
+    e2e_patch_static_website_config()?;
 
     // 8. Start SidecarFleet for infrastructure services
     println!("\n--- Starting sidecars ---");
@@ -315,31 +241,33 @@ async fn run() -> Result<()> {
 
     // ── Hashmerchant full workflow verification ──────────────────────────────
     println!("\n--- Hashmerchant workflow verification ---");
-    let hm_url = fleet.endpoint("hashmerchant", "http")
+    let hm_url = fleet
+        .endpoint("hashmerchant", "http")
         .context("hashmerchant endpoint not found")?;
     let client = reqwest::Client::new();
 
     // 1. Blob upload + retrieve
     let content = b"hashmerchant e2e verification blob";
-    let upload = client.post(format!("{hm_url}/blobs"))
+    let upload = client
+        .post(format!("{hm_url}/blobs"))
         .body(content.to_vec())
         .send()
         .await?;
     assert_eq!(upload.status(), 200, "POST /blobs failed");
     let desc: serde_json::Value = upload.json().await?;
-    let hash_hex = desc["sha256"].as_str()
+    let hash_hex = desc["sha256"]
+        .as_str()
         .context("sha256 field missing from upload response")?;
-    println!("  1. Blob uploaded: {hash_hex}");
 
     // 2. Retrieve blob & verify hash
-    let get_resp = client.get(format!("{hm_url}/blobs/{hash_hex}"))
+    let get_resp = client
+        .get(format!("{hm_url}/blobs/{hash_hex}"))
         .send()
         .await?;
     assert_eq!(get_resp.status(), 200, "GET /blobs/{{hash}} failed");
     let body = get_resp.text().await?;
     let expected = sha2::Sha256::digest(content);
     assert_eq!(hex::encode(expected), hash_hex, "hash mismatch");
-    println!("  2. Blob retrieved & hash verified");
 
     // 3. Upload merkle tree
     let tree_id = "e2e-test-tree";
@@ -355,7 +283,8 @@ async fn run() -> Result<()> {
             }
         }
     });
-    let tree_resp = client.post(format!("{hm_url}/trees/{tree_id}"))
+    let tree_resp = client
+        .post(format!("{hm_url}/trees/{tree_id}"))
         .json(&tree_input)
         .send()
         .await?;
@@ -363,12 +292,13 @@ async fn run() -> Result<()> {
     println!("  3. Merkle tree uploaded");
 
     // 4. List trees
-    let list_resp = client.get(format!("{hm_url}/trees"))
-        .send()
-        .await?;
+    let list_resp = client.get(format!("{hm_url}/trees")).send().await?;
     assert_eq!(list_resp.status(), 200, "GET /trees failed");
     let trees: Vec<String> = list_resp.json().await?;
-    assert!(trees.iter().any(|t| t == tree_id), "tree {tree_id} not in list");
+    assert!(
+        trees.iter().any(|t| t == tree_id),
+        "tree {tree_id} not in list"
+    );
     println!("  4. Tree listed in /trees");
 
     // 5. Register headstash
@@ -383,7 +313,8 @@ async fn run() -> Result<()> {
             }
         ]
     });
-    let hs_resp = client.post(format!("{hm_url}/headstash/{hs_id}"))
+    let hs_resp = client
+        .post(format!("{hm_url}/headstash/{hs_id}"))
         .json(&hs_input)
         .send()
         .await?;
@@ -391,28 +322,32 @@ async fn run() -> Result<()> {
     println!("  5. Headstash registered");
 
     // 6. Retrieve headstash
-    let hs_get = client.get(format!("{hm_url}/headstash/{hs_id}"))
+    let hs_get = client
+        .get(format!("{hm_url}/headstash/{hs_id}"))
         .send()
         .await?;
     assert_eq!(hs_get.status(), 200, "GET /headstash/{{id}} failed");
     println!("  6. Headstash retrieved");
 
     // 7. Delete blob
-    let del_resp = client.delete(format!("{hm_url}/blobs/{hash_hex}"))
+    let del_resp = client
+        .delete(format!("{hm_url}/blobs/{hash_hex}"))
         .send()
         .await?;
     assert_eq!(del_resp.status(), 204, "DELETE /blobs/{{hash}} failed");
     println!("  7. Blob deleted");
 
     // 8. Verify blob is gone
-    let get_gone = client.get(format!("{hm_url}/blobs/{hash_hex}"))
+    let get_gone = client
+        .get(format!("{hm_url}/blobs/{hash_hex}"))
         .send()
         .await?;
     assert_eq!(get_gone.status(), 404, "deleted blob should return 404");
     println!("  8. Deleted blob returns 404 — confirmed");
 
     // 9. Delete tree
-    let del_tree = client.delete(format!("{hm_url}/trees/{tree_id}"))
+    let del_tree = client
+        .delete(format!("{hm_url}/trees/{tree_id}"))
         .send()
         .await?;
     assert_eq!(del_tree.status(), 204, "DELETE /trees/{{id}} failed");
@@ -502,8 +437,6 @@ async fn run() -> Result<()> {
         .args(["network", "rm", "--force", &net])
         .output();
     println!("  Containers and network removed");
-
-    println!("═══ E2E Suite complete: TODO:═══");
     Ok(())
 }
 
@@ -551,5 +484,54 @@ fn clean_docker() -> Result<()> {
     let _ = std::process::Command::new("docker")
         .args(["network", "rm", "--force", &network_id])
         .output();
+    Ok(())
+}
+
+pub fn e2e_patch_static_website_config() -> Result<()> {
+    // TODO: replace with testdata path for shared env.
+    let website_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .join("websites/terp.network");
+    let config_path = website_root.join("public/config.json");
+    if config_path.exists() {
+        let raw = std::fs::read_to_string(&config_path)?;
+        if let Ok(mut config) = serde_json::from_str::<serde_json::Value>(&raw) {
+            let home = std::env::var("HOME").unwrap_or_else(|_| "/root".into());
+            let state_path = std::path::PathBuf::from(home).join(".cw-orchestrator/state.json");
+            if state_path.exists() {
+                let state_raw = std::fs::read_to_string(&state_path)?;
+                if let Ok(state) = serde_json::from_str::<serde_json::Value>(&state_raw) {
+                    if let Some(chain_entry) = state.get(CHAIN_A_ID) {
+                        if let Some(defaults) = chain_entry.get("default") {
+                            let addrs: Vec<(String, String)> = defaults
+                                .as_object()
+                                .unwrap()
+                                .iter()
+                                .map(|(k, v)| (k.clone(), v.as_str().unwrap_or("?").to_string()))
+                                .collect();
+                            let chains = config["chains"].as_object_mut().unwrap();
+                            let entry = chains
+                                .entry(CHAIN_A_ID.to_string())
+                                .or_insert(serde_json::json!({}));
+                            if !entry.as_object().unwrap().contains_key("contracts") {
+                                entry["contracts"] = serde_json::json!({});
+                            }
+                            let contracts = entry["contracts"].as_object_mut().unwrap();
+                            for (k, v) in &addrs {
+                                contracts.insert(k.clone(), serde_json::json!(v));
+                                println!("  {k}: {v}");
+                            }
+                            let updated = serde_json::to_string_pretty(&config)?;
+                            std::fs::write(&config_path, updated)?;
+                            println!("  config.json patched with {} contracts", addrs.len());
+                        }
+                    }
+                }
+            }
+        }
+    }
     Ok(())
 }
