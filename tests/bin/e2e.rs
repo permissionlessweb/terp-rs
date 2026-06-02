@@ -34,10 +34,10 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use anyhow::{Context, Result};
-use cw_orch::daemon::networks::terp::TERP_LOCAL_CHAIN_ID;
+use cw_orch::daemon::networks::terp::{TERP_LOCAL_CHAIN_ID, TERP_LOCAL_CHAIN_ID_B};
 use cw_orch::daemon::networks::TERP_LOCALNET;
 use cw_orch::daemon::DaemonBuilder;
-use cw_orch::environment::{ChainInfoOwned, ChainKind, NetworkInfo, TxHandler};
+use cw_orch::environment::{ChainInfoOwned, ChainKind, TxHandler};
 use cw_orch::prelude::*;
 use hex;
 use ict_rs::prelude::*;
@@ -154,16 +154,22 @@ async fn run() -> Result<()> {
     let network_id = format!("ict-{TEST_NAME}");
     let mut infos: Vec<(&str, ChainInfoOwned)> = Vec::new();
     println!("═══ Terp Network E2E Suite ═══");
-    println!("Chains: {CHAIN_A_ID}, {CHAIN_B_ID}");
+    println!("Chains: {TERP_LOCAL_CHAIN_ID}, {TERP_LOCAL_CHAIN_ID_B}");
     println!("Image: {IMAGE_REPO}:{IMAGE_TAG}");
     let rt: Arc<dyn RuntimeBackend> = IctRuntime::Docker(DockerConfig::default())
         .into_backend()
         .await
         .context("Docker rt creation failed")?;
     rt.create_network(&network_id).await?;
-    let mut ic = spawn_dual_chain(CHAIN_A_ID, CHAIN_B_ID, &network_id, rt.clone()).await?;
+    let mut ic = spawn_dual_chain(
+        TERP_LOCAL_CHAIN_ID,
+        TERP_LOCAL_CHAIN_ID_B,
+        &network_id,
+        rt.clone(),
+    )
+    .await?;
 
-    for id in [CHAIN_A_ID, CHAIN_B_ID] {
+    for id in [TERP_LOCAL_CHAIN_ID, TERP_LOCAL_CHAIN_ID_B] {
         let c = ic.get_chain(id).expect("chain exists");
         c.build_wallet("shitter", TEST_MNEMONIC).await?;
         let shit = c.key_address("shitter").await?;
@@ -184,7 +190,7 @@ async fn run() -> Result<()> {
 
     let (id_a, info_a) = infos.remove(0);
     let (id_b, info_b) = infos.remove(0);
-    assert_eq!((CHAIN_A_ID, CHAIN_B_ID), (id_a, id_b));
+    assert_eq!((TERP_LOCAL_CHAIN_ID, TERP_LOCAL_CHAIN_ID), (id_a, id_b));
 
     // Build daemons (blocking — cw-orch uses tokio::runtime::Handle internally)
     // https://orchestrator.abstract.money/interchain/integrations/daemon.html#for-scripting
@@ -221,7 +227,7 @@ async fn run() -> Result<()> {
     let mut fleet = SidecarFleet::new(TEST_NAME)
         .with_minio_ipfs_defaults()
         .with_merkle_server_defaults()
-        .with_hashmerchant_defaults(CHAIN_A_ID)
+        .with_hashmerchant_defaults(TERP_LOCAL_CHAIN_ID)
         .with_nostr_relay("nostr-e2e")
         .with_minimal_indexer("argus");
     fleet.start_all().await?;
@@ -386,7 +392,7 @@ async fn run() -> Result<()> {
     if state_path.exists() {
         let raw = std::fs::read_to_string(&state_path)?;
         if let Ok(json) = serde_json::from_str::<serde_json::Value>(&raw) {
-            for chain_id in [CHAIN_A_ID, CHAIN_B_ID] {
+            for chain_id in [TERP_LOCAL_CHAIN_ID, TERP_LOCAL_CHAIN_ID_B] {
                 if let Some(chain) = json.get(chain_id) {
                     println!("  [{chain_id}]");
                     if let Some(defaults) = chain.get("default") {
@@ -423,8 +429,8 @@ async fn run() -> Result<()> {
     // Explicitly remove Docker containers and network so next run doesn't conflict
     println!("  Removing Docker artifacts...");
     let names = [
-        format!("ict-{TEST_NAME}-{CHAIN_A_ID}-val-0"),
-        format!("ict-{TEST_NAME}-{CHAIN_B_ID}-val-0"),
+        format!("ict-{TEST_NAME}-{TERP_LOCAL_CHAIN_ID}-val-0"),
+        format!("ict-{TEST_NAME}-{TERP_LOCAL_CHAIN_ID_B}-val-0"),
         format!("ict-{TEST_NAME}-hermes-bg"),
     ];
     for name in &names {
@@ -504,7 +510,7 @@ pub fn e2e_patch_static_website_config() -> Result<()> {
             if state_path.exists() {
                 let state_raw = std::fs::read_to_string(&state_path)?;
                 if let Ok(state) = serde_json::from_str::<serde_json::Value>(&state_raw) {
-                    if let Some(chain_entry) = state.get(CHAIN_A_ID) {
+                    if let Some(chain_entry) = state.get(TERP_LOCAL_CHAIN_ID) {
                         if let Some(defaults) = chain_entry.get("default") {
                             let addrs: Vec<(String, String)> = defaults
                                 .as_object()
@@ -514,7 +520,7 @@ pub fn e2e_patch_static_website_config() -> Result<()> {
                                 .collect();
                             let chains = config["chains"].as_object_mut().unwrap();
                             let entry = chains
-                                .entry(CHAIN_A_ID.to_string())
+                                .entry(TERP_LOCAL_CHAIN_ID.to_string())
                                 .or_insert(serde_json::json!({}));
                             if !entry.as_object().unwrap().contains_key("contracts") {
                                 entry["contracts"] = serde_json::json!({});

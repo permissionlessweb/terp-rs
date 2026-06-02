@@ -46,6 +46,7 @@ use cosmwasm_std::{Decimal, Uint128};
 use csv::ReaderBuilder;
 use cw_orch::{
     daemon::{
+        networks::TERP_MAINNET,
         queriers::{Bank, Staking},
         DaemonBuilder, TxSender, Wallet,
     },
@@ -184,7 +185,7 @@ fn main() -> anyhow::Result<()> {
         ["terp1qfpnat6kc99gsc3233cw6fq0s0fdv7cq06alqu".into()].to_vec();
 
     let bitsong_chain: ChainInfoOwned = match args.network.as_str() {
-        "main" => TERPNETWORK_MAINNET.to_owned(),
+        "main" => TERP_MAINNET.to_owned(),
         // "testnet" => TERPNETWORK_TESTNET.to_owned(),
         // "local" => LOCAL_NETWORK1.to_owned(),
         _ => panic!("Invalid network"),

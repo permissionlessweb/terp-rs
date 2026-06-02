@@ -68,5 +68,3 @@ path = "bin/e2e.rs"
 [[bin]]
 name = "ibc"
 path = "bin/ibc_info.rs"
-
-# Override transitive git deps from zk-cosmwasm with local paths
