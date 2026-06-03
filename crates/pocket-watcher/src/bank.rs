@@ -5,46 +5,6 @@ use std::str::FromStr;
 use crate::error::{QueryError, QueryResult};
 use crate::pagination::{paginate_grpc_query, PageRequest, PageResponse};
 
-// ====================== Bank Protobufs ======================
-
-#[derive(Clone, PartialEq, Message)]
-pub struct QueryAllBalancesRequest {
-    #[prost(string, tag = "1")]
-    pub address: String,
-    #[prost(message, optional, tag = "2")]
-    pub pagination: Option<PageRequest>,
-}
-
-#[derive(Clone, PartialEq, Message)]
-pub struct CoinProto {
-    #[prost(string, tag = "1")]
-    pub denom: String,
-    #[prost(string, tag = "2")]
-    pub amount: String,
-}
-
-#[derive(Clone, PartialEq, Message)]
-pub struct QueryAllBalancesResponse {
-    #[prost(message, repeated, tag = "1")]
-    pub balances: Vec<CoinProto>,
-    #[prost(message, optional, tag = "2")]
-    pub pagination: Option<PageResponse>,
-}
-
-#[derive(Clone, PartialEq, Message)]
-pub struct QueryBalanceRequest {
-    #[prost(string, tag = "1")]
-    pub address: String,
-    #[prost(string, tag = "2")]
-    pub denom: String,
-}
-
-#[derive(Clone, PartialEq, Message)]
-pub struct QueryBalanceResponse {
-    #[prost(message, optional, tag = "1")]
-    pub balance: Option<CoinProto>,
-}
-
 // ====================== Conversions ======================
 
 fn coin_from_proto(c: CoinProto) -> QueryResult<Coin> {
@@ -64,10 +24,7 @@ fn coin_from_proto(c: CoinProto) -> QueryResult<Coin> {
 /// ```rust,ignore
 /// let balances = query_all_balances(deps.as_ref(), &env.contract.address)?;
 /// ```
-pub fn query_all_balances(
-    deps: Deps,
-    address: impl Into<String>,
-) -> QueryResult<Vec<Coin>> {
+pub fn query_all_balances(deps: Deps, address: impl Into<String>) -> QueryResult<Vec<Coin>> {
     let address = address.into();
 
     paginate_grpc_query(
@@ -80,9 +37,13 @@ pub fn query_all_balances(
         |resp: QueryAllBalancesResponse| {
             let items: QueryResult<Vec<Coin>> =
                 resp.balances.into_iter().map(coin_from_proto).collect();
-            let next_key = resp
-                .pagination
-                .and_then(|p| if p.next_key.is_empty() { None } else { Some(p.next_key) });
+            let next_key = resp.pagination.and_then(|p| {
+                if p.next_key.is_empty() {
+                    None
+                } else {
+                    Some(p.next_key)
+                }
+            });
             Ok((items?, next_key))
         },
         None,
@@ -107,9 +68,13 @@ pub fn query_all_balances_limited(
         |resp: QueryAllBalancesResponse| {
             let items: QueryResult<Vec<Coin>> =
                 resp.balances.into_iter().map(coin_from_proto).collect();
-            let next_key = resp
-                .pagination
-                .and_then(|p| if p.next_key.is_empty() { None } else { Some(p.next_key) });
+            let next_key = resp.pagination.and_then(|p| {
+                if p.next_key.is_empty() {
+                    None
+                } else {
+                    Some(p.next_key)
+                }
+            });
             Ok((items?, next_key))
         },
         Some(limit),

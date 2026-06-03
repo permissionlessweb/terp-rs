@@ -1,31 +1,7 @@
+use crate::error::{QueryError, QueryResult};
 use cosmwasm_std::{Binary, Deps, GrpcQuery, QueryRequest};
 use prost::Message;
-
-use crate::error::{QueryError, QueryResult};
-
-// ====================== Common Pagination Types ======================
-
-#[derive(Clone, PartialEq, Message)]
-pub struct PageRequest {
-    #[prost(bytes = "vec", tag = "1")]
-    pub key: Vec<u8>,
-    #[prost(uint64, tag = "2")]
-    pub offset: u64,
-    #[prost(uint64, tag = "3")]
-    pub limit: u64,
-    #[prost(bool, tag = "4")]
-    pub count_total: bool,
-    #[prost(bool, tag = "5")]
-    pub reverse: bool,
-}
-
-#[derive(Clone, PartialEq, Message)]
-pub struct PageResponse {
-    #[prost(bytes = "vec", tag = "1")]
-    pub next_key: Vec<u8>,
-    #[prost(uint64, tag = "2")]
-    pub total: u64,
-}
+use terp_rs::cosmos::base::query::v1beta1::PageRequest;
 
 // ====================== Helpers ======================
 

@@ -2,13 +2,12 @@
 name = "terp-proto"
 version = "0.1.0"
 edition = "2024"
-
+description = "protobuf definition and client libraries for Terp Network. build using `cargo run`."
 
 [features]
 default = []
 # Enable generated gRPC client/server code.
 
-# The proto-gen binary — run with `cargo run --bin proto-gen` or `just gen`.
 [[bin]]
 name = "proto-gen"
 path = "src/main.rs"
