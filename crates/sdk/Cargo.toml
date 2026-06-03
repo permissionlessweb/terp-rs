@@ -7,7 +7,11 @@ edition = "2024"
 crate-type = ["cdylib", "rlib"]
 
 [features]
-default = []
+default = ["ibc"]
+ibc = ["dep:ibc-types", "dep:ibc-proto", "dep:ibc-app-transfer-types", "dep:ibc-app-nft-transfer-types",
+"dep:ibc-client-wasm-types"
+
+]
 # Enable generated gRPC client/server code.
 rpc = ["dep:tonic", "dep:tonic-prost"]
 # Enable Python bindings via PyO3.
@@ -25,8 +29,13 @@ anyhow    = "1.0"
 # ---------------------------------------------------------------------------
 prost       = "0.14"
 pbjson-types = "0.9"
+bytes = "1.11.1"
 serde       = { version = "1", features = ["derive"] }
-
+ibc-types = { path = "../../../ibc-types/crates/ibc-types", optional = true}
+ibc-proto = { path = "../../../ibc-proto-rs", optional = true }
+ibc-app-transfer-types = { path = "../../../ibc-rs/ibc-apps/ics20-transfer/types", optional = true }
+ibc-app-nft-transfer-types = { path = "../../../ibc-rs/ibc-apps/ics721-nft-transfer/types", optional = true }
+ibc-client-wasm-types = { path = "../../../ibc-rs/ibc-clients/ics08-wasm/types", optional = true }
 # Optional: gRPC runtime (enabled with the `rpc` feature).
 [dependencies.tonic]
 version  = "0.14"
@@ -45,3 +54,7 @@ optional = true
 [dependencies.serde_json]
 version  = "1"
 optional = true
+
+
+[patches.crates-io]
+

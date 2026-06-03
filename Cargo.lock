@@ -4225,9 +4225,9 @@ dependencies = [
  "cw2",
  "cw20",
  "cw20-base",
- "ibc-app-transfer-types",
  "schemars 0.8.22",
  "serde",
+ "terp-rs",
  "thiserror 1.0.69",
 ]
 
@@ -7756,7 +7756,10 @@ name = "headstash-randomness"
 version = "0.1.0"
 dependencies = [
  "blake3",
+ "getrandom 0.2.17",
  "rand 0.8.6",
+ "rand_core 0.6.4",
+ "rdrand",
 ]
 
 [[package]]
@@ -13945,6 +13948,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "rdrand"
+version = "0.8.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d92195228612ac8eed47adbc2ed0f04e513a4ccb98175b6f2bd04d963b533655"
+dependencies = [
+ "rand_core 0.6.4",
+]
+
+[[package]]
 name = "reddsa"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -15609,6 +15621,7 @@ dependencies = [
  "ict-rs",
  "serde_json",
  "sha2 0.10.9",
+ "terp-rs",
  "tokio",
  "tracing",
 ]
@@ -16455,6 +16468,12 @@ name = "terp-rs"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bytes",
+ "ibc-app-nft-transfer-types",
+ "ibc-app-transfer-types",
+ "ibc-client-wasm-types",
+ "ibc-proto",
+ "ibc-types",
  "pbjson-types",
  "prost",
  "pyo3",
