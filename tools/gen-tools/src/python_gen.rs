@@ -7,8 +7,8 @@
 use crate::config::GenerationContext;
 use crate::resolver::SourceResolver;
 use crate::{GenerationResult, Generator};
-use std::collections::{BTreeMap, HashMap};
 use serde_json::Value;
+use std::collections::BTreeMap;
 
 pub struct PythonGenGenerator;
 
@@ -65,7 +65,11 @@ impl Generator for PythonGenGenerator {
             }
             std::fs::write(&init_path, &init_content)?;
             total_files += 1;
-            log::info!("[python] Wrote {:?} ({} modules)", init_path, module_names.len());
+            log::info!(
+                "[python] Wrote {:?} ({} modules)",
+                init_path,
+                module_names.len()
+            );
         }
 
         Ok(GenerationResult {
@@ -161,7 +165,11 @@ fn generate_python_module(
         let schema_type = schema.get("type").and_then(|v| v.as_str());
 
         // Check for oneOf/anyOf — these become Union types
-        if let Some(oneof) = schema.get("oneOf").or_else(|| schema.get("anyOf")).and_then(|v| v.as_array()) {
+        if let Some(oneof) = schema
+            .get("oneOf")
+            .or_else(|| schema.get("anyOf"))
+            .and_then(|v| v.as_array())
+        {
             // Generate a Union type alias and individual variant dataclasses
             let mut variant_names = Vec::new();
             for (i, variant) in oneof.iter().enumerate() {
@@ -193,11 +201,15 @@ fn generate_python_module(
                             .map(|a| a.iter().filter_map(|r| r.as_str()).collect())
                             .unwrap_or_default();
                         for (field_name, field_schema) in props {
-                            let (py_type, py_default) = json_type_to_python(field_schema, &all_schemas);
+                            let (py_type, py_default) =
+                                json_type_to_python(field_schema, &all_schemas);
                             if required_set.contains(&field_name.as_str()) {
                                 output.push_str(&format!("    {}: {}\n", field_name, py_type));
                             } else {
-                                output.push_str(&format!("    {}: {} = {}\n", field_name, py_type, py_default));
+                                output.push_str(&format!(
+                                    "    {}: {} = {}\n",
+                                    field_name, py_type, py_default
+                                ));
                             }
                         }
                     }
@@ -300,7 +312,10 @@ fn generate_python_module(
                 if required_set.contains(&field_name.as_str()) {
                     output.push_str(&format!("    {}: {}\n", field_name, py_type));
                 } else {
-                    output.push_str(&format!("    {}: {} = {}\n", field_name, py_type, py_default));
+                    output.push_str(&format!(
+                        "    {}: {} = {}\n",
+                        field_name, py_type, py_default
+                    ));
                 }
             }
             output.push('\n');
@@ -329,7 +344,10 @@ fn generate_python_module(
                     if required_set.contains(&field_name.as_str()) {
                         output.push_str(&format!("    {}: {}\n", field_name, py_type));
                     } else {
-                        output.push_str(&format!("    {}: {} = {}\n", field_name, py_type, py_default));
+                        output.push_str(&format!(
+                            "    {}: {} = {}\n",
+                            field_name, py_type, py_default
+                        ));
                     }
                 }
             }
@@ -344,9 +362,14 @@ fn generate_python_module(
             output.push_str("        from contract_proto._native import encode_message\n");
             output.push_str("        return encode_message(self.TYPE_URL, json.dumps(asdict(self)).encode())\n\n");
             output.push_str("    @classmethod\n");
-            output.push_str(&format!("    def decode(cls, data: bytes) -> '{}':\n", clean_name));
+            output.push_str(&format!(
+                "    def decode(cls, data: bytes) -> '{}':\n",
+                clean_name
+            ));
             output.push_str("        from contract_proto._native import decode_message\n");
-            output.push_str("        return cls(**json.loads(decode_message(cls.TYPE_URL, data)))\n\n");
+            output.push_str(
+                "        return cls(**json.loads(decode_message(cls.TYPE_URL, data)))\n\n",
+            );
             continue;
         }
 
@@ -373,7 +396,10 @@ fn generate_python_module(
 
     // If no types were generated at all, return empty content to skip file creation
     if generated_types.is_empty() {
-        log::info!("[python] No types generated for '{}' — skipping", contract_name);
+        log::info!(
+            "[python] No types generated for '{}' — skipping",
+            contract_name
+        );
         return Ok(String::new());
     }
 
@@ -390,13 +416,17 @@ fn clean_py_name(name: &str) -> String {
 /// Resolve a `$ref` like `#/definitions/Foo` against the collected schemas.
 fn resolve_ref<'a>(ref_path: &str, schemas: &'a [(String, Value)]) -> Option<&'a Value> {
     let target_name = ref_path.rsplit('/').next()?;
-    schemas.iter()
+    schemas
+        .iter()
         .find(|(name, _)| name == target_name || name.ends_with(target_name))
         .map(|(_, v)| v)
 }
 
 /// Map JSON schema types to Python type annotations and defaults.
-fn json_type_to_python(schema: &serde_json::Value, all_schemas: &[(String, Value)]) -> (String, String) {
+fn json_type_to_python(
+    schema: &serde_json::Value,
+    all_schemas: &[(String, Value)],
+) -> (String, String) {
     // $ref
     if let Some(ref_path) = schema.get("$ref").and_then(|v| v.as_str()) {
         let ref_name = ref_path.rsplit('/').next().unwrap_or(ref_path);
@@ -405,11 +435,16 @@ fn json_type_to_python(schema: &serde_json::Value, all_schemas: &[(String, Value
     }
 
     // oneOf/anyOf — generate Union type
-    if let Some(oneof) = schema.get("oneOf").or_else(|| schema.get("anyOf")).and_then(|v| v.as_array()) {
+    if let Some(oneof) = schema
+        .get("oneOf")
+        .or_else(|| schema.get("anyOf"))
+        .and_then(|v| v.as_array())
+    {
         if oneof.is_empty() {
             return ("Any".to_string(), "None".to_string());
         }
-        let types: Vec<String> = oneof.iter()
+        let types: Vec<String> = oneof
+            .iter()
             .map(|v| {
                 let (t, _) = json_type_to_python(v, all_schemas);
                 t
@@ -423,7 +458,10 @@ fn json_type_to_python(schema: &serde_json::Value, all_schemas: &[(String, Value
 
     // allOf — Dict[str, Any] for simplicity
     if schema.get("allOf").is_some() {
-        return ("Dict[str, Any]".to_string(), "field(default_factory=dict)".to_string());
+        return (
+            "Dict[str, Any]".to_string(),
+            "field(default_factory=dict)".to_string(),
+        );
     }
 
     // Type array (e.g., ["string", "null"])
@@ -481,7 +519,10 @@ fn json_type_to_python(schema: &serde_json::Value, all_schemas: &[(String, Value
         }
         Some("object") => {
             // Inline nested object — generate Dict[str, Any]
-            ("Dict[str, Any]".to_string(), "field(default_factory=dict)".to_string())
+            (
+                "Dict[str, Any]".to_string(),
+                "field(default_factory=dict)".to_string(),
+            )
         }
         Some("null") => ("None".to_string(), "None".to_string()),
         _ => ("Any".to_string(), "None".to_string()),
@@ -493,7 +534,11 @@ fn simple_type_to_py(t: &str, schema: &Value, all_schemas: &[(String, Value)]) -
         "string" => {
             if schema.get("enum").is_some() {
                 // Enum reference by title
-                schema.get("title").and_then(|v| v.as_str()).map(|s| clean_py_name(s)).unwrap_or_else(|| "str".to_string())
+                schema
+                    .get("title")
+                    .and_then(|v| v.as_str())
+                    .map(|s| clean_py_name(s))
+                    .unwrap_or_else(|| "str".to_string())
             } else {
                 "str".to_string()
             }

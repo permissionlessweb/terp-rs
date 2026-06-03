@@ -251,7 +251,7 @@ The blobs subsystem is designed for compatibility with:
 | BUD-07 | Paid blobs (Lightning + Cashu) | ✅ Implemented |
 | NIP-98 | HTTP Auth via Nostr event signing | ✅ Implemented via `AuthVerifier` |
 
-BUD implementation lives in the `cw721-nips` crate at `crates/public/nips/src/buds/` and is re-exported through `nips::buds`. The canonical `blossom_router`, auth helpers, and blob handers are there; `hash-market` delegates to them.
+BUD implementation lives in the `cw721-nips` crate at `crates/nips/src/buds/` and is re-exported through `nips::buds`. The canonical `blossom_router`, auth helpers, and blob handers are there; `hash-market` delegates to them.
 
 ---
 

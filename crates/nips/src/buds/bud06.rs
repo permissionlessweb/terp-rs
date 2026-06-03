@@ -50,7 +50,10 @@ mod tests {
 
 pub fn blossom_router(state: Arc<BlossomState>) -> Router {
     Router::new()
-        .route("/blobs/:hash", axum::routing::get(get_blob).delete(delete_blob))
+        .route(
+            "/blobs/:hash",
+            axum::routing::get(get_blob).delete(delete_blob),
+        )
         .route("/blobs", axum::routing::post(upload_blob).get(list_blobs))
         .route("/upload", axum::routing::post(upload_blob))
         .route("/health", axum::routing::get(health))
@@ -58,8 +61,6 @@ pub fn blossom_router(state: Arc<BlossomState>) -> Router {
 }
 
 pub mod blossom {
-    use super::*;
-
     use crate::buds::{BlobDescriptor, BlobStore, BlobStoreError};
 
     // ── In-memory implementation for testing ───────────────────────────────────────

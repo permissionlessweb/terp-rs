@@ -335,7 +335,7 @@ def discover_projects() -> list:
 
         # No root Cargo.toml — recursively check subdirs up to 4 levels deep
         # (handles abstract/, ics23/rust, <project>/,
-        #  terp-rs/crates/public/<project>/, etc.)
+        #  terp-rs/crates/<project>/, etc.)
         _discover_subdirs(entry, projects, seen_paths, depth=4)
 
     return projects

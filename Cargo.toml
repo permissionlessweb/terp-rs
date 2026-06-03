@@ -2,10 +2,7 @@
 resolver = "2"
 members = [
     "proto",
-    "tools/gen-tools",
-    "tools/hash-market",
-    "crates/public/nips",
-    "crates/public/randomness",
-    "crates/public/terp-ibc",
     "tests",
+    "crates/nips",
+    "crates/sdk",
 ]

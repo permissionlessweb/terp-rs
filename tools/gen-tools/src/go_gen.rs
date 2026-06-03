@@ -48,7 +48,7 @@ impl Generator for GoGenGenerator {
         let mut total_files = 0;
         for (contract_name, schemas) in &groups {
             for (_stem, merged) in schemas {
-                let go_name = to_pascal_case(contract_name);
+                let _go_name = to_pascal_case(contract_name);
                 let pkg_name = contract_name.to_lowercase()
                     .replace('-', "")
                     .replace('.', "")
@@ -232,10 +232,10 @@ format!("type {} interface{}\n", go_name, "{ }")
 fn one_of_to_struct(name: &str, variants: &[serde_json::Value],
                     parent_schema: &serde_json::Value,
                     defs: &HashMap<String, serde_json::Value>) -> String {
-    let docs = parent_schema
+    let _docs = parent_schema
         .get("title")
         .and_then(|v| v.as_str())
-        .map(|t| format!("// {} is a Cosmos message variant\n", name))
+        .map(|_t| format!("// {} is a Cosmos message variant\n", name))
         .unwrap_or_default();
 
     let mut out = format!("type {} struct {{\n", name);

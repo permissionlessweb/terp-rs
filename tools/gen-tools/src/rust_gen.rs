@@ -9,7 +9,6 @@ use crate::config::GenerationContext;
 use crate::resolver::SourceResolver;
 use crate::{GenerationResult, Generator};
 use std::collections::{HashMap, HashSet};
-use std::path::PathBuf;
 
 pub struct RustGenGenerator;
 
@@ -246,8 +245,7 @@ fn schema_to_struct(
             if let Some(vtype) = variant.get("type").and_then(|v| v.as_str()) {
                 match vtype {
                     "object" => {
-                        if let Some(props) = variant.get("properties").and_then(|v| v.as_object())
-                        {
+                        if let Some(props) = variant.get("properties").and_then(|v| v.as_object()) {
                             let required: HashSet<&str> = variant
                                 .get("required")
                                 .and_then(|v| v.as_array())
@@ -272,7 +270,10 @@ fn schema_to_struct(
                             if fields.is_empty() {
                                 out.push_str(&format!("    V{vidx}(::cosmwasm_std::Empty),\n"));
                             } else {
-                                out.push_str(&format!("    V{vidx}{{\n{}\n    }},\n", fields.join("\n")));
+                                out.push_str(&format!(
+                                    "    V{vidx}{{\n{}\n    }},\n",
+                                    fields.join("\n")
+                                ));
                             }
                         } else {
                             out.push_str(&format!("    V{vidx}(::cosmwasm_std::Empty),\n"));
@@ -313,7 +314,9 @@ fn schema_to_struct(
                 .unwrap_or_default();
 
             let mut out = String::new();
-            out.push_str("#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]\n");
+            out.push_str(
+                "#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]\n",
+            );
             out.push_str(&format!("pub struct {name} {{\n"));
 
             for (fn_, fs) in props {
@@ -340,7 +343,9 @@ fn schema_to_struct(
                     );
                 }
                 let mut out = String::new();
-                out.push_str("#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]\n");
+                out.push_str(
+                    "#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]\n",
+                );
                 out.push_str(&format!("pub enum {name} {{\n"));
                 for val in enum_vals {
                     if let Some(s) = val.as_str() {

@@ -13,13 +13,17 @@ use crate::resolver::SourceResolver;
 use crate::ts_codegen;
 use crate::{GenerationResult, Generator};
 use serde_json::Value;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 pub struct TsBundlesGenerator;
 
 impl Generator for TsBundlesGenerator {
-    fn name(&self) -> &'static str { "ts-bundles" }
-    fn enabled_by_default(&self) -> bool { true }
+    fn name(&self) -> &'static str {
+        "ts-bundles"
+    }
+    fn enabled_by_default(&self) -> bool {
+        true
+    }
 
     fn generate(&self, ctx: &GenerationContext) -> anyhow::Result<GenerationResult> {
         let ts_out = ctx.ts_out.join(&ctx.project_name);
@@ -29,7 +33,9 @@ impl Generator for TsBundlesGenerator {
         let (_source_label, grouped) = SourceResolver::resolve_grouped(ctx);
         if grouped.is_empty() {
             return Ok(GenerationResult {
-                name: "ts-bundles", success: true, files_generated: 0,
+                name: "ts-bundles",
+                success: true,
+                files_generated: 0,
                 output_dir: Some(ts_out.to_string_lossy().to_string()),
                 message: Some("No contracts found".to_string()),
             });
@@ -42,7 +48,10 @@ impl Generator for TsBundlesGenerator {
 
             for (_type_key, schema_value) in schemas {
                 ts_codegen::collect_types_and_defs(
-                    schema_value, &mut message_types, &mut response_types, &mut all_defs,
+                    schema_value,
+                    &mut message_types,
+                    &mut response_types,
+                    &mut all_defs,
                 );
             }
 
@@ -81,7 +90,9 @@ impl Generator for TsBundlesGenerator {
         }
 
         Ok(GenerationResult {
-            name: "ts-bundles", success: true, files_generated: total_files,
+            name: "ts-bundles",
+            success: true,
+            files_generated: total_files,
             output_dir: Some(ts_out.to_string_lossy().to_string()),
             message: Some(format!("{} bundle files generated", total_files)),
         })
@@ -121,13 +132,21 @@ fn schema_to_zod(val: &Value, defs: &HashMap<String, Value>, depth: usize) -> St
         let n = r.rsplit('/').next().unwrap_or(r);
         return format!("{}Schema", pascal_case(n));
     }
-    if let Some(arr) = val.get("oneOf").or_else(|| val.get("anyOf")).and_then(|v| v.as_array()) {
-        if arr.is_empty() { return "z.never()".to_string(); }
+    if let Some(arr) = val
+        .get("oneOf")
+        .or_else(|| val.get("anyOf"))
+        .and_then(|v| v.as_array())
+    {
+        if arr.is_empty() {
+            return "z.never()".to_string();
+        }
         let items: Vec<String> = arr.iter().map(|v| schema_to_zod(v, defs, depth)).collect();
         return items.join(".or(");
     }
     if let Some(arr) = val.get("allOf").and_then(|v| v.as_array()) {
-        if arr.is_empty() { return "z.unknown()".to_string(); }
+        if arr.is_empty() {
+            return "z.unknown()".to_string();
+        }
         let items: Vec<String> = arr.iter().map(|v| schema_to_zod(v, defs, depth)).collect();
         return items.join(".and(");
     }
@@ -138,7 +157,8 @@ fn schema_to_zod(val: &Value, defs: &HashMap<String, Value>, depth: usize) -> St
         Some("boolean") => "z.boolean()".into(),
         Some("null") => "z.null()".into(),
         Some("array") => {
-            let inner = val.get("items")
+            let inner = val
+                .get("items")
                 .map(|i| schema_to_zod(i, defs, depth))
                 .unwrap_or_else(|| "z.unknown()".into());
             format!("z.array({})", inner)
@@ -147,9 +167,12 @@ fn schema_to_zod(val: &Value, defs: &HashMap<String, Value>, depth: usize) -> St
             if let Some(props) = val.get("properties").and_then(|v| v.as_object()) {
                 let indent = "  ".repeat(depth + 1);
                 let indent_inner = "  ".repeat(depth);
-                let fields: Vec<String> = props.iter().map(|(k, v)| {
-                    format!("{}  {}: {},", indent, k, schema_to_zod(v, defs, depth + 1))
-                }).collect();
+                let fields: Vec<String> = props
+                    .iter()
+                    .map(|(k, v)| {
+                        format!("{}  {}: {},", indent, k, schema_to_zod(v, defs, depth + 1))
+                    })
+                    .collect();
                 format!("z.object({{\n{}\n{}}})", fields.join("\n"), indent_inner)
             } else {
                 "z.record(z.string(), z.unknown())".into()
@@ -157,13 +180,18 @@ fn schema_to_zod(val: &Value, defs: &HashMap<String, Value>, depth: usize) -> St
         }
         _ => {
             if let Some(types) = val.get("type").and_then(|v| v.as_array()) {
-                let items: Vec<String> = types.iter()
+                let items: Vec<String> = types
+                    .iter()
                     .filter_map(|t| t.as_str())
                     .map(|t| match t {
-                        "string" => "z.string()", "integer" | "number" => "z.number()",
-                        "boolean" => "z.boolean()", "null" => "z.null()",
+                        "string" => "z.string()",
+                        "integer" | "number" => "z.number()",
+                        "boolean" => "z.boolean()",
+                        "null" => "z.null()",
                         _ => "z.unknown()",
-                    }).map(String::from).collect();
+                    })
+                    .map(String::from)
+                    .collect();
                 return items.join(".or(");
             }
             "z.unknown()".into()
@@ -178,25 +206,34 @@ fn schema_to_zod(val: &Value, defs: &HashMap<String, Value>, depth: usize) -> St
 fn generate_js_bundle(cname: &str, message_types: &[(String, Value)]) -> String {
     let mut out = String::new();
     out.push_str("// Lightweight ESM JS bundle — no bundler deps\n");
-    out.push_str(&format!("// Usage: import {{ createApi }} from './{}.bundle.mjs';\n\n", cname));
+    out.push_str(&format!(
+        "// Usage: import {{ createApi }} from './{}.bundle.mjs';\n\n",
+        cname
+    ));
 
     out.push_str(&format!("export const CONTRACT = {{\n  name: '{}',\n  typeUrl: '/cosmwasm.wasm.v1.MsgExecuteContract',\n}};\n\n", cname));
 
-    let exec_variants = message_types.iter()
+    let exec_variants = message_types
+        .iter()
         .find(|(t, _)| t.contains("Execute"))
         .and_then(|(_, s)| extract_variant_names(s))
         .unwrap_or_default();
-    let query_variants = message_types.iter()
+    let query_variants = message_types
+        .iter()
         .find(|(t, _)| t.contains("Query"))
         .and_then(|(_, s)| extract_variant_names(s))
         .unwrap_or_default();
 
     out.push_str("export const Execute = {\n");
-    for v in &exec_variants { out.push_str(&format!("  {}: '{}',\n", camel_case(v), v)); }
+    for v in &exec_variants {
+        out.push_str(&format!("  {}: '{}',\n", camel_case(v), v));
+    }
     out.push_str("};\n\n");
 
     out.push_str("export const Query = {\n");
-    for v in &query_variants { out.push_str(&format!("  {}: '{}',\n", camel_case(v), v)); }
+    for v in &query_variants {
+        out.push_str(&format!("  {}: '{}',\n", camel_case(v), v));
+    }
     out.push_str("};\n\n");
 
     out.push_str("export function encodeMsg(msg) {\n");
@@ -226,20 +263,36 @@ fn generate_js_bundle(cname: &str, message_types: &[(String, Value)]) -> String 
 // 3) Enhanced transact+query client class
 // ═══════════════════════════════════════════════════════════════════════════
 
-fn generate_transact_client(cname: &str, message_types: &[(String, Value)], response_types: &[(String, Value)]) -> String {
+fn generate_transact_client(
+    cname: &str,
+    message_types: &[(String, Value)],
+    response_types: &[(String, Value)],
+) -> String {
     let mut out = String::new();
     out.push_str(&format!(
-        "import type {{ ExecuteMsg, QueryMsg }} from './{}.types';\n", cname));
-    out.push_str("import type { CosmWasmClient, SigningCosmWasmClient } from '@cosmjs/cosmwasm-stargate';\n");
+        "import type {{ ExecuteMsg, QueryMsg }} from './{}.types';\n",
+        cname
+    ));
+    out.push_str(
+        "import type { CosmWasmClient, SigningCosmWasmClient } from '@cosmjs/cosmwasm-stargate';\n",
+    );
     out.push_str("import type { Coin } from '@cosmjs/amino';\n\n");
 
-    let exec_variants = message_types.iter()
-        .find(|(t, _)| t.contains("Execute")).and_then(|(_, s)| extract_variant_names(s)).unwrap_or_default();
-    let query_variants = message_types.iter()
-        .find(|(t, _)| t.contains("Query")).and_then(|(_, s)| extract_variant_names(s)).unwrap_or_default();
+    let exec_variants = message_types
+        .iter()
+        .find(|(t, _)| t.contains("Execute"))
+        .and_then(|(_, s)| extract_variant_names(s))
+        .unwrap_or_default();
+    let query_variants = message_types
+        .iter()
+        .find(|(t, _)| t.contains("Query"))
+        .and_then(|(_, s)| extract_variant_names(s))
+        .unwrap_or_default();
 
-    let qrm: HashMap<String, String> = response_types.iter()
-        .map(|(n, _)| (camel_case(n), pascal_case(n))).collect();
+    let qrm: HashMap<String, String> = response_types
+        .iter()
+        .map(|(n, _)| (camel_case(n), pascal_case(n)))
+        .collect();
 
     out.push_str(&format!("export class {}Client {{\n", cname));
     out.push_str("  constructor(\n");
@@ -251,7 +304,7 @@ fn generate_transact_client(cname: &str, message_types: &[(String, Value)], resp
     for v in &query_variants {
         let m = camel_case(v);
         let rt = qrm.get(&m).cloned().unwrap_or_else(|| "unknown".into());
-out.push_str(&format!(
+        out.push_str(&format!(
             "  async {}(params: QueryMsg[keyof QueryMsg]): Promise<{}> {{\n",
             m, rt
         ));
@@ -261,15 +314,22 @@ out.push_str(&format!(
     for v in &exec_variants {
         let m = camel_case(v);
         out.push_str(&format!(
-            "  async {}Tx(msg: ExecuteMsg[keyof ExecuteMsg], funds?: Coin[]): Promise<string> {{\n", m));
+            "  async {}Tx(msg: ExecuteMsg[keyof ExecuteMsg], funds?: Coin[]): Promise<string> {{\n",
+            m
+        ));
         out.push_str("    if (!this.sender) throw new Error('sender required');\n");
         out.push_str(&format!(
             "    const r = await this.client.execute(this.sender, this.contractAddress, {{ {}: msg }}, funds || []);\n", v));
         out.push_str("    return r.transactionHash;\n  }\n\n");
     }
 
-    out.push_str("  static connect(client: SigningCosmWasmClient, addr: string, sender?: string) {\n");
-    out.push_str(&format!("    return new {}Client(client, addr, sender);\n", cname));
+    out.push_str(
+        "  static connect(client: SigningCosmWasmClient, addr: string, sender?: string) {\n",
+    );
+    out.push_str(&format!(
+        "    return new {}Client(client, addr, sender);\n",
+        cname
+    ));
     out.push_str("  }\n}\n");
     out
 }
@@ -288,10 +348,16 @@ fn generate_filter_table(cname: &str, message_types: &[(String, Value)]) -> Stri
     out.push_str("  attributes?: Record<string, string>;\n");
     out.push_str("};\n\n");
 
-    let exec_variants = message_types.iter()
-        .find(|(t, _)| t.contains("Execute")).and_then(|(_, s)| extract_variant_names(s)).unwrap_or_default();
-    let query_variants = message_types.iter()
-        .find(|(t, _)| t.contains("Query")).and_then(|(_, s)| extract_variant_names(s)).unwrap_or_default();
+    let exec_variants = message_types
+        .iter()
+        .find(|(t, _)| t.contains("Execute"))
+        .and_then(|(_, s)| extract_variant_names(s))
+        .unwrap_or_default();
+    let query_variants = message_types
+        .iter()
+        .find(|(t, _)| t.contains("Query"))
+        .and_then(|(_, s)| extract_variant_names(s))
+        .unwrap_or_default();
 
     out.push_str("export function contractFilter(addr: string): EventFilter {\n");
     out.push_str("  return { type: 'wasm', attributes: { contract_address: addr } };\n");
@@ -316,8 +382,12 @@ fn generate_filter_table(cname: &str, message_types: &[(String, Value)]) -> Stri
     out.push_str("export const FilterTable = {\n");
     out.push_str("  wasm: {\n");
     out.push_str("    contract: contractFilter,\n");
-    if !exec_variants.is_empty() { out.push_str("    execute: ExecuteFilters,\n"); }
-    if !query_variants.is_empty() { out.push_str("    query: QueryFilters,\n"); }
+    if !exec_variants.is_empty() {
+        out.push_str("    execute: ExecuteFilters,\n");
+    }
+    if !query_variants.is_empty() {
+        out.push_str("    query: QueryFilters,\n");
+    }
     out.push_str("  },\n} as const;\n");
     out
 }
@@ -348,7 +418,10 @@ fn generate_argus_indexer(cname: &str) -> String {
     out.push_str("    fn: 'updateEntity',\n  },\n};\n\n");
 
     out.push_str("export const QueryFormulas = {\n");
-    out.push_str(&format!("  byContract: 'SELECT * FROM {} WHERE contractAddress = $1',\n", cname));
+    out.push_str(&format!(
+        "  byContract: 'SELECT * FROM {} WHERE contractAddress = $1',\n",
+        cname
+    ));
     out.push_str(&format!("  all: 'SELECT * FROM {}',\n", cname));
     out.push_str("};\n");
     out
@@ -360,10 +433,21 @@ fn generate_argus_indexer(cname: &str) -> String {
 
 fn extract_variant_names(schema: &Value) -> Option<Vec<String>> {
     let variants = schema.get("oneOf").and_then(|v| v.as_array())?;
-    let names: Vec<String> = variants.iter().filter_map(|v| {
-        v.get("required").and_then(|a| a.as_array())?.first()?.as_str().map(|s| s.to_string())
-    }).collect();
-    if names.is_empty() { None } else { Some(names) }
+    let names: Vec<String> = variants
+        .iter()
+        .filter_map(|v| {
+            v.get("required")
+                .and_then(|a| a.as_array())?
+                .first()?
+                .as_str()
+                .map(|s| s.to_string())
+        })
+        .collect();
+    if names.is_empty() {
+        None
+    } else {
+        Some(names)
+    }
 }
 
 fn pascal_case(s: &str) -> String {
@@ -375,7 +459,8 @@ fn pascal_case(s: &str) -> String {
                 None => String::new(),
                 Some(f) => f.to_uppercase().to_string() + c.as_str(),
             }
-        }).collect()
+        })
+        .collect()
 }
 
 fn camel_case(s: &str) -> String {
@@ -405,9 +490,10 @@ mod tests {
 
     #[test]
     fn test_js_bundle() {
-        let msg = vec![
-            ("ExecuteMsg".into(), json!({"oneOf": [{"required": ["do_it"], "properties": {}}]})),
-        ];
+        let msg = vec![(
+            "ExecuteMsg".into(),
+            json!({"oneOf": [{"required": ["do_it"], "properties": {}}]}),
+        )];
         let b = generate_js_bundle("T", &msg);
         assert!(b.contains("encodeMsg"));
         assert!(b.contains("createApi"));
@@ -417,8 +503,14 @@ mod tests {
     #[test]
     fn test_filter_table() {
         let msg = vec![
-            ("ExecuteMsg".into(), json!({"oneOf": [{"required": ["act"], "properties": {}}]})),
-            ("QueryMsg".into(), json!({"oneOf": [{"required": ["info"], "properties": {}}]})),
+            (
+                "ExecuteMsg".into(),
+                json!({"oneOf": [{"required": ["act"], "properties": {}}]}),
+            ),
+            (
+                "QueryMsg".into(),
+                json!({"oneOf": [{"required": ["info"], "properties": {}}]}),
+            ),
         ];
         let f = generate_filter_table("T", &msg);
         assert!(f.contains("EventFilter"));
@@ -429,8 +521,14 @@ mod tests {
     #[test]
     fn test_transact_client() {
         let msg = vec![
-            ("ExecuteMsg".into(), json!({"oneOf": [{"required": ["go"], "properties": {}}]})),
-            ("QueryMsg".into(), json!({"oneOf": [{"required": ["peek"], "properties": {}}]})),
+            (
+                "ExecuteMsg".into(),
+                json!({"oneOf": [{"required": ["go"], "properties": {}}]}),
+            ),
+            (
+                "QueryMsg".into(),
+                json!({"oneOf": [{"required": ["peek"], "properties": {}}]}),
+            ),
         ];
         let res = vec![("PeekResponse".into(), json!({"title": "PeekResponse"}))];
         let c = generate_transact_client("T", &msg, &res);

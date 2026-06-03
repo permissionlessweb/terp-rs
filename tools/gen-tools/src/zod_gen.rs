@@ -115,7 +115,7 @@ fn generate_zod_file(schemas: &BTreeMap<String, serde_json::Value>, contract_nam
                     let ref_name = ref_path.rsplit('/').next().unwrap_or(ref_path);
                     let clean_ref = pascal_case(ref_name);
                     format!("{}Schema", clean_ref)
-                } else if let Some(props) = v.get("properties").and_then(|v| v.as_object()) {
+                } else if let Some(_props) = v.get("properties").and_then(|v| v.as_object()) {
                     // Inline variant — generate inline
                     inline_variant_to_zod(v, &all_defs)
                 } else {

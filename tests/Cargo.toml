@@ -15,9 +15,6 @@ cosmwasm-std = { path = "../../cosmwasm/packages/std" }
 cw-orch = { path = "../../cw-orchestrator/cw-orch", features = ["daemon"] }
 cw-orch-interchain = { path = "../../cw-orchestrator/cw-orch-interchain", features = ["daemon"] }
 sha2 = "0.10"
-# Sub-suite crates
-cw-headstash = { path = "../../headstash/contracts/cw-headstash", features = ["interface"] }
-cw-headstash-manifold = { path = "../../headstash/contracts/manifold", features = ["interface"] }
 cw-infuser-scripts = { path = "../../cw-infuser/scripts" }
 dao-testing = { path = "../../dao-contracts/packages/dao-testing" }
 dao-calendar = { path = "../../dao-contracts/contracts/proposal/dao-calendar", features = ["interface"] }
@@ -37,7 +34,6 @@ hash-market = { path = "../tools/hash-market", features = ["server", "client", "
 axum = { version = "0.7" }
 # CLI + runtime
 anyhow = "1.0"
-base64 = "0.22"
 clap = { version = "4", features = ["derive"] }
 dotenv = "0.15"
 env_logger = "0.11"
@@ -51,7 +47,6 @@ tempfile = "3.27.0"
 toml = "1.1.2"
 which = "8.0.2"
 reqwest = "0.13.4"
-rand = { version = "0.10.1", default-features = false, features = ["thread_rng"] }
 async-trait = "0.1.89"
 k256 = "0.13.4"
 csv = "1.4.0"

@@ -8,6 +8,6 @@ license = "Apache-2.0"
 [workspace]
 
 [dependencies]
-cosmwasm-std = { path = "../../../../cosmwasm/packages/std", features = ["cosmwasm_2_0", "stargate"] }
+cosmwasm-std = { path = "../../../cosmwasm/packages/std", features = ["cosmwasm_2_0", "stargate"] }
 prost = { version = "0.13", default-features = false, features = ["prost-derive", "std"] }
 thiserror = "2"

@@ -27,8 +27,8 @@ COPY tools/hash-market/Cargo.toml tools/hash-market/Cargo.lock /build/tools/hash
 COPY tools/hash-market/src /build/tools/hash-market/src/
 
 # Copy local deps needed by hash-market
-COPY crates/public/nips/Cargo.toml /build/crates/public/nips/
-COPY crates/public/nips/src /build/crates/public/nips/src/
+COPY crates/nips/Cargo.toml /build/crates/nips/
+COPY crates/nips/src /build/crates/nips/src/
 
 # Build just the hash-market-server binary (release, all features)
 RUN cargo build --release \

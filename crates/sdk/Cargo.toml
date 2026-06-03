@@ -1,0 +1,47 @@
+[package]
+name = "terp-rs"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = []
+# Enable generated gRPC client/server code.
+rpc = ["dep:tonic", "dep:tonic-prost"]
+# Enable Python bindings via PyO3.
+python = ["dep:pyo3", "dep:serde_json"]
+
+# ---------------------------------------------------------------------------
+# Dependencies used by the proto-gen binary
+# ---------------------------------------------------------------------------
+[dependencies]
+anyhow    = "1.0"
+
+
+# ---------------------------------------------------------------------------
+# Runtime dependencies for the generated library types
+# ---------------------------------------------------------------------------
+prost       = "0.14"
+pbjson-types = "0.9"
+serde       = { version = "1", features = ["derive"] }
+
+# Optional: gRPC runtime (enabled with the `rpc` feature).
+[dependencies.tonic]
+version  = "0.14"
+optional = true
+
+[dependencies.tonic-prost]
+version  = "0.14"
+optional = true
+
+# Optional: Python bindings (enabled with the `python` feature).
+[dependencies.pyo3]
+version  = "0.24"
+features = ["extension-module"]
+optional = true
+
+[dependencies.serde_json]
+version  = "1"
+optional = true
