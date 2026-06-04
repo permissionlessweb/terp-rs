@@ -21,7 +21,7 @@ constant_time_eq = {version = "0.3", optional = true}
 hkdf = {version = "0.12", optional = true}
 hmac = {version = "0.12", optional = true}
 rand_core = { version = "0.6", features = ["getrandom"] , optional = true }
-axum = { version = "0.7" }
+axum = { version = "0.7" ,default-features = false, features = ["json"]}
 
 [features]
 default = ["full"]

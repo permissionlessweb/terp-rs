@@ -4284,6 +4284,7 @@ dependencies = [
  "cosmwasm-schema 3.0.3-dev",
  "cosmwasm-std 3.0.3-dev",
  "sha2 0.10.9",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
