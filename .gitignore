@@ -31,4 +31,5 @@ dep-graph.dot
 dep-graph.svg
 REPORT.md
 terp-api
+reviews
 *.env*
