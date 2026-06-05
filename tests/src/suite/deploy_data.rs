@@ -126,7 +126,7 @@ fn zk_deploy_data_single(sender: Addr, root: &[u8]) -> Option<TestPressDeployDat
 fn dao_deploy_data_single(sender: Addr) -> anyhow::Result<Option<DaoDaoDeployData>> {
     let mut terp = load_svg_init_msg(&svg_init_path("terp"))?;
     let mut mt = load_terp_warrior_mtree(&mtree_init_path())?;
-    terp.owner = Some(sender.to_string());
+    terp.creator = Some(sender.to_string());
     mt.admins = vec![sender.to_string()];
 
     // Calendar deploy data — minimal config for local testing
@@ -180,7 +180,7 @@ fn dao_deploy_data_single(sender: Addr) -> anyhow::Result<Option<DaoDaoDeployDat
 fn deploy_data_single(sender: Addr) -> anyhow::Result<Option<CwSvgSuiteDeployData>> {
     let mut terp = load_svg_init_msg(&svg_init_path("terp"))?;
     let mut mt = load_terp_warrior_mtree(&mtree_init_path())?;
-    terp.owner = Some(sender.to_string());
+    terp.creator = Some(sender.to_string());
     mt.admins = vec![sender.to_string()];
 
     Ok(Some(CwSvgSuiteDeployData {
@@ -196,9 +196,8 @@ fn deploy_data_single(sender: Addr) -> anyhow::Result<Option<CwSvgSuiteDeployDat
 fn deploy_data_full(sender: Addr) -> anyhow::Result<Option<CwSvgSuiteDeployData>> {
     let mut terp = load_svg_init_msg(&svg_init_path("terp"))?;
     let mut dao = load_svg_init_msg(&svg_init_path("dao"))?;
-    terp.owner = Some(sender.to_string());
-    dao.owner = Some(sender.to_string());
-
+    terp.creator = Some(sender.to_string());
+    dao.creator = Some(sender.to_string());
     Ok(Some(CwSvgSuiteDeployData {
         svg: vec![(terp, None), (dao, None)],
         infuse: None,

@@ -3900,6 +3900,7 @@ dependencies = [
  "serde_json",
  "sha2 0.10.9",
  "thiserror 1.0.69",
+ "zk-cosmwasm",
 ]
 
 [[package]]
@@ -7760,7 +7761,6 @@ dependencies = [
  "getrandom 0.2.17",
  "rand 0.8.6",
  "rand_core 0.6.4",
- "rdrand",
 ]
 
 [[package]]
@@ -13949,15 +13949,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rdrand"
-version = "0.8.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d92195228612ac8eed47adbc2ed0f04e513a4ccb98175b6f2bd04d963b533655"
-dependencies = [
- "rand_core 0.6.4",
-]
-
-[[package]]
 name = "reddsa"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -15030,6 +15021,7 @@ dependencies = [
  "shit-scripts",
  "tempfile",
  "terp-account-scripts",
+ "terp-rs",
  "tokio",
  "toml 1.1.2+spec-1.1.0",
  "tracing",

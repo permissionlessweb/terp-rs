@@ -108,7 +108,7 @@ impl NegentropySync for NegentropySession {
             NegentropyMessage::Init {
                 id,
                 filter,
-                negentropy,
+                ..// negentropy,
             } => {
                 self.filter = filter;
                 // TODO: In real implementation, decode negentropy and compute diff
@@ -148,7 +148,7 @@ impl NegentropySync for NegentropySession {
 pub fn create_init_message(
     pubkey: &str,
     filter: Value,
-    known_event_ids: Vec<String>,
+    _known_event_ids: Vec<String>,
 ) -> NipResult<NegentropyMessage> {
     // In a real implementation you would use a proper negentropy library here
     Ok(NegentropyMessage::Init {

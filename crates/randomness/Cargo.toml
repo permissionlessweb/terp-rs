@@ -10,5 +10,5 @@ path = "src/lib.rs"
 blake3 = "1.5"
 rand = { version = "0.8", features = ["std"] }
 rand_core = "0.6"
-rdrand = "0.8"           # for hardware RNG
+#rdrand = "0.8"           # for hardware RNG
 getrandom = { version = "0.2", features = ["std"] } # ensure strong backend

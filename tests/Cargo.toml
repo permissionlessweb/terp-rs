@@ -27,6 +27,7 @@ zk-test-press = { path = "../../headstash/test-press", features = ["interface"] 
 ict-rs = { path = "../../ict-rs/ict-rs", features = ["docker", "terp", "testing", "nostr"] }
 cw4 = { path = "../../cw-plus/packages/cw4" }
 cw-utils = { path = "../../cw-minus/packages/cw-utils" }
+terp-rs  = { path = "../crates/sdk" }
 cosmrs = { path = "../../cosmos-rust/cosmrs" }
 cosmos-sdk-proto = { path = "../../cosmos-rust/cosmos-sdk-proto" }
 cosmwasm-schema = { path = "../../cosmwasm/packages/schema" }

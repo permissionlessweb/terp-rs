@@ -11,9 +11,9 @@ pub fn ultra_secure_random() -> [u8; 32] {
     hasher.update(&get_os_random());
 
     // 2. Hardware RNG (RDRAND) if available
-    if let Some(rdrand) = get_rdrand() {
-        hasher.update(&rdrand);
-    }
+    // if let Some(rdrand) = get_rdrand() {
+    //     hasher.update(&rdrand);
+    // }
 
     // 3. High-resolution timing jitter + CPU cycle noise
     hasher.update(&get_timing_jitter());
@@ -34,14 +34,14 @@ fn get_os_random() -> [u8; 32] {
 }
 
 /// Hardware RNG via RDRAND (x86/x86_64)
-fn get_rdrand() -> Option<[u8; 32]> {
-    let mut buf = [0u8; 32];
-    let mut rng = rdrand::RdRand::new()?;
+// fn get_rdrand() -> Option<[u8; 32]> {
+//     let mut buf = [0u8; 32];
+//     let mut rng = rdrand::RdRand::new()?;
 
-    // RDRAND is fast — we can afford multiple calls
-    rng.try_fill_bytes(&mut buf).ok()?;
-    Some(buf)
-}
+//     // RDRAND is fast — we can afford multiple calls
+//     rng.try_fill_bytes(&mut buf).ok()?;
+//     Some(buf)
+// }
 
 /// Collect timing jitter + scheduler noise
 fn get_timing_jitter() -> [u8; 32] {
@@ -78,7 +78,7 @@ fn get_process_noise() -> [u8; 32] {
     }
 
     // Thread ID
-    hasher.update(&std::thread::current().id().as_u64().to_le_bytes());
+    // hasher.update(&std::thread::current().id().as_u64().to_le_bytes());
 
     // Memory address of a stack variable (ASLR noise)
     let x = 0u64;
