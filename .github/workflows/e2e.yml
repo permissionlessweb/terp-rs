@@ -36,7 +36,7 @@ jobs:
           key: ${{ runner.os }}-cargo-with-artifacts-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Get mainnet GAS_LIMIT
-        run: echo "MAINNET_GAS_LIMIT=$(curl -s https://rpc-terp.zenchainlabs.io/consensus_params | jq -r '.result.consensus_params.block.max_gas')" >> $GITHUB_ENV
+        run: echo "MAINNET_GAS_LIMIT=$(curl -s https://rpc.terp.network/consensus_params | jq -r '.result.consensus_params.block.max_gas')" >> $GITHUB_ENV
 
       - name: Mainnet block GAS_LIMIT changed
         if: ${{ env.MAINNET_GAS_LIMIT != env.GAS_LIMIT }}

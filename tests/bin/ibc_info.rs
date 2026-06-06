@@ -406,7 +406,7 @@ fn derive_full_ibc_state() -> anyhow::Result<()> {
             "chain_name": "terp",
             "assets": native_assets
         });
-        let output_path = std::path::PathBuf::from("assetlist.json");
+        let output_path = std::path::PathBuf::from("../public/assetlist.json");
         std::fs::write(
             &output_path,
             serde_json::to_string_pretty(&assetlist_output)?,
@@ -459,13 +459,13 @@ fn derive_full_ibc_state() -> anyhow::Result<()> {
 
     // Export the simplified lookup table
     let simplified = routing_table.to_simplified_lookup();
-    let lookup_path = std::path::PathBuf::from("ibc_lookup_table.json");
+    let lookup_path = std::path::PathBuf::from("../public/ibc_lookup_table.json");
     std::fs::write(&lookup_path, serde_json::to_string_pretty(&simplified)?)?;
     println!("\n✓ IBC lookup table written to ibc_lookup_table.json");
 
     // Export the full routing table
     let full_table = routing_table.to_json();
-    let full_path = std::path::PathBuf::from("ibc_routing_table.json");
+    let full_path = std::path::PathBuf::from("../public/ibc_routing_table.json");
     std::fs::write(&full_path, serde_json::to_string_pretty(&full_table)?)?;
     println!("✓ Full routing table written to ibc_routing_table.json");
 
