@@ -1,58 +1,7 @@
 [package]
 name = "scripts"
 version = "0.1.0"
-edition = "2021"
-
-[features]
-default = ["docker", "nostr"]
-docker = []
-nostr = []
-# dao = ["dep:dao-testing"]
-
-[dependencies]
-cosmwasm-std = { path = "../../cosmwasm/packages/std" }
-# Chain orchestration
-cw-orch = { path = "../../cw-orchestrator/cw-orch", features = ["daemon"] }
-cw-orch-interchain = { path = "../../cw-orchestrator/cw-orch-interchain", features = ["daemon"] }
-sha2 = "0.10"
-cw-infuser-scripts = { path = "../../cw-infuser/scripts" }
-dao-testing = { path = "../../dao-contracts/packages/dao-testing" }
-dao-calendar = { path = "../../dao-contracts/contracts/proposal/dao-calendar", features = ["interface"] }
-shit-scripts = { path = "../../shitstrap/scripts/shit-scripts" }
-terp-account-scripts = { path = "../../terp-account-billboards/scripts" }
-zk-test-press = { path = "../../headstash/test-press", features = ["interface"] }
-
-
-# Container lifecycle
-ict-rs = { path = "../../ict-rs/ict-rs", features = ["docker", "terp", "testing", "nostr"] }
-cw4 = { path = "../../cw-plus/packages/cw4" }
-cw-utils = { path = "../../cw-minus/packages/cw-utils" }
-terp-rs  = { path = "../crates/sdk" }
-cosmrs = { path = "../../cosmos-rust/cosmrs" }
-cosmos-sdk-proto = { path = "../../cosmos-rust/cosmos-sdk-proto" }
-cosmwasm-schema = { path = "../../cosmwasm/packages/schema" }
-hash-market = { path = "../tools/hash-market", features = ["server", "client", "ve", "blossom"] }
-axum = { version = "0.7" }
-# CLI + runtime
-anyhow = "1.0"
-clap = { version = "4", features = ["derive"] }
-dotenv = "0.15"
-env_logger = "0.11"
-hex = "0.4"
-rustls = { version = "0.23", default-features = false, features = ["ring", "std"] }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-tokio = { version = "1", features = ["full"] }
-tracing = "0.1"
-tempfile = "3.27.0"
-toml = "1.1.2"
-which = "8.0.2"
-reqwest = "0.13.4"
-async-trait = "0.1.89"
-k256 = "0.13.4"
-csv = "1.4.0"
-log = "0.4.30"
-tracing-subscriber = "0.3.23"
+edition = "2024"
 
 [[bin]]
 name = "delegations"
@@ -64,3 +13,49 @@ path = "bin/e2e.rs"
 [[bin]]
 name = "ibc"
 path = "bin/ibc_info.rs"
+
+[features]
+default = ["docker", "nostr"]
+docker = []
+nostr = []
+# dao = ["dep:dao-testing"]
+
+[dependencies]
+anyhow = "1.0"
+async-trait = "0.1.89"
+axum = { version = "0.7" }
+clap = { version = "4", features = ["derive"] }
+cosmos-sdk-proto = { path = "../../cosmos-rust/cosmos-sdk-proto" }
+cosmrs = { path = "../../cosmos-rust/cosmrs" }
+cosmwasm-schema = { path = "../../cosmwasm/packages/schema" }
+cosmwasm-std = { path = "../../cosmwasm/packages/std" }
+csv = "1.4.0"
+cw-infuser-scripts = { path = "../../cw-infuser/scripts" }
+cw-orch = { path = "../../cw-orchestrator/cw-orch", features = ["daemon"] }
+cw-orch-interchain = { path = "../../cw-orchestrator/cw-orch-interchain", features = ["daemon"] }
+cw-utils = { path = "../../cw-minus/packages/cw-utils" }
+cw4 = { path = "../../cw-plus/packages/cw4" }
+dao-calendar = { path = "../../dao-contracts/contracts/proposal/dao-calendar", features = ["interface"] }
+dao-testing = { path = "../../dao-contracts/packages/dao-testing" }
+dotenv = "0.15"
+env_logger = "0.11"
+hash-market = { path = "../tools/hash-market", features = ["server", "client", "ve", "blossom"] }
+hex = "0.4"
+ict-rs = { path = "../../ict-rs/ict-rs", features = ["docker", "terp", "testing", "nostr"] }
+k256 = "0.13.4"
+log = "0.4.30"
+reqwest = "0.13.4"
+rustls = { version = "0.23", default-features = false, features = ["ring", "std"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sha2 = "0.10"
+shit-scripts = { path = "../../shitstrap/scripts/shit-scripts" }
+tempfile = "3.27.0"
+terp-account-scripts = { path = "../../terp-account-billboards/scripts" }
+terp-rs  = { path = "../crates/sdk" }
+tokio = { version = "1", features = ["full"] }
+toml = "1.1.2"
+tracing = "0.1"
+tracing-subscriber = "0.3.23"
+which = "8.0.2"
+zk-test-press = { path = "../../headstash/test-press", features = ["interface"] }

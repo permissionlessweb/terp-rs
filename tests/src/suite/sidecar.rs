@@ -17,8 +17,8 @@ use tracing::{debug, info, warn};
 // Spinner type removed — subprocess health-check pattern uses polling in SubprocessSidecar
 
 // Re-export for convenience
-pub use ict_rs::runtime::RuntimeBackend;
 pub use ict_rs::runtime::ContainerId;
+pub use ict_rs::runtime::RuntimeBackend;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -312,10 +312,7 @@ impl<C: SubprocessConfig + 'static> TerpSidecar for SubprocessSidecar<C> {
 
         // 7. Register endpoints
         let mut endpoints = EndpointMap::new();
-        endpoints.insert(
-            "http".to_string(),
-            format!("http://127.0.0.1:{}", port),
-        );
+        endpoints.insert("http".to_string(), format!("http://127.0.0.1:{}", port));
 
         self.config_dir = Some(config_dir);
         self.config_path = Some(config_path);
@@ -366,7 +363,7 @@ impl<C: SubprocessConfig + 'static> TerpSidecar for SubprocessSidecar<C> {
         let exit_status = {
             let mut guard = self.child.lock().unwrap();
             match &mut *guard {
-                Some(ref mut child) => child.try_wait().ok().flatten(),
+                Some(child) => child.try_wait().ok().flatten(),
                 None => None,
             }
         };
@@ -476,7 +473,10 @@ impl TerpSidecar for DockerSidecar {
             return Ok(self.endpoints.clone());
         }
 
-        let sp = self.sidecar_process.as_mut().context("no sidecar process configured")?;
+        let sp = self
+            .sidecar_process
+            .as_mut()
+            .context("no sidecar process configured")?;
 
         info!(sidecar = %self.id, "starting Docker sidecar");
         sp.create_container().await?;
@@ -487,10 +487,7 @@ impl TerpSidecar for DockerSidecar {
         if let Some(ref cid) = sp.container_id() {
             for port_str in &sp.config.ports {
                 if let Ok(port) = port_str.parse::<u16>() {
-                    if let Ok(Some(host_port)) = self
-                        .runtime
-                        .get_host_port(cid, port, "tcp")
-                        .await
+                    if let Ok(Some(host_port)) = self.runtime.get_host_port(cid, port, "tcp").await
                     {
                         endpoints.insert(
                             format!("port{}", port),
@@ -521,11 +518,7 @@ impl TerpSidecar for DockerSidecar {
             None => Ok(HealthStatus::Unknown),
             Some(sp) => {
                 if let Some(ref cid) = sp.container_id() {
-                    match self
-                        .runtime
-                        .exec_in_container(cid, &["true"], &[])
-                        .await
-                    {
+                    match self.runtime.exec_in_container(cid, &["true"], &[]).await {
                         Ok(_) => Ok(HealthStatus::Healthy),
                         Err(e) => Ok(HealthStatus::Unhealthy(e.to_string())),
                     }
@@ -655,10 +648,7 @@ impl SidecarBinaryResolver {
 
     /// Create a resolver for a cargo-built binary, checking
     /// `CARGO_MANIFEST_DIR` relative paths.
-    pub fn cargo_binary(
-        manifest_relative_paths: Vec<&str>,
-        fallback_name: &str,
-    ) -> Self {
+    pub fn cargo_binary(manifest_relative_paths: Vec<&str>, fallback_name: &str) -> Self {
         let candidates: Vec<PathBuf> = manifest_relative_paths
             .iter()
             .map(|p| {

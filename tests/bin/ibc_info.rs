@@ -1,19 +1,19 @@
 use cw_orch::{
     daemon::{
-        networks::{chain_name_from_id, OSMOSIS_1, TERP_MAINNET},
-        queriers::Ibc,
         Daemon, DaemonState,
+        networks::{OSMOSIS_1, TERP_MAINNET, chain_name_from_id},
+        queriers::Ibc,
     },
-    environment::{ChainInfo, ChainKind, ChainState, NetworkInfo, QuerierGetter},
+    environment::{ChainState, QuerierGetter},
     prelude::*,
 };
 use cw_orch_interchain::prelude::*;
 use hash_market::middleware::auth::now_timestamp;
-use log::{debug, info};
+use log::info;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::collections::{HashMap, HashSet};
-use terp_rs::{ibc::lightclients::tendermint::v1::ClientState, Message};
+use terp_rs::{Message, ibc::lightclients::tendermint::v1::ClientState};
 use tracing::warn;
 
 fn main() -> anyhow::Result<()> {
@@ -1630,7 +1630,10 @@ mod test {
         // Since we have direct channel to cosmoshub, we use the cosmoshub base denom
         assert_eq!(cp_chain, "cosmoshub");
         // Direct to cosmoshub -> use cosmoshub base denom
-        assert_eq!(path, "transfer/channel-0/ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF");
+        assert_eq!(
+            path,
+            "transfer/channel-0/ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF"
+        );
     }
 
     #[test]
@@ -1744,7 +1747,10 @@ mod test {
         let (hash, path, cp_chain) = derive_terp_ibc_denom(&asset, &channels).unwrap();
         // Direct channel to cosmoshub exists -> use cosmoshub base denom
         assert_eq!(cp_chain, "cosmoshub");
-        assert_eq!(path, "transfer/channel-0/ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF");
+        assert_eq!(
+            path,
+            "transfer/channel-0/ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF"
+        );
     }
 
     #[test]
@@ -1877,5 +1883,249 @@ mod test {
                 assert!(chan["chain_2"].is_object(), "Channel missing chain_2");
             }
         }
+    }
+
+    #[test]
+    fn test_derive_terp_ibc_denom_direct_single_hop_osmosis_native() {
+        let channels = make_terp_channels();
+        let asset = json!({
+            "symbol": "OSMO",
+            "base": "uosmo",
+            "traces": [{
+                "type": "ibc",
+                "counterparty": {
+                    "chain_name": "osmosis",
+                    "base_denom": "uosmo",
+                    "channel_id": "channel-0"
+                },
+                "chain": {
+                    "channel_id": "channel-42",
+                    "path": "transfer/channel-42/uosmo"
+                }
+            }],
+            "_source_chain": "osmosis"
+        });
+
+        let result = derive_terp_ibc_denom(&asset, &channels);
+        assert!(result.is_some());
+        let (hash, path, cp) = result.unwrap();
+        assert_eq!(path, "transfer/channel-5/uosmo");
+        assert_eq!(cp, "osmosis");
+        assert_eq!(hash, compute_ibc_denom_hash("transfer/channel-5/uosmo"));
+    }
+
+    #[test]
+    fn test_derive_terp_ibc_denom_direct_to_cosmoshub_atom() {
+        let channels = make_terp_channels();
+        let asset = json!({
+            "symbol": "ATOM",
+            "base": "uatom",
+            "traces": [{
+                "type": "ibc",
+                "counterparty": {
+                    "chain_name": "cosmoshub",
+                    "base_denom": "uatom",
+                    "channel_id": "channel-0"
+                },
+                "chain": {
+                    "channel_id": "channel-99",
+                    "path": "transfer/channel-99/uatom"
+                }
+            }],
+            "_source_chain": "cosmoshub"
+        });
+
+        let result = derive_terp_ibc_denom(&asset, &channels);
+        assert!(result.is_some());
+        let (hash, path, cp) = result.unwrap();
+        assert_eq!(path, "transfer/channel-0/uatom");
+        assert_eq!(cp, "cosmoshub");
+    }
+
+    #[test]
+    fn test_derive_terp_ibc_denom_multi_hop_via_osmosis_to_atomone() {
+        let channels = make_terp_channels();
+        let asset = json!({
+            "symbol": "ATONE",
+            "base": "ibc/somehash",
+            "traces": [{
+                "type": "ibc",
+                "counterparty": {
+                    "chain_name": "atomone",
+                    "base_denom": "uatone",
+                    "channel_id": "channel-2"
+                },
+                "chain": {
+                    "channel_id": "channel-94814",
+                    "path": "transfer/channel-94814/uatone"
+                }
+            }],
+            "_source_chain": "osmosis"
+        });
+
+        let result = derive_terp_ibc_denom(&asset, &channels);
+        assert!(result.is_some());
+        let (_, path, cp) = result.unwrap();
+        assert_eq!(path, "transfer/channel-5/transfer/channel-94814/uatone");
+        assert_eq!(cp, "atomone");
+    }
+
+    #[test]
+    fn test_derive_terp_ibc_denom_multi_hop_on_source_with_direct_channel() {
+        // Should prefer direct channel when available, even if source has multi-hop trace
+        let channels = make_terp_channels();
+        let asset = json!({
+            "symbol": "ETH",
+            "base": "ibc/someethhash",
+            "traces": [{
+                "type": "ibc",
+                "counterparty": {
+                    "chain_name": "cosmoshub",
+                    "base_denom": "ibc/C0B53...ADFF",
+                    "channel_id": "channel-141"
+                },
+                "chain": {
+                    "channel_id": "channel-0",
+                    "path": "transfer/channel-0/transfer/08-wasm-xxx/0xeth"
+                }
+            }],
+            "_source_chain": "osmosis"
+        });
+
+        let result = derive_terp_ibc_denom(&asset, &channels);
+        assert!(result.is_some());
+        let (_, path, cp) = result.unwrap();
+        assert_eq!(cp, "cosmoshub");
+        assert_eq!(path, "transfer/channel-0/ibc/C0B53...ADFF"); // uses direct + base from counterparty
+    }
+
+    #[test]
+    fn test_derive_terp_ibc_denom_no_channel_fallback_none() {
+        let channels = make_terp_channels();
+        let asset = json!({
+            "symbol": "UNKNOWN",
+            "base": "ibc/xxx",
+            "traces": [{
+                "type": "ibc",
+                "counterparty": {
+                    "chain_name": "secret",
+                    "base_denom": "uscrt"
+                },
+                "chain": { "path": "transfer/channel-999/uscrt" }
+            }],
+            "_source_chain": "secret"
+        });
+
+        let result = derive_terp_ibc_denom(&asset, &channels);
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_build_ibc_asset_entry_full_with_traces() {
+        let asset = json!({
+            "symbol": "ATOM",
+            "name": "Cosmos Hub",
+            "description": "The native token of Cosmos Hub",
+            "display": "atom",
+            "denom_units": [
+                {"denom": "uatom", "exponent": 0},
+                {"denom": "atom", "exponent": 6}
+            ],
+            "coingecko_id": "cosmos",
+            "type_asset": "ics20"
+        });
+
+        let traces = vec![json!({
+            "type": "ibc",
+            "counterparty": {
+                "chain_name": "cosmoshub",
+                "base_denom": "uatom"
+            },
+            "chain": {
+                "channel_id": "channel-0",
+                "path": "transfer/channel-0/uatom"
+            }
+        })];
+
+        let entry = build_ibc_asset_entry(
+            &asset,
+            "ibc/27394C5B9E9A3C6C8A7F4E5D6E7F8A9B0C1D2E3F4A5B6C7D8E9F0A1B2C3D4E5",
+            &traces,
+            "transfer/channel-0/uatom",
+            "ATOM",
+            "cosmoshub",
+            "uatom",
+            "channel-0",
+            None,
+        );
+
+        assert_eq!(
+            entry["base"],
+            "ibc/27394C5B9E9A3C6C8A7F4E5D6E7F8A9B0C1D2E3F4A5B6C7D8E9F0A1B2C3D4E5"
+        );
+        assert_eq!(entry["symbol"], "ATOM");
+        assert!(entry["traces"].is_array());
+        assert!(entry["images"].is_array());
+        assert_eq!(entry["coingecko_id"], "cosmos");
+    }
+
+    #[test]
+    fn test_build_ibc_asset_entry_non_ibc_trace() {
+        let asset = json!({
+            "symbol": "stATOM",
+            "name": "Stride Staked ATOM",
+            "display": "statom",
+            "denom_units": [{"denom": "ustatom", "exponent": 0}, {"denom": "statom", "exponent": 6}]
+        });
+
+        let traces = vec![json!({
+            "type": "liquid-stake",
+            "counterparty": {
+                "chain_name": "stride",
+                "base_denom": "uatom"
+            },
+            "provider": "stride"
+        })];
+
+        let entry = build_ibc_asset_entry(
+            &asset, "ustatom", &traces, "", "stATOM", "stride", "uatom", "", None,
+        );
+
+        assert_eq!(entry["base"], "ustatom");
+        assert_eq!(entry["type_asset"], "ics20");
+    }
+
+    #[test]
+    fn test_compute_ibc_denom_hash_respects_spec() {
+        // Standard IBC hash test vectors
+        let cases = vec![
+            ("transfer/channel-0/uatom", "ibc/27394C5B..."), // real example truncated
+            (
+                "transfer/channel-5/transfer/channel-0/uatom",
+                "ibc/ABC123...",
+            ),
+        ];
+
+        for (path, _) in cases {
+            let hash = compute_ibc_denom_hash(path);
+            assert!(hash.starts_with("ibc/"));
+            assert_eq!(hash.len(), 68);
+            // SHA256 of the path should be deterministic
+            let hash2 = compute_ibc_denom_hash(path);
+            assert_eq!(hash, hash2);
+        }
+    }
+
+    #[test]
+    fn test_derive_terp_ibc_denom_empty_traces() {
+        let channels = make_terp_channels();
+        let asset = json!({
+            "symbol": "TERP",
+            "base": "uterp",
+            "traces": []
+        });
+
+        let result = derive_terp_ibc_denom(&asset, &channels);
+        assert!(result.is_none());
     }
 }

@@ -1,41 +1,3 @@
-[crates.bellperson]
-consumers = []
-description = ""
-local = "abstract/terp-core/crates/bellperson"
-repo_only = true
-zk_local = "abstract/terp-core/crates/bellperson"
-
-[crates.alloy]
-consumers = []
-description = ""
-local = "abstract/terp-core/crates/alloy"
-zk_local = "abstract/terp-core/crates/alloy"
-repo_only = true
-
-[crates.blst]
-consumers = []
-description = ""
-local = "abstract/terp-core/crates/blst/bindings/rust"
-zk_local = "abstract/terp-core/crates/blst/bindings/rust"
-repo_only = true
-package = "nam-blst"
-
-[crates.blst-rs]
-consumers = []
-description = ""
-local = "abstract/terp-core/crates/blstrs"
-zk_local = "abstract/terp-core/crates/blstrs"
-repo_only = true
-package = "nam-blstrs"
-
-[crates.bls12_381]
-consumers = []
-description = ""
-local = "abstract/terp-core/crates/blstrs"
-zk_local = "abstract/terp-core/crates/blstrs"
-repo_only = true
-package = "nam-blstrs"
-
 [crates.abstract]
 consumers = []
 description = "Abstract monorepo (framework, modules, integrations, interchain)"
@@ -86,6 +48,13 @@ url = "https://github.com/permissionlessweb/abstract"
 branch = "zk-mvp"
 url = "https://github.com/permissionlessweb/abstract"
 
+[crates.alloy]
+consumers = []
+description = ""
+local = "abstract/terp-core/crates/alloy"
+repo_only = true
+zk_local = "abstract/terp-core/crates/alloy"
+
 [crates.arse-merkle-tree]
 consumers = ["namada"]
 description = "Sparse Merkle Tree implementation (namada fork)"
@@ -114,6 +83,37 @@ zk_local = "basecoin-rs/basecoin/store"
 
 [crates.basecoin-store.git]
 url = "https://github.com/permissionlessweb/basecoin-rs"
+
+[crates.bellperson]
+consumers = []
+description = ""
+local = "abstract/terp-core/crates/bellperson"
+repo_only = true
+zk_local = "abstract/terp-core/crates/bellperson"
+
+[crates.bls12_381]
+consumers = []
+description = ""
+local = "abstract/terp-core/crates/blstrs"
+package = "nam-blstrs"
+repo_only = true
+zk_local = "abstract/terp-core/crates/blstrs"
+
+[crates.blst]
+consumers = []
+description = ""
+local = "/Users/returniflost/abstract/terp-core/crates/namada/Cargo.toml"
+package = "nam-blst"
+repo_only = true
+zk_local = "abstract/terp-core/crates/blst/bindings/rust"
+
+[crates.blst-rs]
+consumers = []
+description = ""
+local = "abstract/terp-core/crates/blstrs"
+package = "nam-blstrs"
+repo_only = true
+zk_local = "abstract/terp-core/crates/blstrs"
 
 [crates.callback-capturer]
 consumers = []
@@ -1355,9 +1355,6 @@ zk_local = "jmt"
 [crates.jmt.git]
 url = "https://github.com/permissionlessweb/jmt"
 
-[crates.jmt.git]
-url = "https://github.com/permissionlessweb/librustzcash"
-
 [crates.nam-blst.git]
 branch = "master"
 url = "https://github.com/permissionlessweb/blst"
@@ -1603,7 +1600,7 @@ url = "https://github.com/permissionlessweb/polytone"
 consumers = ["abstract"]
 dep_aliases = ["polytone-voice"]
 description = "Polytone voice contract for cross-chain messaging"
-local = "/Users/returniflost/abstract/terp-core/crates/cw-headstash/secret-crates/Cargo.toml"
+local = "/Users/returniflost/abstract/terp-core/crates/abstract/modules/Cargo.toml"
 package = "abstract-polytone-voice"
 stable = "5.0.0"
 zk_local = "polytone/contracts/main/voice"
