@@ -407,7 +407,7 @@ fn derive_full_ibc_state() -> anyhow::Result<()> {
     }
     chain_assets.insert("osmosis".to_string(), osmo_assets);
 
-    // Build final assetlist: native Terp assets + all derived IBC assets
+    // Build final assetlist: native Terp assets + chain-registry base denoms + all derived IBC assets
     let mut native_assets: Vec<serde_json::Value> = state_terp
         .get("assets")
         .ok()
@@ -416,6 +416,18 @@ fn derive_full_ibc_state() -> anyhow::Result<()> {
         .into_iter()
         .filter(|a| a["traces"].as_array().map_or(true, |t| t.is_empty()))
         .collect();
+
+    // Also include chain-registry base denoms from connected chains
+    // (e.g. osmosis assets, akash assets) so the assetlist is complete
+    for osmo_asset in &osmo_assets {
+        let base = osmo_asset["base"].as_str().unwrap_or("");
+        let is_native = osmo_asset["traces"].as_array().map_or(true, |t| t.is_empty());
+        if is_native && !native_assets.iter().any(|a| a["base"] == base) {
+            let mut entry = osmo_asset.clone();
+            entry["_source_chain"] = serde_json::json!("osmosis");
+            native_assets.push(entry);
+        }
+    }
 
     // Merge IBC assets into the list
     for new_asset in &all_derived_ibc_assets {

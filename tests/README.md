@@ -1,26 +1,28 @@
 # Terp Network Test Suite
 
-Date: 2026-05-30
+Date: 2026-06-12
 
 ---
- TODO:
-- use our blossom clent traits for types fetching from hashmerchant server (replaces manual format url fetch keys)
-- spawn anvil and wire in actual ingest and production workflow using hashmerchant: 
-    - client binary (https://github.com/permissionlessweb/terp-rs/blob/feat/zk-wasmvm/tools/hash-market/src/bin/client.rs)
-    - existing e2e script demonstrating (in bash): `tests/tsh/hashmerchant/a.sh` of terp-core repo
-- ensure relayer functionality of chain -> argus -> hash-merchant -> nostr relatyer of dao-calendar event. we do this by using a dao to use a dao-calendar module using nip-52 events and confirm dao-calendar events emitted are:
-    - picked up by argus formula (indexer queries and caches smart contract data from contract)
-    - argus exporter webhook event sent out to hashmerchant relayer (indexer configured via webhook || websocket to do things when events happen )
-    - argus can retrieve information from hashmerchant relayers via cid (testing sanity of retrieveing offchain data via cid)
-    - hashmerchant relayer relays event to nostr relayer container (hashmerchant relayer is sound and compatible to broader nostr network)
 
 ## What this workspace is
-`tests/` is the Terp Network integration and end-to-end test workspace. It is a Rust library that provides:
-1. **Contract deployment** — a unified `TerpNetworkSuite` that composes cw-orch sub-suites (DAO, SVG, headstash, billboards, shitstraps) and deploys them on any Terp chain
-2. **Sidecar lifecycle management** — a fleet of off-chain services (hashmarket, merkle-server, indexer, MinIO, Nostr relay) that run alongside the chain during tests
-3. **Two binaries** — `e2e` (full integration) and `delegations` (focused test)
 
-The workspace is a member of the `crates/terp-rs` workspace and is named `scripts` in `Cargo.toml`.
+`tests/` is the Terp Network integration, schema validation, and IBC asset derivation workspace.  
+Package name: `scripts` (in `Cargo.toml`).
+
+### Capabilities
+
+1. **IBC info derivation** — `bin/ibc_info.rs` connects to live chains (Terp mainnet + connected chains), queries IBC clients/connections/channels, and generates:
+   - Schema-compliant `ibc_data` JSON files (`public/{chain_1}-{chain_2}.json`)
+   - `assetlist.json` with native Terp assets + chain-registry base denoms + derived IBC assets
+   - `ibc_routing_table.json` — all possible multi-hop routes
+   - `ibc_lookup_table.json` — simplified denom→origin lookup
+   - All output validated against `asset_list.schema.json` and `ibc_data.schema.json`
+
+2. **Contract deployment** — `TerpNetworkSuite` composes cw-orch sub-suites (DAO, SVG, headstash, billboards, shitstraps) and deploys them on any Terp chain.
+
+3. **Sidecar lifecycle** — a fleet of off-chain services (hashmarket, merkle-server, indexer, MinIO, Nostr relay) that run alongside the chain during integration tests.
+
+4. **Multi-chain IBC testing** — `ict-rs` Docker-spawned chain environments with Hermes relayer for end-to-end IBC transfer validation.
 
 ---
 
@@ -30,197 +32,130 @@ The workspace is a member of the `crates/terp-rs` workspace and is named `script
 tests/
 ├── src/
 │   ├── lib.rs                  # Public re-exports
-│   ├── environments/           # Test environment primitives
-│   │   ├── mod.rs
-│   │   ├── nostr.rs            # Nostr relay environment
-│   │   └── quickspawn.rs       # Quick chain spawn helpers
-│   └── suite/
-│       ├── mod.rs              # SidecarFleet — builder for all sidecars
-│       ├── sidecar.rs          # TerpSidecar trait + SubprocessSidecar, DockerSidecar, InProcessSidecar
-│       ├── contracts.rs        # TerpNetworkSuite — contract deployment
-│       ├── deploy_data.rs      # TerpNetworkDeployData — per-chain deployment config
-│       ├── hashmerchant.rs     # HashMerchantSuite + MerkleServerSuite
-│       ├── relayer.rs          # RelayerSuite (Hermes/IBC)
-│       ├── indexer.rs          # IndexerSuite
-│       ├── minio_ipfs.rs       # MinioIpfsSuite
-│       └── nostr.rs            # NostrRelaySuite
+│   ├── environments/           # Test environment primitives (nostr, quickspawn)
+│   ├── ibc_core.rs             # Pure IBC derivation: denom hashes, channel graph, routing table
+│   └── suite/                  # SidecarFleet + TerpSidecar trait + contract deployment
 ├── bin/
-│   ├── e2e.rs                  # Full integration test binary
-│   └── delegations.rs          # Delegation-specific test binary
+│   ├── e2e.rs                  # Full integration test binary (Docker sidecars)
+│   ├── delegations.rs          # Delegation-specific test binary
+│   └── ibc_info.rs             # IBC info derivation pipeline (live chains → public/ JSON files)
+├── tests/
+│   ├── nostr_orch_suite.rs     # Nostr relay integration tests
+│   └── ibc_info.rs             # Schema validation + derivation unit tests (11 tests)
+├── public/
+│   ├── asset_list.schema.json  # Chain-registry asset list schema
+│   ├── ibc_data.schema.json    # Chain-registry IBC data schema
+│   ├── assetlist.json          # Generated asset list output
+│   ├── state.json              # Chain state cache (used by ibc_info bin)
+│   ├── ibc_routing_table.json  # Premined multi-hop routing table
+│   └── ibc_lookup_table.json   # Simplified IBC denom lookup
 └── Cargo.toml
 ```
 
-### The core traits
+---
 
-**`TerpSidecar`** — the fundamental abstraction. Every off-chain service implements this:
+## The IBC info pipeline (`bin/ibc_info.rs`)
 
-```rust
-#[async_trait]
-pub trait TerpSidecar: Send + Sync {
-    fn id(&self) -> &SidecarId;
-    async fn start(&mut self, deps: &SidecarRegistry) -> Result<EndpointMap>;
-    async fn stop(&mut self) -> Result<()>;
-    async fn health(&self) -> Result<HealthStatus>;
-    fn endpoint(&self, name: &str) -> Option<String>;
-}
+This binary connects to live chain nodes (Terp mainnet, Osmosis, etc.), queries the IBC state, and produces schema-compliant output files:
+
+```
+cargo run --bin ibc
 ```
 
-Three concrete implementations live in `sidecar.rs`:
+### What it generates
 
-- **`SubprocessSidecar<C>`** — spawns a compiled binary from the local filesystem. Config is provided via `C: SubprocessConfig` which handles binary resolution, argument construction, config file serialization, health-check polling, and port extraction. Used for hashmarket-server, hashmarket-client, merkle-server.
-- **`DockerSidecar`** — wraps an `ict_rs::sidecar::SidecarProcess` (Docker container lifecycle via ict-rs). Used for MinIO, indexer, relayer.
-- **`InProcessSidecar`** — runs a `tokio::task` in-process. Not currently used but available for lightweight services.
+| File | Schema | Contents |
+|------|--------|----------|
+| `public/{a}-{b}.json` | `ibc_data.schema.json` | IBC channels, clients, connections per chain pair |
+| `public/assetlist.json` | `asset_list.schema.json` | Native Terp assets + chain-registry base denoms + derived IBC assets |
+| `public/ibc_routing_table.json` | (internal) | All multi-hop routes from BFS graph traversal |
+| `public/ibc_lookup_table.json` | (simplified) | IBC denom → symbol/origin/trace lookup |
 
-**`SubprocessConfig`** — the configuration trait for subprocess sidecars:
+### Schema compliance
 
-```rust
-pub trait SubprocessConfig {
-    fn binary_path(&self) -> Result<PathBuf>;
-    fn args(&self, config_path: &Path) -> Vec<String>;
-    fn env(&self) -> Vec<(String, String)>;
-    fn write_config(&self, config_dir: &Path) -> Result<PathBuf>;
-    fn health_check(&self) -> Option<(String, String)>;
-    fn bind_port(&self) -> u16;
-    fn startup_timeout_secs(&self) -> u64;
-}
-```
-
-Each suite type (`HashMerchantSuite`, `MerkleServerSuite`, etc.) implements `SubprocessConfig` for its config wrapper. The wrappers in `hashmerchant.rs` delegate serialization to the canonical `hash_market::config` types — `Config` for the server, `ClientConfig` for the client. This means the TOML shape defined in `tools/hash-market/src/config.rs` is the single source of truth shared between the binary and the test suite. When the binary's config shape changes, the test suite picks up the change at compile time. No drift.
-
-### The fleet builder
-
-`SidecarFleet` (in `suite/mod.rs`) is the top-level builder. It holds typed `Option` fields for each sidecar and provides builder methods:
-
-```rust
-let fleet = SidecarFleet::new("my-test")
-    .with_hashmerchant_defaults("terp-test-1")
-    .with_merkle_server_defaults()
-    .with_minio_ipfs_defaults()
-    .with_nostr_relay("my-relay")
-    .with_minimal_indexer("argus");
-
-fleet.start_all().await?;
-// use fleet.hashmerchant, fleet.merkle_server, etc.
-fleet.stop_all().await?;
-```
-
-Sidecars start in dependency order via `SidecarRegistry` — already-running sidecars share their endpoints (e.g., the indexer needs the MinIO URL, the relayer needs chain gRPC addresses).
-
-### Contract deployment
-
-`TerpNetworkSuite` (in `suite/contracts.rs`) wraps `cw-orch` sub-suites. It takes a `TerpNetworkDeployData` struct that specifies which suites to deploy:
-
-```rust
-pub struct TerpNetworkDeployData {
-    pub cw_infuser: Option<InfuserDeployData>,
-    pub shitstraps: Option<ShitstrapDeployData>,
-    pub dao: Option<DaoDeployData>,
-    pub terp_billboards: Option<AdminConfig>,
-    pub zk: Option<ZkDeployData>,
-}
-```
-
-Each field is `Option` — the suite only deploys what is `Some`. Tests that don't need SVG can pass `None` for `cw_infuser`. Tests that need only the DAO can deploy just that.
+All output files are validated against the canonical chain-registry JSON schemas in `public/`:
+- `asset_list.schema.json` — enforces required fields (`denom_units`, `type_asset`, `base`, `display`, `name`, `symbol`), trace type enums (`ibc`, `ibc-cw20`, `bridge`, ...), channel_id patterns (`^channel-\d+$`), `$schema` pointer
+- `ibc_data.schema.json` — enforces `ordering` as `"ordered"|"unordered"` string (not int), `chain_1`/`chain_2` with `chain_name`/`chain_id`/`client_id`/`connection_id`, `tags` with `preferred`/`status`
 
 ---
 
-## Config type architecture
+## Core derivation module (`src/ibc_core.rs`)
 
-The canonical config types live in `tools/hash-market/src/config.rs`:
+Pure functions operating on state.json data — no chain dependency, usable in unit tests:
 
 ```rust
-pub struct Config {
-    pub bind: String,
-    pub chain_id: String,
-    pub signing_key: String,
-    pub data_dir: Option<String>,
-    pub providers: Vec<ProviderConfig>,
-}
+compute_ibc_denom_hash("transfer/channel-1/uakt")
+// → "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4"
 
-pub struct ProviderConfig {
-    pub name: String,
-    pub chain_uid: String,
-    pub algo: String,
-    pub mode: String,
-    pub address: String,
-    pub interval_secs: u64,
-}
-
-pub struct ClientConfig {
-    pub eth_rpc: String,
-    pub sidecar_url: String,
-    pub runtime_id: String,
-    pub chain_uid: String,
-    pub interval_secs: u64,
-    pub account_address: String,
-    pub storage_keys: Vec<String>,
-}
+IBCChannelGraph::build_from_state(&ibc_data)       // adjacency list from ibc_data entries
+graph.find_routes("terp", "akash", 3)               // BFS with hop limit
+graph.compute_ibc_denom_for_route("uakt", &route)   // denom from route
+IBCAssetRoutingTable::premine(&graph, &assets, 4)   // all routes for all assets
 ```
-
-The test suite's `MerchantSuiteConfig` and `MerchantClientSuiteConfig` are thin wrappers around these. They add `binary_path: Option<PathBuf>` for subprocess resolution but delegate TOML serialization to `toml::to_string(&self.inner)` — the canonical types are serialized directly.
-
-This means: if you change `ProviderConfig.interval_secs` in the library, the test suite automatically uses the new field. No duplicate definitions, no silent drift.
-
-`MerkleServerConfig` is not yet unified — it lives in `tests/src/suite/hashmerchant.rs` because it corresponds to a different binary (`tools/merkle-server`) not in the hash-market crate. This is intentional — the rule is: canonical types belong in the library crate that owns the binary.
 
 ---
 
-## How to run tests
+## Schema validation tests (11 tests)
+
+All synchronous, no Docker required. In `tests/tests/ibc_info.rs`:
+
+| Test | What it validates |
+|------|-------------------|
+| `test_assetlist_schema_compliance` | Loads real `assetlist.json`, validates every asset against schema |
+| `test_ibc_data_schema_via_constructed_entry` | Constructed entry with `"ordering": "unordered"`, `$schema`, `chain_1`/`chain_2` validates clean |
+| `test_ibc_data_rejects_int_ordering` | Integer `1` for ordering correctly flagged as violation |
+| `test_ibc_data_rejects_missing_tags` | Missing `preferred` in tags correctly flagged |
+| `test_ibc_denom_computation_known_hashes` | SHA256 hashes match known AKT/ATONE values from assetlist |
+| `test_channel_graph_and_routing_with_real_ibc_data` | Full pipeline with real state.json data |
+| `test_routing_table_integrity` | Pre-computed table: 9 chains, 132 routes, hop count consistency |
+| `test_ibc_lookup_table_integrity` | All lookup entries have required fields |
+| `test_state_json_asset_structure` | Real state.json assets validated (6 entries, 0 violations) |
+| `test_asset_entry_validation_rejects_bad_data` | Validator catches 5 missing fields + 2 pattern violations |
+| `test_construct_ibc_data_and_run_derivation_pipeline` | End-to-end: construct → graph → routes → denoms → map |
+
+---
+
+## Multi-chain IBC test (Docker)
+
+`test_multichain_ibc_info_routing` in `tests/tests/ibc_info.rs` — spawns 4 real Terp chain containers via ict-rs, creates IBC channels with Hermes relayer, creates 16 tokenfactory tokens, executes single/double/triple/quadruple-hop transfers, validates IBC denoms after each step.
+
+```
+cargo test --test ibc_info -- --nocapture --ignored
+```
+
+Requires Docker and `ghcr.io/terpnetwork/terp-core:v5.2.0-zk-localterp` image.
+
+---
+
+## How to run
 
 ### Prerequisites
 
 ```sh
-# 1. Build the sidecar binaries
+# Sidecar binaries
 cargo build --bin hash-market-server -p hash-market --features "server,ve,blossom"
 cargo build --bin hash-market-client -p hash-market --features "client"
-cargo build --bin merkle-server -p merkle-server  # if merkle-server is in workspace
 
-# 2. Docker (for docker feature — MinIO, indexer, relayer)
-docker images | grep terpnetwork/terp-core  # must have a local image
-
-# 3. mc (MinIO client) for website uploads in e2e
-which mc || brew install minio/stable/mc
+# Docker images (for integration tests)
+docker pull ghcr.io/terpnetwork/terp-core:v5.2.0-zk-localterp
 ```
 
-### Running the e2e binary
+### IBC info pipeline
 
 ```sh
-# Full integration — two chains, relayer, all sidecars, contract deployment
+cargo run --bin ibc
+```
+
+### Schema validation tests (no Docker)
+
+```sh
+cargo test -p scripts --test ibc_info -- --skip test_multichain_ibc_info_routing --nocapture
+```
+
+### Full integration e2e
+
+```sh
 cargo run --bin e2e --features docker,nostr
-
-# Without Docker features (subprocess sidecars only, no containers)
-cargo run --bin e2e --features nostr --no-default-features
-```
-
-The `e2e` binary:
-1. Cleans up any stale Docker containers from previous runs
-2. Spawns two Terp chains (`terp-test-1`, `terp-test-2`) and a Hermes relayer via ict-rs
-3. Deploys the contract stack (DAO, SVG, headstash, billboards, shitstraps) via cw-orch
-4. Patches `websites/terp.network/public/config.json` with deployed contract addresses from `~/.cw-orchestrator/state.json`
-5. Starts the sidecar fleet (MinIO, merkle-server, hashmarket, indexer, nostr-relay)
-6. Uploads `websites/terp.network/dist/` to MinIO via `mc cp`
-7. Prints all deployed contract addresses
-8. Waits for Ctrl+C — **no teardown until signal**
-
-The binary uses a dedicated single-thread `tokio::Runtime` (not `#[tokio::main]`) to avoid conflicts with cw-orch's own lazy static runtime.
-
-### Running unit/integration tests
-
-```sh
-# All tests
-cargo test -p scripts
-
-# Without Docker (subprocess only)
-cargo test -p scripts --no-default-features --features nostr
-
-# Specific test
-cargo test -p scripts hashmerchant -- --nocapture
-```
-
-### Running the delegations binary
-
-```sh
-cargo run --bin delegations --features docker,nostr
 ```
 
 ---
@@ -229,69 +164,13 @@ cargo run --bin delegations --features docker,nostr
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `docker` | yes | Enable Docker sidecars (MinIO, indexer, relayer). Requires Docker daemon and `terpnetwork/terp-core` image |
-| `nostr` | yes | Enable Nostr relay suite |
+| `docker` | yes | Docker sidecars (MinIO, indexer, relayer). Requires Docker daemon |
+| `nostr` | yes | Nostr relay suite |
 
 Default features: `docker, nostr`
 
-Disabling `docker` means sidecars that normally run as containers (`minio_ipfs`, `indexer`, `relayer`) are unavailable — `SidecarFleet` builder methods for them will panic or silently skip. The subprocess sidecars (`hashmerchant`, `merkle-server`) work without Docker.
-
 ---
 
-## Current state and known gaps
+## Output files
 
-### Config type unification (hash-market)
-
-**Done.** `Config`, `ProviderConfig`, `ClientConfig` are canonical and shared. The five duplicate structs from the previous version have been removed.
-
-**Not done:**
-- `MerkleServerConfig` is still defined in the test suite, not unified with the binary's config. The comment explains why (separate crate), but it's the same drift risk that was fixed for hash-market.
-- `with_defaults()` uses an empty `signing_key: Default::default()`. The binary parses this as a hex string — an empty string decodes to an empty byte vector and fails at `SigningKey::from_bytes(...)` with a runtime error. The test will fail at server startup. This is not a compile-time safety net.
-- `MerkleServerConfig::with_new_keypair()` is commented out — it returns default/empty values. Any test that calls `MerkleServerSuite::with_defaults()` (which calls `with_new_keypair()`) gets an empty public key and the server will reject signature verification.
-
-### ProviderStatus integration gap
-
-`HashMerchantSuite` can query vote extensions via `vote_extension(chain_uid)` → `GET /ve/vote-extension?chain_uid=...`. It cannot query provider runtime state (is provider X running? what was the last foreign_height?).
-
-`ProviderStatus` (runtime state) and `ProviderConfig` (TOML shape) are different types with no shared structure. The test suite only holds `ProviderConfig` (from `Config`). If a test needs to assert on `ProviderStatus` fields, it has no path — `feed_provider()` is a no-op stub and there is no `GET /ve/providers` call wired into the suite.
-
-### Binary resolution
-
-`SubprocessConfig::binary_path()` searches well-known relative paths:
-
-- `hash-market-server`: `../target/debug/hash-market-server`, `../target/release/hash-market-server`, `../../tools/hash-market/target/debug/hash-market-server`
-- `hash-market-client`: `../../target/debug/hash-market-client`, `../../target/release/hash-market-client`
-- `merkle-server`: `../../target/debug/merkle-server`, etc.
-
-If binaries are built with a different path scheme, resolution fails and the test errors at `binary_path()`.
-
----
-
-## Adding a new sidecar
-
-1. Define a config struct that implements `SubprocessConfig` (or `DockerSidecar` / `InProcessSidecar`)
-2. Define a suite struct that holds the sidecar and implements `TerpSidecar`
-3. Add a `with_*_defaults` builder method to `SidecarFleet`
-4. Add the field to `SidecarFleet` and wire `start_all` / `stop_all`
-
-The pattern for a subprocess sidecar:
-
-```rust
-pub struct MySuiteConfig {
-    pub inner: hash_market::config::Config,  // or your canonical type
-    pub binary_path: Option<PathBuf>,
-}
-
-impl SubprocessConfig for MySuiteConfig {
-    fn binary_path(&self) -> Result<PathBuf> { /* resolve */ }
-    fn args(&self, config_path: &Path) -> Vec<String> { vec!["-c".into(), config_path.to_string_lossy().into()] }
-    fn write_config(&self, config_dir: &Path) -> Result<PathBuf> {
-        let path = config_dir.join("config.toml");
-        std::fs::write(&path, toml::to_string(&self.inner)?)?;
-        Ok(path)
-    }
-    fn health_check(&self) -> Option<(String, String)> { Some(("GET".into(), "/health".into())) }
-    fn bind_port(&self) -> u16 { /* parse from config */ }
-    fn startup_timeout_secs(&self) -> u64 { 30 }
-}
-```
+The `public/` directory is treated as the build output directory for generated IBC data and asset lists. The `ibc_info` binary writes all output here. The schema validation tests load from here. The files can be published to a static site or CDN.
