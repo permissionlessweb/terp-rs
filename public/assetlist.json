@@ -1,0 +1,237 @@
+{
+  "$schema": "../assetlist.schema.json",
+  "assets": [
+    {
+      "base": "ibc/20D7A69EFB3EF5A7B4097503B710917D7ED76E47887969AA9556F989AE9B666C",
+      "coingecko_id": "akash-network",
+      "denom_units": [
+        {
+          "aliases": [
+            "uakt"
+          ],
+          "denom": "ibc/20D7A69EFB3EF5A7B4097503B710917D7ED76E47887969AA9556F989AE9B666C",
+          "exponent": 0
+        },
+        {
+          "denom": "akt",
+          "exponent": 6
+        }
+      ],
+      "description": "Akash Token (AKT) is the Akash Network's native utility token, used as the primary means to govern, secure the blockchain, incentivize participants, and provide a default mechanism to store and exchange value.",
+      "display": "akt",
+      "images": [
+        {
+          "image_sync": {
+            "base_denom": "uakt",
+            "chain_name": "akash"
+          },
+          "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/akash/images/akt.png",
+          "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/akash/images/akt.svg"
+        }
+      ],
+      "logo_URIs": {
+        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/akash/images/akt.png",
+        "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/akash/images/akt.svg"
+      },
+      "name": "Akash",
+      "symbol": "AKT",
+      "traces": [
+        {
+          "chain": {
+            "channel_id": "channel-1",
+            "path": "transfer/channel-1/uakt"
+          },
+          "counterparty": {
+            "base_denom": "uakt",
+            "chain_name": "akash",
+            "channel_id": "channel-9"
+          },
+          "type": "ibc"
+        }
+      ],
+      "type_asset": "ics20"
+    },
+    {
+      "address": "osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743",
+      "base": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
+      "coingecko_id": "wrapped-bitcoin",
+      "denom_units": [
+        {
+          "aliases": [
+            "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"
+          ],
+          "denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
+          "exponent": 0
+        },
+        {
+          "denom": "wbtc",
+          "exponent": 8
+        }
+      ],
+      "description": "Wrapped Bitcoin (WBTC) is an ERC20 token backed 1:1 with Bitcoin. Completely transparent. 100% verifiable. Community led.",
+      "display": "wbtc",
+      "name": "Wrapped Bitcoin",
+      "symbol": "WBTC",
+      "traces": [
+        {
+          "counterparty": {
+            "base_denom": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+            "chain_name": "ethereum"
+          },
+          "provider": "BitGo, Kyber, and Ren",
+          "type": "additional-mintage"
+        }
+      ],
+      "type_asset": "sdk.coin"
+    },
+    {
+      "base": "ibc/BCC292675B6E61999C6EA1B503BEE59D7E61BF3AA4DBC86AC214BAE6FC981227",
+      "coingecko_id": "atomone",
+      "denom_units": [
+        {
+          "aliases": [
+            "uatone"
+          ],
+          "denom": "ibc/BCC292675B6E61999C6EA1B503BEE59D7E61BF3AA4DBC86AC214BAE6FC981227",
+          "exponent": 0
+        },
+        {
+          "denom": "atone",
+          "exponent": 6
+        }
+      ],
+      "description": "The native staking and governance token of AtomOne",
+      "display": "atone",
+      "images": [
+        {
+          "image_sync": {
+            "base_denom": "uatone",
+            "chain_name": "atomone"
+          },
+          "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/atomone/images/atone.png",
+          "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/atomone/images/atone.svg"
+        }
+      ],
+      "logo_URIs": {
+        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/atomone/images/atone.png",
+        "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/atomone/images/atone.svg"
+      },
+      "name": "AtomOne",
+      "symbol": "ATONE",
+      "traces": [
+        {
+          "chain": {
+            "channel_id": "channel-94814",
+            "path": "transfer/channel-94814/uatone"
+          },
+          "counterparty": {
+            "base_denom": "uatone",
+            "chain_name": "atomone",
+            "channel_id": "channel-2"
+          },
+          "type": "ibc"
+        }
+      ],
+      "type_asset": "ics20"
+    },
+    {
+      "base": "ibc/593603DDD1729B6B4EC57136C05638D51D8C09360C75A1EE403E2701A11E3754",
+      "denom_units": [
+        {
+          "aliases": [
+            "upenumbra"
+          ],
+          "denom": "ibc/593603DDD1729B6B4EC57136C05638D51D8C09360C75A1EE403E2701A11E3754",
+          "exponent": 0
+        },
+        {
+          "denom": "penumbra",
+          "exponent": 6
+        }
+      ],
+      "description": "The native token of Penumbra.",
+      "display": "penumbra",
+      "images": [
+        {
+          "image_sync": {
+            "base_denom": "upenumbra",
+            "chain_name": "penumbra"
+          },
+          "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/penumbra/images/penumbra.png",
+          "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/penumbra/images/penumbra.svg"
+        }
+      ],
+      "logo_URIs": {
+        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/penumbra/images/penumbra.png",
+        "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/penumbra/images/penumbra.svg"
+      },
+      "name": "Penumbra",
+      "symbol": "UM",
+      "traces": [
+        {
+          "chain": {
+            "channel_id": "channel-79703",
+            "path": "transfer/channel-79703/upenumbra"
+          },
+          "counterparty": {
+            "base_denom": "upenumbra",
+            "chain_name": "penumbra",
+            "channel_id": "channel-4"
+          },
+          "type": "ibc"
+        }
+      ],
+      "type_asset": "ics20"
+    },
+    {
+      "base": "ibc/1E90CE65259979501EE3ED7D24D19EA97E2BB016ABF205A72A51E3A13F21333D",
+      "denom_units": [
+        {
+          "aliases": [
+            "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF"
+          ],
+          "denom": "ibc/1E90CE65259979501EE3ED7D24D19EA97E2BB016ABF205A72A51E3A13F21333D",
+          "exponent": 0
+        },
+        {
+          "denom": "eth",
+          "exponent": 18
+        }
+      ],
+      "description": "Ether via Eureka",
+      "display": "eth",
+      "images": [
+        {
+          "image_sync": {
+            "base_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
+            "chain_name": "cosmoshub"
+          },
+          "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/cosmoshub/images/ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF.png",
+          "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/cosmoshub/images/ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF.svg"
+        }
+      ],
+      "logo_URIs": {
+        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/cosmoshub/images/ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF.png",
+        "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/cosmoshub/images/ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF.svg"
+      },
+      "name": "Ethereum",
+      "symbol": "ETH",
+      "traces": [
+        {
+          "chain": {
+            "channel_id": "channel-0",
+            "path": "transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+          },
+          "counterparty": {
+            "base_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
+            "chain_name": "cosmoshub",
+            "channel_id": "channel-141"
+          },
+          "type": "ibc"
+        }
+      ],
+      "type_asset": "ics20"
+    }
+  ],
+  "chain_name": "terp"
+}

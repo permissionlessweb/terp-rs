@@ -255,6 +255,19 @@ zk_local = "./cosmwasm/packages/schema"
 branch = "mvp"
 url = "https://github.com/permissionlessweb/cosmwasm"
 
+[crates.nam-supraseal-c2]
+local = "/Users/returniflost/abstract/terp-core/crates/supra_seal/c2/Cargo.toml"
+
+[crates.jubjub]
+local = "/Users/returniflost/abstract/terp-core/crates/jubjub/Cargo.toml"
+
+[crates.c-kzg-4844]
+local = "/Users/returniflost/abstract/terp-core/crates/c-kzg-4844/Cargo.toml"
+stable = "3.0.4"
+branch = "mvp"
+url = "https://github.com/permissionlessweb/c-kzg-4844"
+
+
 [crates.cosmwasm-schema-derive]
 consumers = []
 description = "Derive macros for cosmwasm-schema"

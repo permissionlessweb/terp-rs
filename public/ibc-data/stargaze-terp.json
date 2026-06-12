@@ -1,0 +1,32 @@
+{
+  "$schema": "../ibc_data.schema.json",
+  "chain_1": {
+    "chain_id": "morocco-1",
+    "chain_name": "stargaze",
+    "client_id": "07-tendermint-13",
+    "connection_id": "connection-3"
+  },
+  "chain_2": {
+    "chain_id": "stargaze-1",
+    "chain_name": "terp",
+    "client_id": "07-tendermint-317",
+    "connection_id": "connection-255"
+  },
+  "channels": [
+    {
+      "chain_1": {
+        "channel_id": "channel-2",
+        "port_id": "transfer"
+      },
+      "chain_2": {
+        "channel_id": "channel-235",
+        "port_id": "transfer"
+      },
+      "ordering": 1,
+      "tags": {
+        "status": "ACTIVE"
+      },
+      "version": "ics20-1"
+    }
+  ]
+}

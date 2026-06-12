@@ -1,12 +1,16 @@
-# Terp-RS
+# Terp-RS: Standard Development Kit For Terp Netork
 
 Rust client library for Terp Network. Also includes various languages coversion tooling + language agnostic protobuf definitions. Also a bunch of other really cool shit.
 
-## Clients
 
-### Python
+## API Clients
 
-### Typescript
+## Ecosystem Type Definitions 
 
-### Rust
+## Test And Orchestration Suites
 
+## Servers
+
+
+## TODO
+- unify and implement shims for replacing cosmrs // cosmos-sdk-proto libraries

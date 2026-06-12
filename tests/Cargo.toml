@@ -18,29 +18,24 @@ path = "bin/ibc_info.rs"
 default = ["docker", "nostr"]
 docker = []
 nostr = []
-# dao = ["dep:dao-testing"]
+# zk = ["cosmwasm-std/zk", "dep:zk-test-press"]
+hash-market = ["dep:hash-market"]
 
 [dependencies]
 anyhow = "1.0"
 async-trait = "0.1.89"
 axum = { version = "0.7" }
 clap = { version = "4", features = ["derive"] }
-cosmos-sdk-proto = { path = "../../cosmos-rust/cosmos-sdk-proto" }
-cosmrs = { path = "../../cosmos-rust/cosmrs" }
 cosmwasm-schema = { path = "../../cosmwasm/packages/schema" }
 cosmwasm-std = { path = "../../cosmwasm/packages/std" }
 csv = "1.4.0"
-cw-infuser-scripts = { path = "../../cw-infuser/scripts" }
 cw-orch = { path = "../../cw-orchestrator/cw-orch", features = ["daemon"] }
 cw-orch-interchain = { path = "../../cw-orchestrator/cw-orch-interchain", features = ["daemon"] }
-cw-utils = { path = "../../cw-minus/packages/cw-utils" }
-cw4 = { path = "../../cw-plus/packages/cw4" }
-dao-calendar = { path = "../../dao-contracts/contracts/proposal/dao-calendar", features = ["interface"] }
-dao-testing = { path = "../../dao-contracts/packages/dao-testing" }
 dotenv = "0.15"
 env_logger = "0.11"
-hash-market = { path = "../tools/hash-market", features = ["server", "client", "ve", "blossom"] }
+hash-market = { path = "../tools/hash-market", features = ["server", "client", "ve", "blossom"], optional = true }
 hex = "0.4"
+# zk-test-press = { path = "../../headstash/test-press", features = ["interface"], optional = true }
 ict-rs = { path = "../../ict-rs/ict-rs", features = ["docker", "terp", "testing", "nostr"] }
 k256 = "0.13.4"
 log = "0.4.30"
@@ -49,7 +44,6 @@ rustls = { version = "0.23", default-features = false, features = ["ring", "std"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 sha2 = "0.10"
-shit-scripts = { path = "../../shitstrap/scripts/shit-scripts" }
 tempfile = "3.27.0"
 terp-account-scripts = { path = "../../terp-account-billboards/scripts" }
 terp-rs  = { path = "../crates/sdk" }
@@ -58,4 +52,3 @@ toml = "1.1.2"
 tracing = "0.1"
 tracing-subscriber = "0.3.23"
 which = "8.0.2"
-zk-test-press = { path = "../../headstash/test-press", features = ["interface"] }

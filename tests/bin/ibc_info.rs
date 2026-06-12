@@ -1,4 +1,5 @@
 use cw_orch::{
+    core::env,
     daemon::{
         Daemon, DaemonState,
         networks::{OSMOSIS_1, TERP_MAINNET, chain_name_from_id},
@@ -8,7 +9,6 @@ use cw_orch::{
     prelude::*,
 };
 use cw_orch_interchain::prelude::*;
-use hash_market::middleware::auth::now_timestamp;
 use log::info;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -20,13 +20,27 @@ fn main() -> anyhow::Result<()> {
     rustls::crypto::aws_lc_rs::default_provider()
         .install_default()
         .unwrap();
+    // dotenv::dotenv().ok();
     env_logger::init();
-    dotenv::dotenv().ok();
+
     derive_full_ibc_state()
 }
 
+/// Convert IBC ordering int to schema-compliant string.
+/// Cosmos SDK gRPC returns: ORDER_NONE_UNSPECIFIED=0, ORDER_UNORDERED=1, ORDER_ORDERED=2
+fn ordering_to_str(ord_val: &serde_json::Value) -> String {
+    match ord_val.as_str() {
+        Some(s) if s == "ordered" || s == "unordered" => s.to_string(),
+        _ => match ord_val.as_i64().unwrap_or(1) {
+            1 => "unordered".to_string(),
+            2 => "ordered".to_string(),
+            _ => "unordered".to_string(),
+        },
+    }
+}
+
 fn derive_full_ibc_state() -> anyhow::Result<()> {
-    dotenv::dotenv()?;
+
     let interchain = DaemonInterchain::new(
         vec![
             TERP_MAINNET.clone(),
@@ -266,9 +280,15 @@ fn derive_full_ibc_state() -> anyhow::Result<()> {
             }
 
             final_channels.push(json!({
-                "terp": ch_1,
-                counterpartyname.clone(): ch_2,
-                "ordering": ch["ordering"],
+                "chain_1": {
+                    "channel_id": ch_1["channel_id"],
+                    "port_id": ch_1["port_id"],
+                },
+                "chain_2": {
+                    "channel_id": ch_2["channel_id"],
+                    "port_id": ch_2["port_id"],
+                },
+                "ordering": ordering_to_str(&ch["ordering"]),
                 "version": ch["version"],
                 "tags": tags,
             }));
@@ -278,6 +298,7 @@ fn derive_full_ibc_state() -> anyhow::Result<()> {
         let filename = format!("{}-{}.json", chain_1_name, chain_2_name);
 
         let ibc_entry = json!({
+            "$schema": "../ibc_data.schema.json",
             "chain_1": {
                 "chain_name": chain_1_name,
                 "chain_id": "morocco-1",
@@ -318,7 +339,21 @@ fn derive_full_ibc_state() -> anyhow::Result<()> {
     }
     state_mut.force_write()?;
 
-    // Step 4: NOW build the channel map from the updated state
+    // Step 4: Write individual ibc_data files to public/ (schema-compliant)
+    let ibc_data_path = std::path::PathBuf::from("../public/ibc-data");
+    for entry in &ibc_data_output {
+        let filename = entry["filename"].as_str().unwrap_or("unknown");
+        let file_path = ibc_data_path.join(filename);
+        let data = &entry["data"];
+        std::fs::write(&file_path, serde_json::to_string_pretty(data)?)?;
+        println!("  ✓ Wrote {}", file_path.display());
+    }
+    println!(
+        "\n✓ {} IBC data files written to public/",
+        ibc_data_output.len()
+    );
+
+    // Step 5: NOW build the channel map from the updated state
     let ibc_data_map = build_channel_to_chain_map(&state_terp);
     println!(
         "\n✓ {} IBC data entries written to state.json",
@@ -2128,4 +2163,12 @@ mod test {
         let result = derive_terp_ibc_denom(&asset, &channels);
         assert!(result.is_none());
     }
+}
+/// Current unix timestamp as a string. Used by `prepare` to anchor the message.
+pub fn now_timestamp() -> String {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0)
+        .to_string()
 }

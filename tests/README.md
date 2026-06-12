@@ -8,7 +8,6 @@ Date: 2026-05-30
 - spawn anvil and wire in actual ingest and production workflow using hashmerchant: 
     - client binary (https://github.com/permissionlessweb/terp-rs/blob/feat/zk-wasmvm/tools/hash-market/src/bin/client.rs)
     - existing e2e script demonstrating (in bash): `tests/tsh/hashmerchant/a.sh` of terp-core repo
-    
 - ensure relayer functionality of chain -> argus -> hash-merchant -> nostr relatyer of dao-calendar event. we do this by using a dao to use a dao-calendar module using nip-52 events and confirm dao-calendar events emitted are:
     - picked up by argus formula (indexer queries and caches smart contract data from contract)
     - argus exporter webhook event sent out to hashmerchant relayer (indexer configured via webhook || websocket to do things when events happen )
@@ -16,9 +15,7 @@ Date: 2026-05-30
     - hashmerchant relayer relays event to nostr relayer container (hashmerchant relayer is sound and compatible to broader nostr network)
 
 ## What this workspace is
-
 `tests/` is the Terp Network integration and end-to-end test workspace. It is a Rust library that provides:
-
 1. **Contract deployment** — a unified `TerpNetworkSuite` that composes cw-orch sub-suites (DAO, SVG, headstash, billboards, shitstraps) and deploys them on any Terp chain
 2. **Sidecar lifecycle management** — a fleet of off-chain services (hashmarket, merkle-server, indexer, MinIO, Nostr relay) that run alongside the chain during tests
 3. **Two binaries** — `e2e` (full integration) and `delegations` (focused test)

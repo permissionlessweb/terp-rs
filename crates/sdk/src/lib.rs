@@ -73,22 +73,23 @@ pub mod google {
     }
 }
 
-#[cfg(feature = "ibc")]
 pub mod ibc {
     pub use ibc_proto::google::protobuf::Any;
-
-    pub use ibc_app_nft_transfer_types::{self};
-    pub use ibc_app_transfer_types::{self};
-    pub use ibc_client_wasm_types::{self};
-
     pub use ibc_proto::ics23::{self};
-    pub use ibc_types::{
-        self,
-        core::{self as ibc_core},
-        lightclients::{self as lightclient},
-        timestamp::{self},
-        transfer::acknowledgement::{self},
-    };
+    #[cfg(feature = "ibc")]
+    pub mod crates {}
+
+    // pub use ibc_app_nft_transfer_types::{self};
+    // pub use ibc_app_transfer_types::{self};
+    // // pub use ibc_client_wasm_types::{self};
+
+    // pub use ibc_types::{
+    //     self,
+    //     core::{self as ibc_core},
+    //     lightclients::{self as lightclient},
+    //     timestamp::{self},
+    //     transfer::acknowledgement::{self},
+    // };
 
     pub mod applications {
         pub mod gmp {

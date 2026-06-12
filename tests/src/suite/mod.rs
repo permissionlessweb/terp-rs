@@ -36,8 +36,8 @@ pub use sidecar::{
     SidecarId, SidecarRegistry, SubprocessConfig, SubprocessSidecar,
 };
 use sidecar::TerpSidecar;
-pub use contracts::TerpNetworkSuite as DeploySuite;
-pub use deploy_data::TerpNetworkDeployData;
+// pub use contracts::TerpNetworkSuite as DeploySuite;
+// pub use deploy_data::TerpNetworkDeployData;
 
 use hashmerchant::HashMerchantSuite;
 use indexer::IndexerSuite;

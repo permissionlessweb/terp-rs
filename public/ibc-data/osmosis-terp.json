@@ -1,0 +1,47 @@
+{
+  "$schema": "../ibc_data.schema.json",
+  "chain_1": {
+    "chain_id": "morocco-1",
+    "chain_name": "osmosis",
+    "client_id": "07-tendermint-33",
+    "connection_id": "connection-13"
+  },
+  "chain_2": {
+    "chain_id": "osmosis-1",
+    "chain_name": "terp",
+    "client_id": "07-tendermint-3708",
+    "connection_id": "connection-11060"
+  },
+  "channels": [
+    {
+      "chain_1": {
+        "channel_id": "channel-1",
+        "port_id": "transfer"
+      },
+      "chain_2": {
+        "channel_id": "channel-6738",
+        "port_id": "transfer"
+      },
+      "ordering": 1,
+      "tags": {
+        "status": "ACTIVE"
+      },
+      "version": "ics20-1"
+    },
+    {
+      "chain_1": {
+        "channel_id": "channel-11",
+        "port_id": "transfer"
+      },
+      "chain_2": {
+        "channel_id": "channel-110258",
+        "port_id": "transfer"
+      },
+      "ordering": 1,
+      "tags": {
+        "status": "ACTIVE"
+      },
+      "version": "ics20-1"
+    }
+  ]
+}
