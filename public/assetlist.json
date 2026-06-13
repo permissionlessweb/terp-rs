@@ -1,15 +1,49 @@
 {
-  "$schema": "../assetlist.schema.json",
+  "$schema": "../asset_list.schema.json",
   "assets": [
     {
-      "base": "ibc/20D7A69EFB3EF5A7B4097503B710917D7ED76E47887969AA9556F989AE9B666C",
+      "_source_chain": "osmosis",
+      "base": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+      "coingecko_id": "spice-2",
+      "denom_units": [
+        {
+          "denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+          "exponent": 0
+        },
+        {
+          "denom": "Spice",
+          "exponent": 6
+        }
+      ],
+      "description": "The Spice memecoin",
+      "display": "Spice",
+      "images": [
+        {
+          "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/spice.png"
+        }
+      ],
+      "keywords": [
+        "meme"
+      ],
+      "logo_URIs": {
+        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/spice.png"
+      },
+      "name": "Spice",
+      "socials": {
+        "x": "https://x.com/spiceoncosmos"
+      },
+      "symbol": "SPICE",
+      "type_asset": "sdk.coin"
+    },
+    {
+      "base": "ibc/2E4CF68617591638A6CBD7DA3E8CAF8C9C0B34AAB4878775A0B16ADDC56E4389",
       "coingecko_id": "akash-network",
       "denom_units": [
         {
           "aliases": [
             "uakt"
           ],
-          "denom": "ibc/20D7A69EFB3EF5A7B4097503B710917D7ED76E47887969AA9556F989AE9B666C",
+          "denom": "ibc/2E4CF68617591638A6CBD7DA3E8CAF8C9C0B34AAB4878775A0B16ADDC56E4389",
           "exponent": 0
         },
         {
@@ -85,14 +119,14 @@
       "type_asset": "sdk.coin"
     },
     {
-      "base": "ibc/BCC292675B6E61999C6EA1B503BEE59D7E61BF3AA4DBC86AC214BAE6FC981227",
+      "base": "ibc/AF34593540E81B06145CD80BDBB2149BE068A9B495086284DFD0FB3017AB5254",
       "coingecko_id": "atomone",
       "denom_units": [
         {
           "aliases": [
             "uatone"
           ],
-          "denom": "ibc/BCC292675B6E61999C6EA1B503BEE59D7E61BF3AA4DBC86AC214BAE6FC981227",
+          "denom": "ibc/AF34593540E81B06145CD80BDBB2149BE068A9B495086284DFD0FB3017AB5254",
           "exponent": 0
         },
         {
@@ -135,13 +169,63 @@
       "type_asset": "ics20"
     },
     {
-      "base": "ibc/593603DDD1729B6B4EC57136C05638D51D8C09360C75A1EE403E2701A11E3754",
+      "base": "ibc/ADD33E9703A911023E73181FCA39B022094A1832F0C2311152A927E580E28B5F",
+      "coingecko_id": "spice-2",
+      "denom_units": [
+        {
+          "aliases": [
+            "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+          ],
+          "denom": "ibc/ADD33E9703A911023E73181FCA39B022094A1832F0C2311152A927E580E28B5F",
+          "exponent": 0
+        },
+        {
+          "denom": "Spice",
+          "exponent": 6
+        }
+      ],
+      "description": "The Spice memecoin",
+      "display": "Spice",
+      "images": [
+        {
+          "image_sync": {
+            "base_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+            "chain_name": "osmosis"
+          },
+          "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice.png",
+          "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice.svg"
+        }
+      ],
+      "logo_URIs": {
+        "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice.png",
+        "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice.svg"
+      },
+      "name": "Spice",
+      "symbol": "SPICE",
+      "traces": [
+        {
+          "chain": {
+            "channel_id": "",
+            "path": "transfer/channel-1/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+          },
+          "counterparty": {
+            "base_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+            "chain_name": "osmosis",
+            "channel_id": ""
+          },
+          "type": "ibc"
+        }
+      ],
+      "type_asset": "sdk.coin"
+    },
+    {
+      "base": "ibc/406AE2A657026B1ABB7994D28E3CBE699C526D0418FD4A3ACAAC0BC26D2B54EC",
       "denom_units": [
         {
           "aliases": [
             "upenumbra"
           ],
-          "denom": "ibc/593603DDD1729B6B4EC57136C05638D51D8C09360C75A1EE403E2701A11E3754",
+          "denom": "ibc/406AE2A657026B1ABB7994D28E3CBE699C526D0418FD4A3ACAAC0BC26D2B54EC",
           "exponent": 0
         },
         {
@@ -184,13 +268,13 @@
       "type_asset": "ics20"
     },
     {
-      "base": "ibc/1E90CE65259979501EE3ED7D24D19EA97E2BB016ABF205A72A51E3A13F21333D",
+      "base": "ibc/E6A14427945A957F30D05A686EC4C70420F778EB94999F0A1C2B9F420ACB9AE1",
       "denom_units": [
         {
           "aliases": [
             "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF"
           ],
-          "denom": "ibc/1E90CE65259979501EE3ED7D24D19EA97E2BB016ABF205A72A51E3A13F21333D",
+          "denom": "ibc/E6A14427945A957F30D05A686EC4C70420F778EB94999F0A1C2B9F420ACB9AE1",
           "exponent": 0
         },
         {

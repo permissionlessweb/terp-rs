@@ -680,16 +680,16 @@ fn form_and_broadcast_obligated_msgs(
         );
 
         // Combine all messages into a single vector
-        let mut all_msgs: Vec<cosmrs::Any> = Vec::new();
-        all_msgs.extend(dao_msgs.0.iter().map(|msg| cosmrs::Any {
+        let mut all_msgs: Vec<terp_rs::Any> = Vec::new();
+        all_msgs.extend(dao_msgs.0.iter().map(|msg| terp_rs::Any {
             type_url: "/cosmos.staking.v1beta1.MsgBeginRedelegate".to_string(),
             value: msg.clone().into_any().unwrap().value,
         }));
-        all_msgs.extend(dao_msgs.1.iter().map(|msg| cosmrs::Any {
+        all_msgs.extend(dao_msgs.1.iter().map(|msg| terp_rs::Any {
             type_url: "/cosmos.staking.v1beta1.MsgDelegate".to_string(),
             value: msg.clone().into_any().unwrap().value,
         }));
-        all_msgs.extend(dao_msgs.2.iter().map(|msg| cosmrs::Any {
+        all_msgs.extend(dao_msgs.2.iter().map(|msg| terp_rs::Any {
             type_url: "/cosmos.staking.v1beta1.MsgUndelegate".to_string(),
             value: msg.clone().into_any().unwrap().value,
         }));

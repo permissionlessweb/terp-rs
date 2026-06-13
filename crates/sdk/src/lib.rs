@@ -10,6 +10,7 @@
     unused_imports
 )]
 
+pub use ibc::Any;
 pub use prost::{Message, Name};
 // ---------------------------------------------------------------------------
 // PyO3 Python bindings (enabled with `--features python`)

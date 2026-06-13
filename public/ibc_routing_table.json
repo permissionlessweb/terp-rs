@@ -1,17 +1,17 @@
 {
   "metadata": {
     "chains": [
-      "osmosis",
-      "terp"
+      "terp",
+      "osmosis"
     ],
-    "generated_at": "1781279937",
+    "generated_at": "1781370051",
     "total_routes": 132
   },
   "routes": {
     "akash": [
       {
         "dest_chain": "akash",
-        "dest_denom": "ibc/14EF454DE9F6440DDED7439B88D00A99A8462EFC5772329E7B485722F6E58F63",
+        "dest_denom": "ibc/6243F552F5D6A14BACB8F445BCDE3F346517DBB25AB82D25FD1052223481FBD8",
         "hop_count": 2,
         "origin_chain": "akash",
         "origin_denom": "uakt",
@@ -19,23 +19,23 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-139",
+            "from_channel": "channel-6",
             "to_chain": "akash",
-            "to_channel": "channel-9"
+            "to_channel": "channel-115"
           }
         ],
         "symbol": "AKT",
-        "trace_path": "transfer/channel-9/transfer/channel-1/uakt"
+        "trace_path": "transfer/channel-115/transfer/channel-1/uakt"
       },
       {
         "dest_chain": "akash",
-        "dest_denom": "ibc/F9B0A90BD48629BEA2A331AC7A0EEB5B95A780CEA3E32772F138F433E6C04EF2",
+        "dest_denom": "ibc/CAB6ADBF7C637493F7A5266782C0EB319AF0E2C83A123C60DC6710C4D5DE2C48",
         "hop_count": 2,
         "origin_chain": "akash",
         "origin_denom": "uakt",
@@ -43,23 +43,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-115",
+            "from_channel": "channel-9",
             "to_chain": "akash",
-            "to_channel": "channel-6"
+            "to_channel": "channel-139"
           }
         ],
         "symbol": "AKT",
-        "trace_path": "transfer/channel-6/transfer/channel-1/uakt"
+        "trace_path": "transfer/channel-139/transfer/channel-1/uakt"
       },
       {
         "dest_chain": "akash",
-        "dest_denom": "ibc/14EF454DE9F6440DDED7439B88D00A99A8462EFC5772329E7B485722F6E58F63",
+        "dest_denom": "ibc/6243F552F5D6A14BACB8F445BCDE3F346517DBB25AB82D25FD1052223481FBD8",
+        "hop_count": 2,
+        "origin_chain": "akash",
+        "origin_denom": "uakt",
+        "preferred": true,
+        "route": [
+          {
+            "from_chain": "osmosis",
+            "from_channel": "channel-6738",
+            "to_chain": "terp",
+            "to_channel": "channel-1"
+          },
+          {
+            "from_chain": "terp",
+            "from_channel": "channel-6",
+            "to_chain": "akash",
+            "to_channel": "channel-115"
+          }
+        ],
+        "symbol": "AKT",
+        "trace_path": "transfer/channel-115/transfer/channel-1/uakt"
+      },
+      {
+        "dest_chain": "akash",
+        "dest_denom": "ibc/CAB6ADBF7C637493F7A5266782C0EB319AF0E2C83A123C60DC6710C4D5DE2C48",
         "hop_count": 2,
         "origin_chain": "akash",
         "origin_denom": "uakt",
@@ -67,47 +91,23 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-139",
+            "from_channel": "channel-9",
             "to_chain": "akash",
-            "to_channel": "channel-9"
+            "to_channel": "channel-139"
           }
         ],
         "symbol": "AKT",
-        "trace_path": "transfer/channel-9/transfer/channel-1/uakt"
+        "trace_path": "transfer/channel-139/transfer/channel-1/uakt"
       },
       {
         "dest_chain": "akash",
-        "dest_denom": "ibc/F9B0A90BD48629BEA2A331AC7A0EEB5B95A780CEA3E32772F138F433E6C04EF2",
-        "hop_count": 2,
-        "origin_chain": "akash",
-        "origin_denom": "uakt",
-        "preferred": false,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-1",
-            "to_chain": "terp",
-            "to_channel": "channel-6738"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-115",
-            "to_chain": "akash",
-            "to_channel": "channel-6"
-          }
-        ],
-        "symbol": "AKT",
-        "trace_path": "transfer/channel-6/transfer/channel-1/uakt"
-      },
-      {
-        "dest_chain": "akash",
-        "dest_denom": "ibc/B01D10458A36A82A37686701A23C5D171B63914A0AC93CDB1136720F6F55272E",
+        "dest_denom": "ibc/E08B0BE8768F312C93988FE9C9278E850F18FB49EA7939F5EDAD367F98C589C9",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
@@ -115,23 +115,23 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-139",
+            "from_channel": "channel-6",
             "to_chain": "akash",
-            "to_channel": "channel-9"
+            "to_channel": "channel-115"
           }
         ],
         "symbol": "WBTC",
-        "trace_path": "transfer/channel-110258/transfer/channel-9/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+        "trace_path": "transfer/channel-11/transfer/channel-115/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
       },
       {
         "dest_chain": "akash",
-        "dest_denom": "ibc/5851F2D4D8CEE09A99C6C4425C1AEB5161CABA03329ABC2A093B7600A79B1D4B",
+        "dest_denom": "ibc/132A8DD97655CC49D117231079E4C491448FDCB5DC1F4922CE0BDB0B1604FB5C",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
@@ -139,23 +139,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-115",
+            "from_channel": "channel-9",
             "to_chain": "akash",
-            "to_channel": "channel-6"
+            "to_channel": "channel-139"
           }
         ],
         "symbol": "WBTC",
-        "trace_path": "transfer/channel-110258/transfer/channel-6/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+        "trace_path": "transfer/channel-1/transfer/channel-139/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
       },
       {
         "dest_chain": "akash",
-        "dest_denom": "ibc/709729EA70E3714C154E73A5A8059B6D79AED7EB99529D7C626CD7CD59EFC0E5",
+        "dest_denom": "ibc/30DA732F4DA2E0407393B60597B8C4EB0801A0F4CE13DEFFADF7817DD1745A8E",
+        "hop_count": 2,
+        "origin_chain": "osmosis",
+        "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
+        "preferred": true,
+        "route": [
+          {
+            "from_chain": "osmosis",
+            "from_channel": "channel-6738",
+            "to_chain": "terp",
+            "to_channel": "channel-1"
+          },
+          {
+            "from_chain": "terp",
+            "from_channel": "channel-6",
+            "to_chain": "akash",
+            "to_channel": "channel-115"
+          }
+        ],
+        "symbol": "WBTC",
+        "trace_path": "transfer/channel-1/transfer/channel-115/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+      },
+      {
+        "dest_chain": "akash",
+        "dest_denom": "ibc/E1D175E97F3882DB2C5A6DF20C7AC8A84ECC920D10B80C420E97E9BDA417D59F",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
@@ -163,47 +187,23 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-139",
+            "from_channel": "channel-9",
             "to_chain": "akash",
-            "to_channel": "channel-9"
+            "to_channel": "channel-139"
           }
         ],
         "symbol": "WBTC",
-        "trace_path": "transfer/channel-6738/transfer/channel-9/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+        "trace_path": "transfer/channel-11/transfer/channel-139/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
       },
       {
         "dest_chain": "akash",
-        "dest_denom": "ibc/2B835BD24B510CE481A208A8E034D4AB8BF2B1D949AA3CCF008BEB47F3D56F3E",
-        "hop_count": 2,
-        "origin_chain": "osmosis",
-        "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
-        "preferred": false,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-1",
-            "to_chain": "terp",
-            "to_channel": "channel-6738"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-115",
-            "to_chain": "akash",
-            "to_channel": "channel-6"
-          }
-        ],
-        "symbol": "WBTC",
-        "trace_path": "transfer/channel-6738/transfer/channel-6/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
-      },
-      {
-        "dest_chain": "akash",
-        "dest_denom": "ibc/6BCB4A0BACDAE82E3127FFDDC46ED34BB8FF4CF9F1DF23C913DBC4EA8313A912",
+        "dest_denom": "ibc/CDFD15D6E3BA0375EBCACC2B90D53EACF54F165B48A41B25762480B29F98CAC0",
         "hop_count": 2,
         "origin_chain": "atomone",
         "origin_denom": "uatone",
@@ -211,23 +211,23 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-139",
+            "from_channel": "channel-6",
             "to_chain": "akash",
-            "to_channel": "channel-9"
+            "to_channel": "channel-115"
           }
         ],
         "symbol": "ATONE",
-        "trace_path": "transfer/channel-9/transfer/channel-94814/uatone"
+        "trace_path": "transfer/channel-115/transfer/channel-94814/uatone"
       },
       {
         "dest_chain": "akash",
-        "dest_denom": "ibc/3F9BFC370F1F12D69B5AE96BE14D11D2DE382E8CE334B9955F1DC36FECB32909",
+        "dest_denom": "ibc/ACB214700BF3930E34210071159C48F5E61E424A514C3446B723F6CADC209654",
         "hop_count": 2,
         "origin_chain": "atomone",
         "origin_denom": "uatone",
@@ -235,23 +235,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-115",
+            "from_channel": "channel-9",
             "to_chain": "akash",
-            "to_channel": "channel-6"
+            "to_channel": "channel-139"
           }
         ],
         "symbol": "ATONE",
-        "trace_path": "transfer/channel-6/transfer/channel-94814/uatone"
+        "trace_path": "transfer/channel-139/transfer/channel-94814/uatone"
       },
       {
         "dest_chain": "akash",
-        "dest_denom": "ibc/6BCB4A0BACDAE82E3127FFDDC46ED34BB8FF4CF9F1DF23C913DBC4EA8313A912",
+        "dest_denom": "ibc/CDFD15D6E3BA0375EBCACC2B90D53EACF54F165B48A41B25762480B29F98CAC0",
+        "hop_count": 2,
+        "origin_chain": "atomone",
+        "origin_denom": "uatone",
+        "preferred": true,
+        "route": [
+          {
+            "from_chain": "osmosis",
+            "from_channel": "channel-6738",
+            "to_chain": "terp",
+            "to_channel": "channel-1"
+          },
+          {
+            "from_chain": "terp",
+            "from_channel": "channel-6",
+            "to_chain": "akash",
+            "to_channel": "channel-115"
+          }
+        ],
+        "symbol": "ATONE",
+        "trace_path": "transfer/channel-115/transfer/channel-94814/uatone"
+      },
+      {
+        "dest_chain": "akash",
+        "dest_denom": "ibc/ACB214700BF3930E34210071159C48F5E61E424A514C3446B723F6CADC209654",
         "hop_count": 2,
         "origin_chain": "atomone",
         "origin_denom": "uatone",
@@ -259,47 +283,23 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-139",
+            "from_channel": "channel-9",
             "to_chain": "akash",
-            "to_channel": "channel-9"
+            "to_channel": "channel-139"
           }
         ],
         "symbol": "ATONE",
-        "trace_path": "transfer/channel-9/transfer/channel-94814/uatone"
+        "trace_path": "transfer/channel-139/transfer/channel-94814/uatone"
       },
       {
         "dest_chain": "akash",
-        "dest_denom": "ibc/3F9BFC370F1F12D69B5AE96BE14D11D2DE382E8CE334B9955F1DC36FECB32909",
-        "hop_count": 2,
-        "origin_chain": "atomone",
-        "origin_denom": "uatone",
-        "preferred": false,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-1",
-            "to_chain": "terp",
-            "to_channel": "channel-6738"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-115",
-            "to_chain": "akash",
-            "to_channel": "channel-6"
-          }
-        ],
-        "symbol": "ATONE",
-        "trace_path": "transfer/channel-6/transfer/channel-94814/uatone"
-      },
-      {
-        "dest_chain": "akash",
-        "dest_denom": "ibc/5BB27E6225D40AF277EC587FE76AAC5A782534DC945320758E249DBAA8F5F764",
+        "dest_denom": "ibc/5B5F52056A427DA73EF4053223B3AD368157F1857E08640662AED11E60816DC7",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
@@ -307,23 +307,23 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-139",
+            "from_channel": "channel-6",
             "to_chain": "akash",
-            "to_channel": "channel-9"
+            "to_channel": "channel-115"
           }
         ],
         "symbol": "SPICE",
-        "trace_path": "transfer/channel-110258/transfer/channel-9/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+        "trace_path": "transfer/channel-11/transfer/channel-115/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
       },
       {
         "dest_chain": "akash",
-        "dest_denom": "ibc/4E1EE30C9E0AB1ED8F845E5141DBA502A0CF3E6E03507C3A3AF42C86D578547A",
+        "dest_denom": "ibc/4DC802777BA5D9F21F8189DACE5C279644918EF5D5A395793E376CA6A37A2A56",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
@@ -331,23 +331,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-115",
+            "from_channel": "channel-9",
             "to_chain": "akash",
-            "to_channel": "channel-6"
+            "to_channel": "channel-139"
           }
         ],
         "symbol": "SPICE",
-        "trace_path": "transfer/channel-110258/transfer/channel-6/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+        "trace_path": "transfer/channel-1/transfer/channel-139/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
       },
       {
         "dest_chain": "akash",
-        "dest_denom": "ibc/7EDCD042C72D43A47EB7BBCAFDDC93352FF60E60F8181C5F619A65A08D289AD9",
+        "dest_denom": "ibc/887785B16572D384D8CF9D88785AA755FBF627E572E6DBCA410734E0CA253AE8",
+        "hop_count": 2,
+        "origin_chain": "osmosis",
+        "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+        "preferred": true,
+        "route": [
+          {
+            "from_chain": "osmosis",
+            "from_channel": "channel-6738",
+            "to_chain": "terp",
+            "to_channel": "channel-1"
+          },
+          {
+            "from_chain": "terp",
+            "from_channel": "channel-6",
+            "to_chain": "akash",
+            "to_channel": "channel-115"
+          }
+        ],
+        "symbol": "SPICE",
+        "trace_path": "transfer/channel-1/transfer/channel-115/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+      },
+      {
+        "dest_chain": "akash",
+        "dest_denom": "ibc/0572998B998B9D8BBF3650FF6218EE8CC8B89FC3F05C90579C79741104C52038",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
@@ -355,47 +379,23 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-139",
+            "from_channel": "channel-9",
             "to_chain": "akash",
-            "to_channel": "channel-9"
+            "to_channel": "channel-139"
           }
         ],
         "symbol": "SPICE",
-        "trace_path": "transfer/channel-6738/transfer/channel-9/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+        "trace_path": "transfer/channel-11/transfer/channel-139/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
       },
       {
         "dest_chain": "akash",
-        "dest_denom": "ibc/11253CD0ACBBD797890DD8D75FA6CA8FEA9F4D109A7D795D42CB02EBF344FBFF",
-        "hop_count": 2,
-        "origin_chain": "osmosis",
-        "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
-        "preferred": false,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-1",
-            "to_chain": "terp",
-            "to_channel": "channel-6738"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-115",
-            "to_chain": "akash",
-            "to_channel": "channel-6"
-          }
-        ],
-        "symbol": "SPICE",
-        "trace_path": "transfer/channel-6738/transfer/channel-6/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
-      },
-      {
-        "dest_chain": "akash",
-        "dest_denom": "ibc/BA998EA2F63F58A9043D7F0BDD1B95254E37435A0BC73C77F2211AFE4099EE4E",
+        "dest_denom": "ibc/3CDA1340A04DDD78CAE3E360154A1A8E9824FDB586851F24B2618A937A2AC995",
         "hop_count": 2,
         "origin_chain": "penumbra",
         "origin_denom": "upenumbra",
@@ -403,23 +403,23 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-139",
+            "from_channel": "channel-6",
             "to_chain": "akash",
-            "to_channel": "channel-9"
+            "to_channel": "channel-115"
           }
         ],
         "symbol": "UM",
-        "trace_path": "transfer/channel-9/transfer/channel-79703/upenumbra"
+        "trace_path": "transfer/channel-115/transfer/channel-79703/upenumbra"
       },
       {
         "dest_chain": "akash",
-        "dest_denom": "ibc/2D20DD64C981A43B063EC0CBE6FC4B9A1A0CBCB68DE1BA5DF2385B053E8C08F5",
+        "dest_denom": "ibc/7B679F39373D03A4C56CCB3654D964306A80E2DF2B9003FCEB748E0CD92EFC9A",
         "hop_count": 2,
         "origin_chain": "penumbra",
         "origin_denom": "upenumbra",
@@ -427,23 +427,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-115",
+            "from_channel": "channel-9",
             "to_chain": "akash",
-            "to_channel": "channel-6"
+            "to_channel": "channel-139"
           }
         ],
         "symbol": "UM",
-        "trace_path": "transfer/channel-6/transfer/channel-79703/upenumbra"
+        "trace_path": "transfer/channel-139/transfer/channel-79703/upenumbra"
       },
       {
         "dest_chain": "akash",
-        "dest_denom": "ibc/BA998EA2F63F58A9043D7F0BDD1B95254E37435A0BC73C77F2211AFE4099EE4E",
+        "dest_denom": "ibc/3CDA1340A04DDD78CAE3E360154A1A8E9824FDB586851F24B2618A937A2AC995",
+        "hop_count": 2,
+        "origin_chain": "penumbra",
+        "origin_denom": "upenumbra",
+        "preferred": true,
+        "route": [
+          {
+            "from_chain": "osmosis",
+            "from_channel": "channel-6738",
+            "to_chain": "terp",
+            "to_channel": "channel-1"
+          },
+          {
+            "from_chain": "terp",
+            "from_channel": "channel-6",
+            "to_chain": "akash",
+            "to_channel": "channel-115"
+          }
+        ],
+        "symbol": "UM",
+        "trace_path": "transfer/channel-115/transfer/channel-79703/upenumbra"
+      },
+      {
+        "dest_chain": "akash",
+        "dest_denom": "ibc/7B679F39373D03A4C56CCB3654D964306A80E2DF2B9003FCEB748E0CD92EFC9A",
         "hop_count": 2,
         "origin_chain": "penumbra",
         "origin_denom": "upenumbra",
@@ -451,47 +475,23 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-139",
+            "from_channel": "channel-9",
             "to_chain": "akash",
-            "to_channel": "channel-9"
+            "to_channel": "channel-139"
           }
         ],
         "symbol": "UM",
-        "trace_path": "transfer/channel-9/transfer/channel-79703/upenumbra"
+        "trace_path": "transfer/channel-139/transfer/channel-79703/upenumbra"
       },
       {
         "dest_chain": "akash",
-        "dest_denom": "ibc/2D20DD64C981A43B063EC0CBE6FC4B9A1A0CBCB68DE1BA5DF2385B053E8C08F5",
-        "hop_count": 2,
-        "origin_chain": "penumbra",
-        "origin_denom": "upenumbra",
-        "preferred": false,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-1",
-            "to_chain": "terp",
-            "to_channel": "channel-6738"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-115",
-            "to_chain": "akash",
-            "to_channel": "channel-6"
-          }
-        ],
-        "symbol": "UM",
-        "trace_path": "transfer/channel-6/transfer/channel-79703/upenumbra"
-      },
-      {
-        "dest_chain": "akash",
-        "dest_denom": "ibc/59DF5B0EDAF6FEFC524F32EFC6ED7A53CF3F2FEA64A120216ECA7D44CB819478",
+        "dest_denom": "ibc/800DB401FB484B5532BF3BDC93684A3E9B9D69EF1B761A87D0A003DBE3023DB0",
         "hop_count": 2,
         "origin_chain": "cosmoshub",
         "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
@@ -499,23 +499,23 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-139",
+            "from_channel": "channel-6",
             "to_chain": "akash",
-            "to_channel": "channel-9"
+            "to_channel": "channel-115"
           }
         ],
         "symbol": "ETH",
-        "trace_path": "transfer/channel-9/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+        "trace_path": "transfer/channel-115/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
       },
       {
         "dest_chain": "akash",
-        "dest_denom": "ibc/B607FE695480269F1FBDCA2484CCCF5C28A6BECAC33E10AB9FB757706537F8D1",
+        "dest_denom": "ibc/81F1F03308F253972BBA88BF296C40B964072F605ABB98F431B794F73A5BC2FC",
         "hop_count": 2,
         "origin_chain": "cosmoshub",
         "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
@@ -523,23 +523,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-115",
+            "from_channel": "channel-9",
             "to_chain": "akash",
-            "to_channel": "channel-6"
+            "to_channel": "channel-139"
           }
         ],
         "symbol": "ETH",
-        "trace_path": "transfer/channel-6/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+        "trace_path": "transfer/channel-139/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
       },
       {
         "dest_chain": "akash",
-        "dest_denom": "ibc/59DF5B0EDAF6FEFC524F32EFC6ED7A53CF3F2FEA64A120216ECA7D44CB819478",
+        "dest_denom": "ibc/800DB401FB484B5532BF3BDC93684A3E9B9D69EF1B761A87D0A003DBE3023DB0",
+        "hop_count": 2,
+        "origin_chain": "cosmoshub",
+        "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
+        "preferred": true,
+        "route": [
+          {
+            "from_chain": "osmosis",
+            "from_channel": "channel-6738",
+            "to_chain": "terp",
+            "to_channel": "channel-1"
+          },
+          {
+            "from_chain": "terp",
+            "from_channel": "channel-6",
+            "to_chain": "akash",
+            "to_channel": "channel-115"
+          }
+        ],
+        "symbol": "ETH",
+        "trace_path": "transfer/channel-115/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+      },
+      {
+        "dest_chain": "akash",
+        "dest_denom": "ibc/81F1F03308F253972BBA88BF296C40B964072F605ABB98F431B794F73A5BC2FC",
         "hop_count": 2,
         "origin_chain": "cosmoshub",
         "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
@@ -547,49 +571,25 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-139",
+            "from_channel": "channel-9",
             "to_chain": "akash",
-            "to_channel": "channel-9"
+            "to_channel": "channel-139"
           }
         ],
         "symbol": "ETH",
-        "trace_path": "transfer/channel-9/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
-      },
-      {
-        "dest_chain": "akash",
-        "dest_denom": "ibc/B607FE695480269F1FBDCA2484CCCF5C28A6BECAC33E10AB9FB757706537F8D1",
-        "hop_count": 2,
-        "origin_chain": "cosmoshub",
-        "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
-        "preferred": false,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-1",
-            "to_chain": "terp",
-            "to_channel": "channel-6738"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-115",
-            "to_chain": "akash",
-            "to_channel": "channel-6"
-          }
-        ],
-        "symbol": "ETH",
-        "trace_path": "transfer/channel-6/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+        "trace_path": "transfer/channel-139/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
       }
     ],
     "atomone": [
       {
         "dest_chain": "atomone",
-        "dest_denom": "ibc/43A73C7EF821ECD3D102CEF9DB93EF17DB9AEAED1AF456DAEEAFBAFCB0DC5707",
+        "dest_denom": "ibc/BC1B2E5330A714F9241EEABB79DAC4E942B1820D507E8B10B09840A8DBA75612",
         "hop_count": 2,
         "origin_chain": "akash",
         "origin_denom": "uakt",
@@ -597,47 +597,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-13",
+            "from_channel": "channel-10",
             "to_chain": "atomone",
-            "to_channel": "channel-10"
+            "to_channel": "channel-13"
           }
         ],
         "symbol": "AKT",
-        "trace_path": "transfer/channel-10/transfer/channel-1/uakt"
+        "trace_path": "transfer/channel-13/transfer/channel-1/uakt"
       },
       {
         "dest_chain": "atomone",
-        "dest_denom": "ibc/43A73C7EF821ECD3D102CEF9DB93EF17DB9AEAED1AF456DAEEAFBAFCB0DC5707",
+        "dest_denom": "ibc/BC1B2E5330A714F9241EEABB79DAC4E942B1820D507E8B10B09840A8DBA75612",
         "hop_count": 2,
         "origin_chain": "akash",
         "origin_denom": "uakt",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-13",
+            "from_channel": "channel-10",
             "to_chain": "atomone",
-            "to_channel": "channel-10"
+            "to_channel": "channel-13"
           }
         ],
         "symbol": "AKT",
-        "trace_path": "transfer/channel-10/transfer/channel-1/uakt"
+        "trace_path": "transfer/channel-13/transfer/channel-1/uakt"
       },
       {
         "dest_chain": "atomone",
-        "dest_denom": "ibc/D6D8787ECC63C6D6B28428C7B726E473002A7AF240B21FCCD5EAE4149AFB8BE9",
+        "dest_denom": "ibc/F29B2D57D8DB312E773BDE8EB0205840368B2BD5E972582F6E112358B3E80B2F",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
@@ -645,47 +645,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-13",
+            "from_channel": "channel-10",
             "to_chain": "atomone",
-            "to_channel": "channel-10"
+            "to_channel": "channel-13"
           }
         ],
         "symbol": "WBTC",
-        "trace_path": "transfer/channel-110258/transfer/channel-10/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+        "trace_path": "transfer/channel-11/transfer/channel-13/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
       },
       {
         "dest_chain": "atomone",
-        "dest_denom": "ibc/49C158284F8FC61C459D39D0F85CD8FE750F27EE0142DEFC4575341ECF9B2CA7",
+        "dest_denom": "ibc/66B21CA47561AEF72EA947CC13EA1377D5DC0E0CCDB0B6884E64CC2C26DEA67C",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-13",
+            "from_channel": "channel-10",
             "to_chain": "atomone",
-            "to_channel": "channel-10"
+            "to_channel": "channel-13"
           }
         ],
         "symbol": "WBTC",
-        "trace_path": "transfer/channel-6738/transfer/channel-10/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+        "trace_path": "transfer/channel-1/transfer/channel-13/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
       },
       {
         "dest_chain": "atomone",
-        "dest_denom": "ibc/5D16CD25EAB73E92C14802586A74DA9A132C691FDDD8F424CC210E4ADA25AC37",
+        "dest_denom": "ibc/6EA343A45CD49D9BF077A7FC3F96D672449303214402B787B6BED32288B7E798",
         "hop_count": 2,
         "origin_chain": "atomone",
         "origin_denom": "uatone",
@@ -693,47 +693,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-13",
+            "from_channel": "channel-10",
             "to_chain": "atomone",
-            "to_channel": "channel-10"
+            "to_channel": "channel-13"
           }
         ],
         "symbol": "ATONE",
-        "trace_path": "transfer/channel-10/transfer/channel-94814/uatone"
+        "trace_path": "transfer/channel-13/transfer/channel-94814/uatone"
       },
       {
         "dest_chain": "atomone",
-        "dest_denom": "ibc/5D16CD25EAB73E92C14802586A74DA9A132C691FDDD8F424CC210E4ADA25AC37",
+        "dest_denom": "ibc/6EA343A45CD49D9BF077A7FC3F96D672449303214402B787B6BED32288B7E798",
         "hop_count": 2,
         "origin_chain": "atomone",
         "origin_denom": "uatone",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-13",
+            "from_channel": "channel-10",
             "to_chain": "atomone",
-            "to_channel": "channel-10"
+            "to_channel": "channel-13"
           }
         ],
         "symbol": "ATONE",
-        "trace_path": "transfer/channel-10/transfer/channel-94814/uatone"
+        "trace_path": "transfer/channel-13/transfer/channel-94814/uatone"
       },
       {
         "dest_chain": "atomone",
-        "dest_denom": "ibc/BED2B664A2D5D516AB7E5C56BC9ABC609BCB3FE8CC1FB4ADE4566A1621D2B14F",
+        "dest_denom": "ibc/27455319225D1F4C697A9E9FB7B5DB0C7EEF5A0FE68936596CE094F1E8D06944",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
@@ -741,47 +741,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-13",
+            "from_channel": "channel-10",
             "to_chain": "atomone",
-            "to_channel": "channel-10"
+            "to_channel": "channel-13"
           }
         ],
         "symbol": "SPICE",
-        "trace_path": "transfer/channel-110258/transfer/channel-10/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+        "trace_path": "transfer/channel-11/transfer/channel-13/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
       },
       {
         "dest_chain": "atomone",
-        "dest_denom": "ibc/8C9730EEF76EDFDE901C1C84E455B15294A975E3ECF92C9DA2B9189B29F27C6E",
+        "dest_denom": "ibc/1CC118EA390B9DF516D4801AA19098E36D586F6CD671BACFF7F7B04DD45D80E6",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-13",
+            "from_channel": "channel-10",
             "to_chain": "atomone",
-            "to_channel": "channel-10"
+            "to_channel": "channel-13"
           }
         ],
         "symbol": "SPICE",
-        "trace_path": "transfer/channel-6738/transfer/channel-10/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+        "trace_path": "transfer/channel-1/transfer/channel-13/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
       },
       {
         "dest_chain": "atomone",
-        "dest_denom": "ibc/22C7A1F943560EDBA05817859847440C71053309FD98507982FE30FFD025BC07",
+        "dest_denom": "ibc/B9FC357FAC52D872E3DF495766B9385A53022578037F5F52CD9F44F0063BCC6A",
         "hop_count": 2,
         "origin_chain": "penumbra",
         "origin_denom": "upenumbra",
@@ -789,47 +789,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-13",
+            "from_channel": "channel-10",
             "to_chain": "atomone",
-            "to_channel": "channel-10"
+            "to_channel": "channel-13"
           }
         ],
         "symbol": "UM",
-        "trace_path": "transfer/channel-10/transfer/channel-79703/upenumbra"
+        "trace_path": "transfer/channel-13/transfer/channel-79703/upenumbra"
       },
       {
         "dest_chain": "atomone",
-        "dest_denom": "ibc/22C7A1F943560EDBA05817859847440C71053309FD98507982FE30FFD025BC07",
+        "dest_denom": "ibc/B9FC357FAC52D872E3DF495766B9385A53022578037F5F52CD9F44F0063BCC6A",
         "hop_count": 2,
         "origin_chain": "penumbra",
         "origin_denom": "upenumbra",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-13",
+            "from_channel": "channel-10",
             "to_chain": "atomone",
-            "to_channel": "channel-10"
+            "to_channel": "channel-13"
           }
         ],
         "symbol": "UM",
-        "trace_path": "transfer/channel-10/transfer/channel-79703/upenumbra"
+        "trace_path": "transfer/channel-13/transfer/channel-79703/upenumbra"
       },
       {
         "dest_chain": "atomone",
-        "dest_denom": "ibc/313836A80B6B0886EB027CAD00E97966F5E24608BB2F1CAC8130224C8DFF1DA2",
+        "dest_denom": "ibc/2F97F0ED1B7801FB62C3087503AC7A6F38BE3C7CCFCAF839E66D86C5E17EA665",
         "hop_count": 2,
         "origin_chain": "cosmoshub",
         "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
@@ -837,49 +837,49 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-13",
+            "from_channel": "channel-10",
             "to_chain": "atomone",
-            "to_channel": "channel-10"
+            "to_channel": "channel-13"
           }
         ],
         "symbol": "ETH",
-        "trace_path": "transfer/channel-10/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+        "trace_path": "transfer/channel-13/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
       },
       {
         "dest_chain": "atomone",
-        "dest_denom": "ibc/313836A80B6B0886EB027CAD00E97966F5E24608BB2F1CAC8130224C8DFF1DA2",
+        "dest_denom": "ibc/2F97F0ED1B7801FB62C3087503AC7A6F38BE3C7CCFCAF839E66D86C5E17EA665",
         "hop_count": 2,
         "origin_chain": "cosmoshub",
         "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-13",
+            "from_channel": "channel-10",
             "to_chain": "atomone",
-            "to_channel": "channel-10"
+            "to_channel": "channel-13"
           }
         ],
         "symbol": "ETH",
-        "trace_path": "transfer/channel-10/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+        "trace_path": "transfer/channel-13/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
       }
     ],
     "evmos": [
       {
         "dest_chain": "evmos",
-        "dest_denom": "ibc/25223A2508A4FBDC609E8BC6CF6CEC23A5348E1EC4F161041CB44994630B2925",
+        "dest_denom": "ibc/DB4E258C3DBD7433C46337DBA7D17DFB88FE88ED65A5412D8A4995CCEAD3606B",
         "hop_count": 2,
         "origin_chain": "akash",
         "origin_denom": "uakt",
@@ -887,47 +887,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-101",
+            "from_channel": "channel-5",
             "to_chain": "evmos",
-            "to_channel": "channel-5"
+            "to_channel": "channel-101"
           }
         ],
         "symbol": "AKT",
-        "trace_path": "transfer/channel-5/transfer/channel-1/uakt"
+        "trace_path": "transfer/channel-101/transfer/channel-1/uakt"
       },
       {
         "dest_chain": "evmos",
-        "dest_denom": "ibc/25223A2508A4FBDC609E8BC6CF6CEC23A5348E1EC4F161041CB44994630B2925",
+        "dest_denom": "ibc/DB4E258C3DBD7433C46337DBA7D17DFB88FE88ED65A5412D8A4995CCEAD3606B",
         "hop_count": 2,
         "origin_chain": "akash",
         "origin_denom": "uakt",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-101",
+            "from_channel": "channel-5",
             "to_chain": "evmos",
-            "to_channel": "channel-5"
+            "to_channel": "channel-101"
           }
         ],
         "symbol": "AKT",
-        "trace_path": "transfer/channel-5/transfer/channel-1/uakt"
+        "trace_path": "transfer/channel-101/transfer/channel-1/uakt"
       },
       {
         "dest_chain": "evmos",
-        "dest_denom": "ibc/ACB32F3085091D7E3C0B56DA8C185A5F849AE11869DD1226D820FF36ACACDADF",
+        "dest_denom": "ibc/C9332B8165FE29132A0E32882C1BC693EC84665382229D69D3F3B5ADD97A6E24",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
@@ -935,47 +935,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-101",
+            "from_channel": "channel-5",
             "to_chain": "evmos",
-            "to_channel": "channel-5"
+            "to_channel": "channel-101"
           }
         ],
         "symbol": "WBTC",
-        "trace_path": "transfer/channel-110258/transfer/channel-5/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+        "trace_path": "transfer/channel-11/transfer/channel-101/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
       },
       {
         "dest_chain": "evmos",
-        "dest_denom": "ibc/90070F349669515E0FBDAA49D92FD2BFA466F37358BECB9B79726E5229872B5B",
+        "dest_denom": "ibc/50A29065374378C6C71A3CDCB46821043FEAC0224C57BCD145B74879E188F3CD",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-101",
+            "from_channel": "channel-5",
             "to_chain": "evmos",
-            "to_channel": "channel-5"
+            "to_channel": "channel-101"
           }
         ],
         "symbol": "WBTC",
-        "trace_path": "transfer/channel-6738/transfer/channel-5/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+        "trace_path": "transfer/channel-1/transfer/channel-101/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
       },
       {
         "dest_chain": "evmos",
-        "dest_denom": "ibc/9D8C540FF5B46F1FF3206E915E8359355CB94B8AA71474A0B35E71DAC51CEEA8",
+        "dest_denom": "ibc/518DC8EDCAAC70600A9C1CC32EFD09B115594E7A878DF41611A4BC0C06C6B06A",
         "hop_count": 2,
         "origin_chain": "atomone",
         "origin_denom": "uatone",
@@ -983,47 +983,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-101",
+            "from_channel": "channel-5",
             "to_chain": "evmos",
-            "to_channel": "channel-5"
+            "to_channel": "channel-101"
           }
         ],
         "symbol": "ATONE",
-        "trace_path": "transfer/channel-5/transfer/channel-94814/uatone"
+        "trace_path": "transfer/channel-101/transfer/channel-94814/uatone"
       },
       {
         "dest_chain": "evmos",
-        "dest_denom": "ibc/9D8C540FF5B46F1FF3206E915E8359355CB94B8AA71474A0B35E71DAC51CEEA8",
+        "dest_denom": "ibc/518DC8EDCAAC70600A9C1CC32EFD09B115594E7A878DF41611A4BC0C06C6B06A",
         "hop_count": 2,
         "origin_chain": "atomone",
         "origin_denom": "uatone",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-101",
+            "from_channel": "channel-5",
             "to_chain": "evmos",
-            "to_channel": "channel-5"
+            "to_channel": "channel-101"
           }
         ],
         "symbol": "ATONE",
-        "trace_path": "transfer/channel-5/transfer/channel-94814/uatone"
+        "trace_path": "transfer/channel-101/transfer/channel-94814/uatone"
       },
       {
         "dest_chain": "evmos",
-        "dest_denom": "ibc/ABC7C54143864EE3B8208A6E43E856F3680AE5FD597483D6FC69049B8867C8A1",
+        "dest_denom": "ibc/7F139C2289DAAD0D2AE1D3F5177010CCF455C22A87BE89D76E28EDEECAB58D79",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
@@ -1031,47 +1031,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-101",
+            "from_channel": "channel-5",
             "to_chain": "evmos",
-            "to_channel": "channel-5"
+            "to_channel": "channel-101"
           }
         ],
         "symbol": "SPICE",
-        "trace_path": "transfer/channel-110258/transfer/channel-5/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+        "trace_path": "transfer/channel-11/transfer/channel-101/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
       },
       {
         "dest_chain": "evmos",
-        "dest_denom": "ibc/458AD825AF6A50159ECF1ACFFA660C3F306B16DF25B5553D41F3957A51AAF2D8",
+        "dest_denom": "ibc/DCE2DC6B81E2DB2049970E9CB24BE113EEEE228503341B4AAB27794FB5A9080F",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-101",
+            "from_channel": "channel-5",
             "to_chain": "evmos",
-            "to_channel": "channel-5"
+            "to_channel": "channel-101"
           }
         ],
         "symbol": "SPICE",
-        "trace_path": "transfer/channel-6738/transfer/channel-5/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+        "trace_path": "transfer/channel-1/transfer/channel-101/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
       },
       {
         "dest_chain": "evmos",
-        "dest_denom": "ibc/8297074E9978FA7D904970E8E18172FF329EDE62D96E75911392321A78E8EDC8",
+        "dest_denom": "ibc/21B46568FF0299C321BD64B2F0C937382FE8B2DB68606A4179C16DB33A9E6159",
         "hop_count": 2,
         "origin_chain": "penumbra",
         "origin_denom": "upenumbra",
@@ -1079,47 +1079,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-101",
+            "from_channel": "channel-5",
             "to_chain": "evmos",
-            "to_channel": "channel-5"
+            "to_channel": "channel-101"
           }
         ],
         "symbol": "UM",
-        "trace_path": "transfer/channel-5/transfer/channel-79703/upenumbra"
+        "trace_path": "transfer/channel-101/transfer/channel-79703/upenumbra"
       },
       {
         "dest_chain": "evmos",
-        "dest_denom": "ibc/8297074E9978FA7D904970E8E18172FF329EDE62D96E75911392321A78E8EDC8",
+        "dest_denom": "ibc/21B46568FF0299C321BD64B2F0C937382FE8B2DB68606A4179C16DB33A9E6159",
         "hop_count": 2,
         "origin_chain": "penumbra",
         "origin_denom": "upenumbra",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-101",
+            "from_channel": "channel-5",
             "to_chain": "evmos",
-            "to_channel": "channel-5"
+            "to_channel": "channel-101"
           }
         ],
         "symbol": "UM",
-        "trace_path": "transfer/channel-5/transfer/channel-79703/upenumbra"
+        "trace_path": "transfer/channel-101/transfer/channel-79703/upenumbra"
       },
       {
         "dest_chain": "evmos",
-        "dest_denom": "ibc/3D7C2619EE0F154499D0FCEEA37643203A60249A163763CC83AAE2A03AB392B7",
+        "dest_denom": "ibc/A640FDB41DE0E6C82B13E522E29D1E6849D0BC127945139772561BA7EF509DCB",
         "hop_count": 2,
         "origin_chain": "cosmoshub",
         "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
@@ -1127,49 +1127,49 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-101",
+            "from_channel": "channel-5",
             "to_chain": "evmos",
-            "to_channel": "channel-5"
+            "to_channel": "channel-101"
           }
         ],
         "symbol": "ETH",
-        "trace_path": "transfer/channel-5/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+        "trace_path": "transfer/channel-101/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
       },
       {
         "dest_chain": "evmos",
-        "dest_denom": "ibc/3D7C2619EE0F154499D0FCEEA37643203A60249A163763CC83AAE2A03AB392B7",
+        "dest_denom": "ibc/A640FDB41DE0E6C82B13E522E29D1E6849D0BC127945139772561BA7EF509DCB",
         "hop_count": 2,
         "origin_chain": "cosmoshub",
         "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-101",
+            "from_channel": "channel-5",
             "to_chain": "evmos",
-            "to_channel": "channel-5"
+            "to_channel": "channel-101"
           }
         ],
         "symbol": "ETH",
-        "trace_path": "transfer/channel-5/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+        "trace_path": "transfer/channel-101/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
       }
     ],
     "gitopia": [
       {
         "dest_chain": "gitopia",
-        "dest_denom": "ibc/CA6B469517203E6F3365DDEC3A8FBD337824EB539F7002DA88C5F4A1376D250F",
+        "dest_denom": "ibc/7AE2B0FD4D084438C7910E6B294E0979A422936B65EC1F4BF67DEE4EC311741B",
         "hop_count": 2,
         "origin_chain": "akash",
         "origin_denom": "uakt",
@@ -1177,47 +1177,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-1",
+            "from_channel": "channel-4",
             "to_chain": "gitopia",
-            "to_channel": "channel-4"
+            "to_channel": "channel-1"
           }
         ],
         "symbol": "AKT",
-        "trace_path": "transfer/channel-4/transfer/channel-1/uakt"
+        "trace_path": "transfer/channel-1/transfer/channel-1/uakt"
       },
       {
         "dest_chain": "gitopia",
-        "dest_denom": "ibc/CA6B469517203E6F3365DDEC3A8FBD337824EB539F7002DA88C5F4A1376D250F",
+        "dest_denom": "ibc/7AE2B0FD4D084438C7910E6B294E0979A422936B65EC1F4BF67DEE4EC311741B",
         "hop_count": 2,
         "origin_chain": "akash",
         "origin_denom": "uakt",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-1",
+            "from_channel": "channel-4",
             "to_chain": "gitopia",
-            "to_channel": "channel-4"
+            "to_channel": "channel-1"
           }
         ],
         "symbol": "AKT",
-        "trace_path": "transfer/channel-4/transfer/channel-1/uakt"
+        "trace_path": "transfer/channel-1/transfer/channel-1/uakt"
       },
       {
         "dest_chain": "gitopia",
-        "dest_denom": "ibc/BB0789E3C51003CDB84D678EAB61DB4D4F5C9F6FC0BB45771F098EA039723752",
+        "dest_denom": "ibc/CBBD81F1DF1E213C8894A514ED7C33696049B4B13771812FA9B3C98F1F190AE1",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
@@ -1225,47 +1225,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-1",
+            "from_channel": "channel-4",
             "to_chain": "gitopia",
-            "to_channel": "channel-4"
+            "to_channel": "channel-1"
           }
         ],
         "symbol": "WBTC",
-        "trace_path": "transfer/channel-110258/transfer/channel-4/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+        "trace_path": "transfer/channel-11/transfer/channel-1/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
       },
       {
         "dest_chain": "gitopia",
-        "dest_denom": "ibc/E22F24B5B6B07361285A526559CE9D49FD62D0219BB2E8FC1BE1E45ED9164F05",
+        "dest_denom": "ibc/6E303906AA4D91A223B90CE1BC0A367EB034D1EF5C8736D8A8704DE00C0FF99D",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-1",
+            "from_channel": "channel-4",
             "to_chain": "gitopia",
-            "to_channel": "channel-4"
+            "to_channel": "channel-1"
           }
         ],
         "symbol": "WBTC",
-        "trace_path": "transfer/channel-6738/transfer/channel-4/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+        "trace_path": "transfer/channel-1/transfer/channel-1/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
       },
       {
         "dest_chain": "gitopia",
-        "dest_denom": "ibc/FCDCAECF064BC9D119EDE4F57CAF85B44D3C3F964F11E18338B490EF96D52F47",
+        "dest_denom": "ibc/9CA884DC564774BA48A9AF21BF9ABADD2FE1A505E936C80439103CAE956BAE64",
         "hop_count": 2,
         "origin_chain": "atomone",
         "origin_denom": "uatone",
@@ -1273,47 +1273,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-1",
+            "from_channel": "channel-4",
             "to_chain": "gitopia",
-            "to_channel": "channel-4"
+            "to_channel": "channel-1"
           }
         ],
         "symbol": "ATONE",
-        "trace_path": "transfer/channel-4/transfer/channel-94814/uatone"
+        "trace_path": "transfer/channel-1/transfer/channel-94814/uatone"
       },
       {
         "dest_chain": "gitopia",
-        "dest_denom": "ibc/FCDCAECF064BC9D119EDE4F57CAF85B44D3C3F964F11E18338B490EF96D52F47",
+        "dest_denom": "ibc/9CA884DC564774BA48A9AF21BF9ABADD2FE1A505E936C80439103CAE956BAE64",
         "hop_count": 2,
         "origin_chain": "atomone",
         "origin_denom": "uatone",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-1",
+            "from_channel": "channel-4",
             "to_chain": "gitopia",
-            "to_channel": "channel-4"
+            "to_channel": "channel-1"
           }
         ],
         "symbol": "ATONE",
-        "trace_path": "transfer/channel-4/transfer/channel-94814/uatone"
+        "trace_path": "transfer/channel-1/transfer/channel-94814/uatone"
       },
       {
         "dest_chain": "gitopia",
-        "dest_denom": "ibc/220C59EE2F9870BC02028175E2C62FEA66B7A61C40E23A43176BEBAD13FC375C",
+        "dest_denom": "ibc/634D1722D3EA05954221CC8B9B23D36E29D492A55BEF58F02C5D195A5F0AC5B2",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
@@ -1321,47 +1321,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-1",
+            "from_channel": "channel-4",
             "to_chain": "gitopia",
-            "to_channel": "channel-4"
+            "to_channel": "channel-1"
           }
         ],
         "symbol": "SPICE",
-        "trace_path": "transfer/channel-110258/transfer/channel-4/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+        "trace_path": "transfer/channel-11/transfer/channel-1/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
       },
       {
         "dest_chain": "gitopia",
-        "dest_denom": "ibc/625B0DCAF648F5FB86601E4E5A117B69C6B4DBD2F74DF844C68F9C595CFFE067",
+        "dest_denom": "ibc/480CA70A0DFBC224AD32E39E3724984D5AC2EB02875D567BDE1AD8B498913C2A",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-1",
+            "from_channel": "channel-4",
             "to_chain": "gitopia",
-            "to_channel": "channel-4"
+            "to_channel": "channel-1"
           }
         ],
         "symbol": "SPICE",
-        "trace_path": "transfer/channel-6738/transfer/channel-4/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+        "trace_path": "transfer/channel-1/transfer/channel-1/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
       },
       {
         "dest_chain": "gitopia",
-        "dest_denom": "ibc/61D711B5EDF3F2B10F291D6AF606314CD1F47AC7BB4C457F71A63FD289CBF9AB",
+        "dest_denom": "ibc/406AE2A657026B1ABB7994D28E3CBE699C526D0418FD4A3ACAAC0BC26D2B54EC",
         "hop_count": 2,
         "origin_chain": "penumbra",
         "origin_denom": "upenumbra",
@@ -1369,47 +1369,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-1",
+            "from_channel": "channel-4",
             "to_chain": "gitopia",
-            "to_channel": "channel-4"
+            "to_channel": "channel-1"
           }
         ],
         "symbol": "UM",
-        "trace_path": "transfer/channel-4/transfer/channel-79703/upenumbra"
+        "trace_path": "transfer/channel-1/transfer/channel-79703/upenumbra"
       },
       {
         "dest_chain": "gitopia",
-        "dest_denom": "ibc/61D711B5EDF3F2B10F291D6AF606314CD1F47AC7BB4C457F71A63FD289CBF9AB",
+        "dest_denom": "ibc/406AE2A657026B1ABB7994D28E3CBE699C526D0418FD4A3ACAAC0BC26D2B54EC",
         "hop_count": 2,
         "origin_chain": "penumbra",
         "origin_denom": "upenumbra",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-1",
+            "from_channel": "channel-4",
             "to_chain": "gitopia",
-            "to_channel": "channel-4"
+            "to_channel": "channel-1"
           }
         ],
         "symbol": "UM",
-        "trace_path": "transfer/channel-4/transfer/channel-79703/upenumbra"
+        "trace_path": "transfer/channel-1/transfer/channel-79703/upenumbra"
       },
       {
         "dest_chain": "gitopia",
-        "dest_denom": "ibc/41BCC63921E9DCD907C0A6F208D46C112B0466139645C798D9A379F1DAFF9418",
+        "dest_denom": "ibc/E6A14427945A957F30D05A686EC4C70420F778EB94999F0A1C2B9F420ACB9AE1",
         "hop_count": 2,
         "origin_chain": "cosmoshub",
         "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
@@ -1417,49 +1417,49 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-1",
+            "from_channel": "channel-4",
             "to_chain": "gitopia",
-            "to_channel": "channel-4"
+            "to_channel": "channel-1"
           }
         ],
         "symbol": "ETH",
-        "trace_path": "transfer/channel-4/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+        "trace_path": "transfer/channel-1/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
       },
       {
         "dest_chain": "gitopia",
-        "dest_denom": "ibc/41BCC63921E9DCD907C0A6F208D46C112B0466139645C798D9A379F1DAFF9418",
+        "dest_denom": "ibc/E6A14427945A957F30D05A686EC4C70420F778EB94999F0A1C2B9F420ACB9AE1",
         "hop_count": 2,
         "origin_chain": "cosmoshub",
         "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-1",
+            "from_channel": "channel-4",
             "to_chain": "gitopia",
-            "to_channel": "channel-4"
+            "to_channel": "channel-1"
           }
         ],
         "symbol": "ETH",
-        "trace_path": "transfer/channel-4/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+        "trace_path": "transfer/channel-1/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
       }
     ],
     "juno": [
       {
         "dest_chain": "juno",
-        "dest_denom": "ibc/ADC63C00000CA75F909D2BE3ACB5A9980BED3A73B92746E0FCE6C67414055459",
+        "dest_denom": "ibc/EC3AAA73709DDC1113A1B0C136A752C31091D14849C54F681A4382541312039C",
         "hop_count": 2,
         "origin_chain": "akash",
         "origin_denom": "uakt",
@@ -1467,47 +1467,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-393",
+            "from_channel": "channel-0",
             "to_chain": "juno",
-            "to_channel": "channel-0"
+            "to_channel": "channel-393"
           }
         ],
         "symbol": "AKT",
-        "trace_path": "transfer/channel-0/transfer/channel-1/uakt"
+        "trace_path": "transfer/channel-393/transfer/channel-1/uakt"
       },
       {
         "dest_chain": "juno",
-        "dest_denom": "ibc/ADC63C00000CA75F909D2BE3ACB5A9980BED3A73B92746E0FCE6C67414055459",
+        "dest_denom": "ibc/EC3AAA73709DDC1113A1B0C136A752C31091D14849C54F681A4382541312039C",
         "hop_count": 2,
         "origin_chain": "akash",
         "origin_denom": "uakt",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-393",
+            "from_channel": "channel-0",
             "to_chain": "juno",
-            "to_channel": "channel-0"
+            "to_channel": "channel-393"
           }
         ],
         "symbol": "AKT",
-        "trace_path": "transfer/channel-0/transfer/channel-1/uakt"
+        "trace_path": "transfer/channel-393/transfer/channel-1/uakt"
       },
       {
         "dest_chain": "juno",
-        "dest_denom": "ibc/16E2AC5563E8DEFEA4CFC7EF9C2774F491082A67B3CB5C1714836AA413EB17D7",
+        "dest_denom": "ibc/DBD2D88487461DCE68E2A99FACA7A0526A12EAC96D834C3AF13E862514A0C4F0",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
@@ -1515,47 +1515,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-393",
+            "from_channel": "channel-0",
             "to_chain": "juno",
-            "to_channel": "channel-0"
+            "to_channel": "channel-393"
           }
         ],
         "symbol": "WBTC",
-        "trace_path": "transfer/channel-110258/transfer/channel-0/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+        "trace_path": "transfer/channel-11/transfer/channel-393/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
       },
       {
         "dest_chain": "juno",
-        "dest_denom": "ibc/C16C230A47A43FE63D6CB9F34DAD4F90837F329E5AA787D55DCE617279806DF4",
+        "dest_denom": "ibc/5BD96F44E3C1851FF534BD28AA7F804C595500BFF7646189D3CC5BD34B45672A",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-393",
+            "from_channel": "channel-0",
             "to_chain": "juno",
-            "to_channel": "channel-0"
+            "to_channel": "channel-393"
           }
         ],
         "symbol": "WBTC",
-        "trace_path": "transfer/channel-6738/transfer/channel-0/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+        "trace_path": "transfer/channel-1/transfer/channel-393/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
       },
       {
         "dest_chain": "juno",
-        "dest_denom": "ibc/E7CF15949EE673E0BD3F5AA7D711DD0A6C22992E7E5714A174DCEA289EB696A1",
+        "dest_denom": "ibc/CEBEF5475A3B40DAD75171CB74AAEABC1D12AE3A06488904189DFF3B717A4252",
         "hop_count": 2,
         "origin_chain": "atomone",
         "origin_denom": "uatone",
@@ -1563,47 +1563,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-393",
+            "from_channel": "channel-0",
             "to_chain": "juno",
-            "to_channel": "channel-0"
+            "to_channel": "channel-393"
           }
         ],
         "symbol": "ATONE",
-        "trace_path": "transfer/channel-0/transfer/channel-94814/uatone"
+        "trace_path": "transfer/channel-393/transfer/channel-94814/uatone"
       },
       {
         "dest_chain": "juno",
-        "dest_denom": "ibc/E7CF15949EE673E0BD3F5AA7D711DD0A6C22992E7E5714A174DCEA289EB696A1",
+        "dest_denom": "ibc/CEBEF5475A3B40DAD75171CB74AAEABC1D12AE3A06488904189DFF3B717A4252",
         "hop_count": 2,
         "origin_chain": "atomone",
         "origin_denom": "uatone",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-393",
+            "from_channel": "channel-0",
             "to_chain": "juno",
-            "to_channel": "channel-0"
+            "to_channel": "channel-393"
           }
         ],
         "symbol": "ATONE",
-        "trace_path": "transfer/channel-0/transfer/channel-94814/uatone"
+        "trace_path": "transfer/channel-393/transfer/channel-94814/uatone"
       },
       {
         "dest_chain": "juno",
-        "dest_denom": "ibc/49DCE8E3EF03729AE9A88417EEB3B71CAE098C148013BE71350F62AFAC79269F",
+        "dest_denom": "ibc/EDA6CB34A2FD50583A5AEE0C0E6FBE31A819497A19D8513A8C5876BDCA4F5142",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
@@ -1611,47 +1611,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-393",
+            "from_channel": "channel-0",
             "to_chain": "juno",
-            "to_channel": "channel-0"
+            "to_channel": "channel-393"
           }
         ],
         "symbol": "SPICE",
-        "trace_path": "transfer/channel-110258/transfer/channel-0/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+        "trace_path": "transfer/channel-11/transfer/channel-393/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
       },
       {
         "dest_chain": "juno",
-        "dest_denom": "ibc/92C1AB7001EB5717E9FD37529FFF3F69E9303FF30F992FC736E5B57C3147DB43",
+        "dest_denom": "ibc/88A51D1A97788A63170B7EA6045511968B7D1A9AAF8C1FBD7663F8FB8385D541",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-393",
+            "from_channel": "channel-0",
             "to_chain": "juno",
-            "to_channel": "channel-0"
+            "to_channel": "channel-393"
           }
         ],
         "symbol": "SPICE",
-        "trace_path": "transfer/channel-6738/transfer/channel-0/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+        "trace_path": "transfer/channel-1/transfer/channel-393/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
       },
       {
         "dest_chain": "juno",
-        "dest_denom": "ibc/3070FF39C51CC23E27C4D75C9A9B1D2FDBF51B6D0E6AB3371614D36360BCBF5D",
+        "dest_denom": "ibc/13C0ADE877464E960FC5F7FB779FA4DD8D606BEDCB7A74D4089EA2628D43C262",
         "hop_count": 2,
         "origin_chain": "penumbra",
         "origin_denom": "upenumbra",
@@ -1659,47 +1659,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-393",
+            "from_channel": "channel-0",
             "to_chain": "juno",
-            "to_channel": "channel-0"
+            "to_channel": "channel-393"
           }
         ],
         "symbol": "UM",
-        "trace_path": "transfer/channel-0/transfer/channel-79703/upenumbra"
+        "trace_path": "transfer/channel-393/transfer/channel-79703/upenumbra"
       },
       {
         "dest_chain": "juno",
-        "dest_denom": "ibc/3070FF39C51CC23E27C4D75C9A9B1D2FDBF51B6D0E6AB3371614D36360BCBF5D",
+        "dest_denom": "ibc/13C0ADE877464E960FC5F7FB779FA4DD8D606BEDCB7A74D4089EA2628D43C262",
         "hop_count": 2,
         "origin_chain": "penumbra",
         "origin_denom": "upenumbra",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-393",
+            "from_channel": "channel-0",
             "to_chain": "juno",
-            "to_channel": "channel-0"
+            "to_channel": "channel-393"
           }
         ],
         "symbol": "UM",
-        "trace_path": "transfer/channel-0/transfer/channel-79703/upenumbra"
+        "trace_path": "transfer/channel-393/transfer/channel-79703/upenumbra"
       },
       {
         "dest_chain": "juno",
-        "dest_denom": "ibc/49984E989DD1B8C8D983029B6B09DB1386AC6CC10C4488039A7CB764D6F115BA",
+        "dest_denom": "ibc/53734AD1CEDB4B2204FD1853E0A441D29FE3E7EC00BEBD74E8527E971E4BA6EA",
         "hop_count": 2,
         "origin_chain": "cosmoshub",
         "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
@@ -1707,49 +1707,49 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-393",
+            "from_channel": "channel-0",
             "to_chain": "juno",
-            "to_channel": "channel-0"
+            "to_channel": "channel-393"
           }
         ],
         "symbol": "ETH",
-        "trace_path": "transfer/channel-0/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+        "trace_path": "transfer/channel-393/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
       },
       {
         "dest_chain": "juno",
-        "dest_denom": "ibc/49984E989DD1B8C8D983029B6B09DB1386AC6CC10C4488039A7CB764D6F115BA",
+        "dest_denom": "ibc/53734AD1CEDB4B2204FD1853E0A441D29FE3E7EC00BEBD74E8527E971E4BA6EA",
         "hop_count": 2,
         "origin_chain": "cosmoshub",
         "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-393",
+            "from_channel": "channel-0",
             "to_chain": "juno",
-            "to_channel": "channel-0"
+            "to_channel": "channel-393"
           }
         ],
         "symbol": "ETH",
-        "trace_path": "transfer/channel-0/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+        "trace_path": "transfer/channel-393/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
       }
     ],
     "omniflix": [
       {
         "dest_chain": "omniflix",
-        "dest_denom": "ibc/223B8848663D9496FF7E85E3DA5C1CDACE6E5437F98F61CE957A08EF448C3B19",
+        "dest_denom": "ibc/8FA9E2E8F1404ED4D9BD3753A7E8867881418FC75E7EB1F8F355F580230D238C",
         "hop_count": 2,
         "origin_chain": "akash",
         "origin_denom": "uakt",
@@ -1757,47 +1757,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-33",
+            "from_channel": "channel-3",
             "to_chain": "omniflix",
-            "to_channel": "channel-3"
+            "to_channel": "channel-33"
           }
         ],
         "symbol": "AKT",
-        "trace_path": "transfer/channel-3/transfer/channel-1/uakt"
+        "trace_path": "transfer/channel-33/transfer/channel-1/uakt"
       },
       {
         "dest_chain": "omniflix",
-        "dest_denom": "ibc/223B8848663D9496FF7E85E3DA5C1CDACE6E5437F98F61CE957A08EF448C3B19",
+        "dest_denom": "ibc/8FA9E2E8F1404ED4D9BD3753A7E8867881418FC75E7EB1F8F355F580230D238C",
         "hop_count": 2,
         "origin_chain": "akash",
         "origin_denom": "uakt",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-33",
+            "from_channel": "channel-3",
             "to_chain": "omniflix",
-            "to_channel": "channel-3"
+            "to_channel": "channel-33"
           }
         ],
         "symbol": "AKT",
-        "trace_path": "transfer/channel-3/transfer/channel-1/uakt"
+        "trace_path": "transfer/channel-33/transfer/channel-1/uakt"
       },
       {
         "dest_chain": "omniflix",
-        "dest_denom": "ibc/56398FEBB15653BD3781133E253FA0C0E10C78B8CEFCFDE1D1B76E40F25B2D72",
+        "dest_denom": "ibc/73278AC6B8594252A9A60AA3EE47603E0630540167DA71C563BEDCA2A6CEEBBB",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
@@ -1805,47 +1805,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-33",
+            "from_channel": "channel-3",
             "to_chain": "omniflix",
-            "to_channel": "channel-3"
+            "to_channel": "channel-33"
           }
         ],
         "symbol": "WBTC",
-        "trace_path": "transfer/channel-110258/transfer/channel-3/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+        "trace_path": "transfer/channel-11/transfer/channel-33/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
       },
       {
         "dest_chain": "omniflix",
-        "dest_denom": "ibc/7279A2757302CDA16AA5255C178517C3146C1AD4A2ECF81E23E973BC184100A0",
+        "dest_denom": "ibc/2D04255B51F3E4921BDEA115B3872C4DDEFF1EEBC83084086EB03C92AEC77F79",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-33",
+            "from_channel": "channel-3",
             "to_chain": "omniflix",
-            "to_channel": "channel-3"
+            "to_channel": "channel-33"
           }
         ],
         "symbol": "WBTC",
-        "trace_path": "transfer/channel-6738/transfer/channel-3/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+        "trace_path": "transfer/channel-1/transfer/channel-33/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
       },
       {
         "dest_chain": "omniflix",
-        "dest_denom": "ibc/9154F3A8F4952D953A9DA62B5ADF876EEB2BF8F3B1926F338BD7598B5FD82E80",
+        "dest_denom": "ibc/A8B12F51125AA14A5AD4029A4CB65B675C68F791798C9CBA3F8758772A7F0079",
         "hop_count": 2,
         "origin_chain": "atomone",
         "origin_denom": "uatone",
@@ -1853,47 +1853,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-33",
+            "from_channel": "channel-3",
             "to_chain": "omniflix",
-            "to_channel": "channel-3"
+            "to_channel": "channel-33"
           }
         ],
         "symbol": "ATONE",
-        "trace_path": "transfer/channel-3/transfer/channel-94814/uatone"
+        "trace_path": "transfer/channel-33/transfer/channel-94814/uatone"
       },
       {
         "dest_chain": "omniflix",
-        "dest_denom": "ibc/9154F3A8F4952D953A9DA62B5ADF876EEB2BF8F3B1926F338BD7598B5FD82E80",
+        "dest_denom": "ibc/A8B12F51125AA14A5AD4029A4CB65B675C68F791798C9CBA3F8758772A7F0079",
         "hop_count": 2,
         "origin_chain": "atomone",
         "origin_denom": "uatone",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-33",
+            "from_channel": "channel-3",
             "to_chain": "omniflix",
-            "to_channel": "channel-3"
+            "to_channel": "channel-33"
           }
         ],
         "symbol": "ATONE",
-        "trace_path": "transfer/channel-3/transfer/channel-94814/uatone"
+        "trace_path": "transfer/channel-33/transfer/channel-94814/uatone"
       },
       {
         "dest_chain": "omniflix",
-        "dest_denom": "ibc/71A002A48DBA408E3FBE66BCC29E9DEC5C3D3883AC26D3E03EF5DAF4B7E55296",
+        "dest_denom": "ibc/A64C6AB5EA0F02348287AD0F5E0C07E39B61EDB6EFE5D6AECDF44AE833A0AAFD",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
@@ -1901,47 +1901,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-33",
+            "from_channel": "channel-3",
             "to_chain": "omniflix",
-            "to_channel": "channel-3"
+            "to_channel": "channel-33"
           }
         ],
         "symbol": "SPICE",
-        "trace_path": "transfer/channel-110258/transfer/channel-3/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+        "trace_path": "transfer/channel-11/transfer/channel-33/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
       },
       {
         "dest_chain": "omniflix",
-        "dest_denom": "ibc/A2BC695B7A140FBF386D4E9F3BBA820CB204D5B7ABFFC27F802172B73F593498",
+        "dest_denom": "ibc/AB2DF646C73866C02CDA80B7FDB22F87CEAA850BF75CE02F00F2D0FD718C2F07",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-33",
+            "from_channel": "channel-3",
             "to_chain": "omniflix",
-            "to_channel": "channel-3"
+            "to_channel": "channel-33"
           }
         ],
         "symbol": "SPICE",
-        "trace_path": "transfer/channel-6738/transfer/channel-3/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+        "trace_path": "transfer/channel-1/transfer/channel-33/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
       },
       {
         "dest_chain": "omniflix",
-        "dest_denom": "ibc/4D23883AC4C3D1A0B320A0A6619718141DC695451E13B828AF37FA6B1A81E15D",
+        "dest_denom": "ibc/C8D6C238837FFBB478946F7C65B26BBF90630D0BD0CE7E51179AAA14554D03BA",
         "hop_count": 2,
         "origin_chain": "penumbra",
         "origin_denom": "upenumbra",
@@ -1949,47 +1949,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-33",
+            "from_channel": "channel-3",
             "to_chain": "omniflix",
-            "to_channel": "channel-3"
+            "to_channel": "channel-33"
           }
         ],
         "symbol": "UM",
-        "trace_path": "transfer/channel-3/transfer/channel-79703/upenumbra"
+        "trace_path": "transfer/channel-33/transfer/channel-79703/upenumbra"
       },
       {
         "dest_chain": "omniflix",
-        "dest_denom": "ibc/4D23883AC4C3D1A0B320A0A6619718141DC695451E13B828AF37FA6B1A81E15D",
+        "dest_denom": "ibc/C8D6C238837FFBB478946F7C65B26BBF90630D0BD0CE7E51179AAA14554D03BA",
         "hop_count": 2,
         "origin_chain": "penumbra",
         "origin_denom": "upenumbra",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-33",
+            "from_channel": "channel-3",
             "to_chain": "omniflix",
-            "to_channel": "channel-3"
+            "to_channel": "channel-33"
           }
         ],
         "symbol": "UM",
-        "trace_path": "transfer/channel-3/transfer/channel-79703/upenumbra"
+        "trace_path": "transfer/channel-33/transfer/channel-79703/upenumbra"
       },
       {
         "dest_chain": "omniflix",
-        "dest_denom": "ibc/AB4082A5B3EEB76580FB4779E65BBA7739E10CF1ACB164158CEB0193ADB08F58",
+        "dest_denom": "ibc/AE352E425DAEE4CFB41CD1A94E73A46390FA43AEF07822728AEA84DCAF2F1AB5",
         "hop_count": 2,
         "origin_chain": "cosmoshub",
         "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
@@ -1997,49 +1997,49 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-33",
+            "from_channel": "channel-3",
             "to_chain": "omniflix",
-            "to_channel": "channel-3"
+            "to_channel": "channel-33"
           }
         ],
         "symbol": "ETH",
-        "trace_path": "transfer/channel-3/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+        "trace_path": "transfer/channel-33/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
       },
       {
         "dest_chain": "omniflix",
-        "dest_denom": "ibc/AB4082A5B3EEB76580FB4779E65BBA7739E10CF1ACB164158CEB0193ADB08F58",
+        "dest_denom": "ibc/AE352E425DAEE4CFB41CD1A94E73A46390FA43AEF07822728AEA84DCAF2F1AB5",
         "hop_count": 2,
         "origin_chain": "cosmoshub",
         "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-33",
+            "from_channel": "channel-3",
             "to_chain": "omniflix",
-            "to_channel": "channel-3"
+            "to_channel": "channel-33"
           }
         ],
         "symbol": "ETH",
-        "trace_path": "transfer/channel-3/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+        "trace_path": "transfer/channel-33/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
       }
     ],
     "secret": [
       {
         "dest_chain": "secret",
-        "dest_denom": "ibc/645D9EB0AAC28E95E63123AAFC123EFF80210D2F90F78B2ECC881D967F67E4A5",
+        "dest_denom": "ibc/91154A777BF342627DB72768BD02A3195385B0A0AB6CEE4895D2EC8E9DFA7765",
         "hop_count": 2,
         "origin_chain": "akash",
         "origin_denom": "uakt",
@@ -2047,23 +2047,23 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-165",
+            "from_channel": "channel-7",
             "to_chain": "secret",
-            "to_channel": "channel-8"
+            "to_channel": "channel-100"
           }
         ],
         "symbol": "AKT",
-        "trace_path": "transfer/channel-8/transfer/channel-1/uakt"
+        "trace_path": "transfer/channel-100/transfer/channel-1/uakt"
       },
       {
         "dest_chain": "secret",
-        "dest_denom": "ibc/3B9D1A08908D1920634F59847445A8E70E7EFF388F1D15616B3EA987C249B550",
+        "dest_denom": "ibc/4284074DF4986CA6B629BACF8DD8546FB61A6D415CCF759EBB3FCD8138480C22",
         "hop_count": 2,
         "origin_chain": "akash",
         "origin_denom": "uakt",
@@ -2071,23 +2071,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-100",
+            "from_channel": "channel-8",
             "to_chain": "secret",
-            "to_channel": "channel-7"
+            "to_channel": "channel-165"
           }
         ],
         "symbol": "AKT",
-        "trace_path": "transfer/channel-7/transfer/channel-1/uakt"
+        "trace_path": "transfer/channel-165/transfer/channel-1/uakt"
       },
       {
         "dest_chain": "secret",
-        "dest_denom": "ibc/645D9EB0AAC28E95E63123AAFC123EFF80210D2F90F78B2ECC881D967F67E4A5",
+        "dest_denom": "ibc/91154A777BF342627DB72768BD02A3195385B0A0AB6CEE4895D2EC8E9DFA7765",
+        "hop_count": 2,
+        "origin_chain": "akash",
+        "origin_denom": "uakt",
+        "preferred": true,
+        "route": [
+          {
+            "from_chain": "osmosis",
+            "from_channel": "channel-6738",
+            "to_chain": "terp",
+            "to_channel": "channel-1"
+          },
+          {
+            "from_chain": "terp",
+            "from_channel": "channel-7",
+            "to_chain": "secret",
+            "to_channel": "channel-100"
+          }
+        ],
+        "symbol": "AKT",
+        "trace_path": "transfer/channel-100/transfer/channel-1/uakt"
+      },
+      {
+        "dest_chain": "secret",
+        "dest_denom": "ibc/4284074DF4986CA6B629BACF8DD8546FB61A6D415CCF759EBB3FCD8138480C22",
         "hop_count": 2,
         "origin_chain": "akash",
         "origin_denom": "uakt",
@@ -2095,47 +2119,23 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-165",
+            "from_channel": "channel-8",
             "to_chain": "secret",
-            "to_channel": "channel-8"
+            "to_channel": "channel-165"
           }
         ],
         "symbol": "AKT",
-        "trace_path": "transfer/channel-8/transfer/channel-1/uakt"
+        "trace_path": "transfer/channel-165/transfer/channel-1/uakt"
       },
       {
         "dest_chain": "secret",
-        "dest_denom": "ibc/3B9D1A08908D1920634F59847445A8E70E7EFF388F1D15616B3EA987C249B550",
-        "hop_count": 2,
-        "origin_chain": "akash",
-        "origin_denom": "uakt",
-        "preferred": false,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-1",
-            "to_chain": "terp",
-            "to_channel": "channel-6738"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-100",
-            "to_chain": "secret",
-            "to_channel": "channel-7"
-          }
-        ],
-        "symbol": "AKT",
-        "trace_path": "transfer/channel-7/transfer/channel-1/uakt"
-      },
-      {
-        "dest_chain": "secret",
-        "dest_denom": "ibc/6526C4764F87BE102F4A83CB8362D0ABA12115C20DDB1FC4D72FA1D761A85646",
+        "dest_denom": "ibc/02373FED66D4B487D4987B17263C45A19993B21A2A1FDC327BA4AE5CEA7780BA",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
@@ -2143,23 +2143,23 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-165",
+            "from_channel": "channel-7",
             "to_chain": "secret",
-            "to_channel": "channel-8"
+            "to_channel": "channel-100"
           }
         ],
         "symbol": "WBTC",
-        "trace_path": "transfer/channel-110258/transfer/channel-8/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+        "trace_path": "transfer/channel-11/transfer/channel-100/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
       },
       {
         "dest_chain": "secret",
-        "dest_denom": "ibc/0ECFA09A69236D31D59364BF9942DB2E5C0426CF836D576C85ADA56FFEB2348E",
+        "dest_denom": "ibc/1CC3F4A2E45E6AD95F399465F5C01C6B57921F2696D7F9B5F278DCC5218DFD6A",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
@@ -2167,23 +2167,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-100",
+            "from_channel": "channel-8",
             "to_chain": "secret",
-            "to_channel": "channel-7"
+            "to_channel": "channel-165"
           }
         ],
         "symbol": "WBTC",
-        "trace_path": "transfer/channel-110258/transfer/channel-7/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+        "trace_path": "transfer/channel-1/transfer/channel-165/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
       },
       {
         "dest_chain": "secret",
-        "dest_denom": "ibc/8CD32265CEFF69B7448A04CE4C86F2E01598D7F65CC295F2F0AE2B1E1A8B0718",
+        "dest_denom": "ibc/C3BFDFCC25D66FC0DE35D9070B056E6EFA5D352B51FC3D6DBC935B7C6076DFAB",
+        "hop_count": 2,
+        "origin_chain": "osmosis",
+        "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
+        "preferred": true,
+        "route": [
+          {
+            "from_chain": "osmosis",
+            "from_channel": "channel-6738",
+            "to_chain": "terp",
+            "to_channel": "channel-1"
+          },
+          {
+            "from_chain": "terp",
+            "from_channel": "channel-7",
+            "to_chain": "secret",
+            "to_channel": "channel-100"
+          }
+        ],
+        "symbol": "WBTC",
+        "trace_path": "transfer/channel-1/transfer/channel-100/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+      },
+      {
+        "dest_chain": "secret",
+        "dest_denom": "ibc/B6F4B1610930695FE2957E94CB31BF54D637BC58BCBFD403D15D8A17A7082AAC",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
@@ -2191,47 +2215,23 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-165",
+            "from_channel": "channel-8",
             "to_chain": "secret",
-            "to_channel": "channel-8"
+            "to_channel": "channel-165"
           }
         ],
         "symbol": "WBTC",
-        "trace_path": "transfer/channel-6738/transfer/channel-8/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+        "trace_path": "transfer/channel-11/transfer/channel-165/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
       },
       {
         "dest_chain": "secret",
-        "dest_denom": "ibc/0C2AD0680BCB1F6A51CA4377196269BD62A67404324D8DED5BCB278DE21A721A",
-        "hop_count": 2,
-        "origin_chain": "osmosis",
-        "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
-        "preferred": false,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-1",
-            "to_chain": "terp",
-            "to_channel": "channel-6738"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-100",
-            "to_chain": "secret",
-            "to_channel": "channel-7"
-          }
-        ],
-        "symbol": "WBTC",
-        "trace_path": "transfer/channel-6738/transfer/channel-7/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
-      },
-      {
-        "dest_chain": "secret",
-        "dest_denom": "ibc/E29F8228862F08C549386CD112B73D702F6CF6AF2D9507349DB6ED163BA624D1",
+        "dest_denom": "ibc/520FE6922535E00035F6C263321DBD5FFE064DB318EE7E5F6B3EF4B6E2282527",
         "hop_count": 2,
         "origin_chain": "atomone",
         "origin_denom": "uatone",
@@ -2239,23 +2239,23 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-165",
+            "from_channel": "channel-7",
             "to_chain": "secret",
-            "to_channel": "channel-8"
+            "to_channel": "channel-100"
           }
         ],
         "symbol": "ATONE",
-        "trace_path": "transfer/channel-8/transfer/channel-94814/uatone"
+        "trace_path": "transfer/channel-100/transfer/channel-94814/uatone"
       },
       {
         "dest_chain": "secret",
-        "dest_denom": "ibc/A4DA3E488DEB60251B9F51C11070F743CA5B2F8465C75736C4246052F99FBB72",
+        "dest_denom": "ibc/53F0CBC8E79A79BDA982015518A447E82A638B1497DB4FA5F07B1A1951F19388",
         "hop_count": 2,
         "origin_chain": "atomone",
         "origin_denom": "uatone",
@@ -2263,23 +2263,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-100",
+            "from_channel": "channel-8",
             "to_chain": "secret",
-            "to_channel": "channel-7"
+            "to_channel": "channel-165"
           }
         ],
         "symbol": "ATONE",
-        "trace_path": "transfer/channel-7/transfer/channel-94814/uatone"
+        "trace_path": "transfer/channel-165/transfer/channel-94814/uatone"
       },
       {
         "dest_chain": "secret",
-        "dest_denom": "ibc/E29F8228862F08C549386CD112B73D702F6CF6AF2D9507349DB6ED163BA624D1",
+        "dest_denom": "ibc/520FE6922535E00035F6C263321DBD5FFE064DB318EE7E5F6B3EF4B6E2282527",
+        "hop_count": 2,
+        "origin_chain": "atomone",
+        "origin_denom": "uatone",
+        "preferred": true,
+        "route": [
+          {
+            "from_chain": "osmosis",
+            "from_channel": "channel-6738",
+            "to_chain": "terp",
+            "to_channel": "channel-1"
+          },
+          {
+            "from_chain": "terp",
+            "from_channel": "channel-7",
+            "to_chain": "secret",
+            "to_channel": "channel-100"
+          }
+        ],
+        "symbol": "ATONE",
+        "trace_path": "transfer/channel-100/transfer/channel-94814/uatone"
+      },
+      {
+        "dest_chain": "secret",
+        "dest_denom": "ibc/53F0CBC8E79A79BDA982015518A447E82A638B1497DB4FA5F07B1A1951F19388",
         "hop_count": 2,
         "origin_chain": "atomone",
         "origin_denom": "uatone",
@@ -2287,47 +2311,23 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-165",
+            "from_channel": "channel-8",
             "to_chain": "secret",
-            "to_channel": "channel-8"
+            "to_channel": "channel-165"
           }
         ],
         "symbol": "ATONE",
-        "trace_path": "transfer/channel-8/transfer/channel-94814/uatone"
+        "trace_path": "transfer/channel-165/transfer/channel-94814/uatone"
       },
       {
         "dest_chain": "secret",
-        "dest_denom": "ibc/A4DA3E488DEB60251B9F51C11070F743CA5B2F8465C75736C4246052F99FBB72",
-        "hop_count": 2,
-        "origin_chain": "atomone",
-        "origin_denom": "uatone",
-        "preferred": false,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-1",
-            "to_chain": "terp",
-            "to_channel": "channel-6738"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-100",
-            "to_chain": "secret",
-            "to_channel": "channel-7"
-          }
-        ],
-        "symbol": "ATONE",
-        "trace_path": "transfer/channel-7/transfer/channel-94814/uatone"
-      },
-      {
-        "dest_chain": "secret",
-        "dest_denom": "ibc/47D1434E764AD20AEF11EAD59EAE74384FF7C1449492ED8E13F9DBFF39156E14",
+        "dest_denom": "ibc/9922319EAC30A478377BCDC5C0A1CEE2E3AF2223572D761504264075E5E47A3C",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
@@ -2335,23 +2335,23 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-165",
+            "from_channel": "channel-7",
             "to_chain": "secret",
-            "to_channel": "channel-8"
+            "to_channel": "channel-100"
           }
         ],
         "symbol": "SPICE",
-        "trace_path": "transfer/channel-110258/transfer/channel-8/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+        "trace_path": "transfer/channel-11/transfer/channel-100/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
       },
       {
         "dest_chain": "secret",
-        "dest_denom": "ibc/D8F4A6E9E133E87974466DBC96AB9CB7867C34A55631C97F2D19E99A4180F21D",
+        "dest_denom": "ibc/DD29954890F29C607EFAB6D3EB478C388DE0E5306504079D87E0401B22634C87",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
@@ -2359,23 +2359,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-100",
+            "from_channel": "channel-8",
             "to_chain": "secret",
-            "to_channel": "channel-7"
+            "to_channel": "channel-165"
           }
         ],
         "symbol": "SPICE",
-        "trace_path": "transfer/channel-110258/transfer/channel-7/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+        "trace_path": "transfer/channel-1/transfer/channel-165/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
       },
       {
         "dest_chain": "secret",
-        "dest_denom": "ibc/281BAB8055D8A1AED3ADC054C20693116D9925B62ED0B2D5D4ED18110B3591FD",
+        "dest_denom": "ibc/B550E25A8DBE677423919155CD141D6303498FFDC437EDA0E24F12612884C611",
+        "hop_count": 2,
+        "origin_chain": "osmosis",
+        "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+        "preferred": true,
+        "route": [
+          {
+            "from_chain": "osmosis",
+            "from_channel": "channel-6738",
+            "to_chain": "terp",
+            "to_channel": "channel-1"
+          },
+          {
+            "from_chain": "terp",
+            "from_channel": "channel-7",
+            "to_chain": "secret",
+            "to_channel": "channel-100"
+          }
+        ],
+        "symbol": "SPICE",
+        "trace_path": "transfer/channel-1/transfer/channel-100/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+      },
+      {
+        "dest_chain": "secret",
+        "dest_denom": "ibc/334C390E772C9A8766B2D45C16CA2A7C3F4AA9AC0C0FD7CBD6A8CC196FCAE632",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
@@ -2383,47 +2407,23 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-165",
+            "from_channel": "channel-8",
             "to_chain": "secret",
-            "to_channel": "channel-8"
+            "to_channel": "channel-165"
           }
         ],
         "symbol": "SPICE",
-        "trace_path": "transfer/channel-6738/transfer/channel-8/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+        "trace_path": "transfer/channel-11/transfer/channel-165/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
       },
       {
         "dest_chain": "secret",
-        "dest_denom": "ibc/709F87A3211AD2D9C3CAFADB5CB8B5D2A83001A5C898A4018323F3449ADE664E",
-        "hop_count": 2,
-        "origin_chain": "osmosis",
-        "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
-        "preferred": false,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-1",
-            "to_chain": "terp",
-            "to_channel": "channel-6738"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-100",
-            "to_chain": "secret",
-            "to_channel": "channel-7"
-          }
-        ],
-        "symbol": "SPICE",
-        "trace_path": "transfer/channel-6738/transfer/channel-7/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
-      },
-      {
-        "dest_chain": "secret",
-        "dest_denom": "ibc/72106863A1AB287CAFE4662892742327BD7CF44E70C0103EFB75522A25356FC4",
+        "dest_denom": "ibc/3D972351461535572028805DACF5A453E88703500A21DB7E184E0B91A8E0AEEB",
         "hop_count": 2,
         "origin_chain": "penumbra",
         "origin_denom": "upenumbra",
@@ -2431,23 +2431,23 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-165",
+            "from_channel": "channel-7",
             "to_chain": "secret",
-            "to_channel": "channel-8"
+            "to_channel": "channel-100"
           }
         ],
         "symbol": "UM",
-        "trace_path": "transfer/channel-8/transfer/channel-79703/upenumbra"
+        "trace_path": "transfer/channel-100/transfer/channel-79703/upenumbra"
       },
       {
         "dest_chain": "secret",
-        "dest_denom": "ibc/7781A1E40EA007967CED5DF3ED60162B2CAB4F6336E2249F72F066B07CA032CE",
+        "dest_denom": "ibc/B9A740580872577FD0E618F2C0D4915D91AB11D76D1A00AE6672C3AFFB9858ED",
         "hop_count": 2,
         "origin_chain": "penumbra",
         "origin_denom": "upenumbra",
@@ -2455,23 +2455,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-100",
+            "from_channel": "channel-8",
             "to_chain": "secret",
-            "to_channel": "channel-7"
+            "to_channel": "channel-165"
           }
         ],
         "symbol": "UM",
-        "trace_path": "transfer/channel-7/transfer/channel-79703/upenumbra"
+        "trace_path": "transfer/channel-165/transfer/channel-79703/upenumbra"
       },
       {
         "dest_chain": "secret",
-        "dest_denom": "ibc/72106863A1AB287CAFE4662892742327BD7CF44E70C0103EFB75522A25356FC4",
+        "dest_denom": "ibc/3D972351461535572028805DACF5A453E88703500A21DB7E184E0B91A8E0AEEB",
+        "hop_count": 2,
+        "origin_chain": "penumbra",
+        "origin_denom": "upenumbra",
+        "preferred": true,
+        "route": [
+          {
+            "from_chain": "osmosis",
+            "from_channel": "channel-6738",
+            "to_chain": "terp",
+            "to_channel": "channel-1"
+          },
+          {
+            "from_chain": "terp",
+            "from_channel": "channel-7",
+            "to_chain": "secret",
+            "to_channel": "channel-100"
+          }
+        ],
+        "symbol": "UM",
+        "trace_path": "transfer/channel-100/transfer/channel-79703/upenumbra"
+      },
+      {
+        "dest_chain": "secret",
+        "dest_denom": "ibc/B9A740580872577FD0E618F2C0D4915D91AB11D76D1A00AE6672C3AFFB9858ED",
         "hop_count": 2,
         "origin_chain": "penumbra",
         "origin_denom": "upenumbra",
@@ -2479,47 +2503,23 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-165",
+            "from_channel": "channel-8",
             "to_chain": "secret",
-            "to_channel": "channel-8"
+            "to_channel": "channel-165"
           }
         ],
         "symbol": "UM",
-        "trace_path": "transfer/channel-8/transfer/channel-79703/upenumbra"
+        "trace_path": "transfer/channel-165/transfer/channel-79703/upenumbra"
       },
       {
         "dest_chain": "secret",
-        "dest_denom": "ibc/7781A1E40EA007967CED5DF3ED60162B2CAB4F6336E2249F72F066B07CA032CE",
-        "hop_count": 2,
-        "origin_chain": "penumbra",
-        "origin_denom": "upenumbra",
-        "preferred": false,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-1",
-            "to_chain": "terp",
-            "to_channel": "channel-6738"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-100",
-            "to_chain": "secret",
-            "to_channel": "channel-7"
-          }
-        ],
-        "symbol": "UM",
-        "trace_path": "transfer/channel-7/transfer/channel-79703/upenumbra"
-      },
-      {
-        "dest_chain": "secret",
-        "dest_denom": "ibc/DA5151A4BEF55150CC458DA9AB1F675973A3643971B87BF02433FC80B4B73CC7",
+        "dest_denom": "ibc/5D9E30DCCC21E59DB3C3EE0D08BD416196BD0C0CA02F47445247B5400F029FD4",
         "hop_count": 2,
         "origin_chain": "cosmoshub",
         "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
@@ -2527,23 +2527,23 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-165",
+            "from_channel": "channel-7",
             "to_chain": "secret",
-            "to_channel": "channel-8"
+            "to_channel": "channel-100"
           }
         ],
         "symbol": "ETH",
-        "trace_path": "transfer/channel-8/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+        "trace_path": "transfer/channel-100/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
       },
       {
         "dest_chain": "secret",
-        "dest_denom": "ibc/69AFF07F9D37F0D7B16AAFAE828B8F298A202188ADDFA682651ED9745CD03649",
+        "dest_denom": "ibc/89EE9B565CD4E1E80298BF775967ED2C2C1786C95594D55C09C6DF3C92C24E59",
         "hop_count": 2,
         "origin_chain": "cosmoshub",
         "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
@@ -2551,23 +2551,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-100",
+            "from_channel": "channel-8",
             "to_chain": "secret",
-            "to_channel": "channel-7"
+            "to_channel": "channel-165"
           }
         ],
         "symbol": "ETH",
-        "trace_path": "transfer/channel-7/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+        "trace_path": "transfer/channel-165/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
       },
       {
         "dest_chain": "secret",
-        "dest_denom": "ibc/DA5151A4BEF55150CC458DA9AB1F675973A3643971B87BF02433FC80B4B73CC7",
+        "dest_denom": "ibc/5D9E30DCCC21E59DB3C3EE0D08BD416196BD0C0CA02F47445247B5400F029FD4",
+        "hop_count": 2,
+        "origin_chain": "cosmoshub",
+        "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
+        "preferred": true,
+        "route": [
+          {
+            "from_chain": "osmosis",
+            "from_channel": "channel-6738",
+            "to_chain": "terp",
+            "to_channel": "channel-1"
+          },
+          {
+            "from_chain": "terp",
+            "from_channel": "channel-7",
+            "to_chain": "secret",
+            "to_channel": "channel-100"
+          }
+        ],
+        "symbol": "ETH",
+        "trace_path": "transfer/channel-100/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+      },
+      {
+        "dest_chain": "secret",
+        "dest_denom": "ibc/89EE9B565CD4E1E80298BF775967ED2C2C1786C95594D55C09C6DF3C92C24E59",
         "hop_count": 2,
         "origin_chain": "cosmoshub",
         "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
@@ -2575,49 +2599,25 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-165",
+            "from_channel": "channel-8",
             "to_chain": "secret",
-            "to_channel": "channel-8"
+            "to_channel": "channel-165"
           }
         ],
         "symbol": "ETH",
-        "trace_path": "transfer/channel-8/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
-      },
-      {
-        "dest_chain": "secret",
-        "dest_denom": "ibc/69AFF07F9D37F0D7B16AAFAE828B8F298A202188ADDFA682651ED9745CD03649",
-        "hop_count": 2,
-        "origin_chain": "cosmoshub",
-        "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
-        "preferred": false,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-1",
-            "to_chain": "terp",
-            "to_channel": "channel-6738"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-100",
-            "to_chain": "secret",
-            "to_channel": "channel-7"
-          }
-        ],
-        "symbol": "ETH",
-        "trace_path": "transfer/channel-7/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+        "trace_path": "transfer/channel-165/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
       }
     ],
     "stargaze": [
       {
         "dest_chain": "stargaze",
-        "dest_denom": "ibc/1F2A2A5E4DBE9ACCD495D024A0B2BA14E7C1D7F4C14803CF1895B195264C9C22",
+        "dest_denom": "ibc/CDFBBDA5E532FDBD887D978C9EE5AC99C53B2DC38D72FACC17D88F7745056421",
         "hop_count": 2,
         "origin_chain": "akash",
         "origin_denom": "uakt",
@@ -2625,47 +2625,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-235",
+            "from_channel": "channel-2",
             "to_chain": "stargaze",
-            "to_channel": "channel-2"
+            "to_channel": "channel-235"
           }
         ],
         "symbol": "AKT",
-        "trace_path": "transfer/channel-2/transfer/channel-1/uakt"
+        "trace_path": "transfer/channel-235/transfer/channel-1/uakt"
       },
       {
         "dest_chain": "stargaze",
-        "dest_denom": "ibc/1F2A2A5E4DBE9ACCD495D024A0B2BA14E7C1D7F4C14803CF1895B195264C9C22",
+        "dest_denom": "ibc/CDFBBDA5E532FDBD887D978C9EE5AC99C53B2DC38D72FACC17D88F7745056421",
         "hop_count": 2,
         "origin_chain": "akash",
         "origin_denom": "uakt",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-235",
+            "from_channel": "channel-2",
             "to_chain": "stargaze",
-            "to_channel": "channel-2"
+            "to_channel": "channel-235"
           }
         ],
         "symbol": "AKT",
-        "trace_path": "transfer/channel-2/transfer/channel-1/uakt"
+        "trace_path": "transfer/channel-235/transfer/channel-1/uakt"
       },
       {
         "dest_chain": "stargaze",
-        "dest_denom": "ibc/6E07B030C0440BE31973D65B745FA7337EEB15E4F6620AB1EE1FD48544313A62",
+        "dest_denom": "ibc/9E6C59DB88412DC4CF74DBD6DF2A56E00FBBC5C1B43229E94BD780425CCD5E15",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
@@ -2673,47 +2673,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-235",
+            "from_channel": "channel-2",
             "to_chain": "stargaze",
-            "to_channel": "channel-2"
+            "to_channel": "channel-235"
           }
         ],
         "symbol": "WBTC",
-        "trace_path": "transfer/channel-110258/transfer/channel-2/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+        "trace_path": "transfer/channel-11/transfer/channel-235/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
       },
       {
         "dest_chain": "stargaze",
-        "dest_denom": "ibc/89DFB9BB1AD7DCB53E3C1AF3660C8B5B23F2C142E4C61E9D4FC755D7DBBCA393",
+        "dest_denom": "ibc/F265AA5FCD1F4017CA55AB3A034CAD9A706776BDEDBFE98E10483DB3BF86EEE9",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-235",
+            "from_channel": "channel-2",
             "to_chain": "stargaze",
-            "to_channel": "channel-2"
+            "to_channel": "channel-235"
           }
         ],
         "symbol": "WBTC",
-        "trace_path": "transfer/channel-6738/transfer/channel-2/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+        "trace_path": "transfer/channel-1/transfer/channel-235/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
       },
       {
         "dest_chain": "stargaze",
-        "dest_denom": "ibc/427ABDD8A5198C581AE1EED03F5104524221F70B3E44831A22B398E926250E57",
+        "dest_denom": "ibc/55A4B536A3D44AEE1314D798F3A73A436CD15F9C1F2652FA02D6E4FBFB13E9B0",
         "hop_count": 2,
         "origin_chain": "atomone",
         "origin_denom": "uatone",
@@ -2721,47 +2721,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-235",
+            "from_channel": "channel-2",
             "to_chain": "stargaze",
-            "to_channel": "channel-2"
+            "to_channel": "channel-235"
           }
         ],
         "symbol": "ATONE",
-        "trace_path": "transfer/channel-2/transfer/channel-94814/uatone"
+        "trace_path": "transfer/channel-235/transfer/channel-94814/uatone"
       },
       {
         "dest_chain": "stargaze",
-        "dest_denom": "ibc/427ABDD8A5198C581AE1EED03F5104524221F70B3E44831A22B398E926250E57",
+        "dest_denom": "ibc/55A4B536A3D44AEE1314D798F3A73A436CD15F9C1F2652FA02D6E4FBFB13E9B0",
         "hop_count": 2,
         "origin_chain": "atomone",
         "origin_denom": "uatone",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-235",
+            "from_channel": "channel-2",
             "to_chain": "stargaze",
-            "to_channel": "channel-2"
+            "to_channel": "channel-235"
           }
         ],
         "symbol": "ATONE",
-        "trace_path": "transfer/channel-2/transfer/channel-94814/uatone"
+        "trace_path": "transfer/channel-235/transfer/channel-94814/uatone"
       },
       {
         "dest_chain": "stargaze",
-        "dest_denom": "ibc/CE84BC29FADA0E8C94B9EFE44B08685E4699BDD79B839BE060CE0F21A51FF899",
+        "dest_denom": "ibc/A4A5CDF6CF216985519D4724E295944FD26B3217BDF416FC5B0D4A932F395114",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
@@ -2769,47 +2769,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-235",
+            "from_channel": "channel-2",
             "to_chain": "stargaze",
-            "to_channel": "channel-2"
+            "to_channel": "channel-235"
           }
         ],
         "symbol": "SPICE",
-        "trace_path": "transfer/channel-110258/transfer/channel-2/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+        "trace_path": "transfer/channel-11/transfer/channel-235/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
       },
       {
         "dest_chain": "stargaze",
-        "dest_denom": "ibc/F7880C7C0E634EF5C0D005A0CEEAF26CAB35EE241FA4DC5FDFD8B90FFC93D744",
+        "dest_denom": "ibc/724E543712050A4D927145E0B581EB3C58E826DD82D114EA9560F4EC59E15380",
         "hop_count": 2,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-235",
+            "from_channel": "channel-2",
             "to_chain": "stargaze",
-            "to_channel": "channel-2"
+            "to_channel": "channel-235"
           }
         ],
         "symbol": "SPICE",
-        "trace_path": "transfer/channel-6738/transfer/channel-2/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+        "trace_path": "transfer/channel-1/transfer/channel-235/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
       },
       {
         "dest_chain": "stargaze",
-        "dest_denom": "ibc/D3CD9B6A1C1775B4F6B2D6246FAD574FC298FF380877165722C05E7662093395",
+        "dest_denom": "ibc/5A93865DF1E514DACB181614626A8911583E30935F5D6A415933ED6E7E33E795",
         "hop_count": 2,
         "origin_chain": "penumbra",
         "origin_denom": "upenumbra",
@@ -2817,47 +2817,47 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-235",
+            "from_channel": "channel-2",
             "to_chain": "stargaze",
-            "to_channel": "channel-2"
+            "to_channel": "channel-235"
           }
         ],
         "symbol": "UM",
-        "trace_path": "transfer/channel-2/transfer/channel-79703/upenumbra"
+        "trace_path": "transfer/channel-235/transfer/channel-79703/upenumbra"
       },
       {
         "dest_chain": "stargaze",
-        "dest_denom": "ibc/D3CD9B6A1C1775B4F6B2D6246FAD574FC298FF380877165722C05E7662093395",
+        "dest_denom": "ibc/5A93865DF1E514DACB181614626A8911583E30935F5D6A415933ED6E7E33E795",
         "hop_count": 2,
         "origin_chain": "penumbra",
         "origin_denom": "upenumbra",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-235",
+            "from_channel": "channel-2",
             "to_chain": "stargaze",
-            "to_channel": "channel-2"
+            "to_channel": "channel-235"
           }
         ],
         "symbol": "UM",
-        "trace_path": "transfer/channel-2/transfer/channel-79703/upenumbra"
+        "trace_path": "transfer/channel-235/transfer/channel-79703/upenumbra"
       },
       {
         "dest_chain": "stargaze",
-        "dest_denom": "ibc/A736F6E6453770A49FCA74B5B082121C865AD92C4AA641C0FE749F4A1DC0AEA9",
+        "dest_denom": "ibc/E1234B623C2670BE6479B801DCE6BAAD75EDABE2D2FD6508EB9A4806830D2D2C",
         "hop_count": 2,
         "origin_chain": "cosmoshub",
         "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
@@ -2865,49 +2865,67 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-235",
+            "from_channel": "channel-2",
             "to_chain": "stargaze",
-            "to_channel": "channel-2"
+            "to_channel": "channel-235"
           }
         ],
         "symbol": "ETH",
-        "trace_path": "transfer/channel-2/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+        "trace_path": "transfer/channel-235/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
       },
       {
         "dest_chain": "stargaze",
-        "dest_denom": "ibc/A736F6E6453770A49FCA74B5B082121C865AD92C4AA641C0FE749F4A1DC0AEA9",
+        "dest_denom": "ibc/E1234B623C2670BE6479B801DCE6BAAD75EDABE2D2FD6508EB9A4806830D2D2C",
         "hop_count": 2,
         "origin_chain": "cosmoshub",
         "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
-        "preferred": false,
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           },
           {
             "from_chain": "terp",
-            "from_channel": "channel-235",
+            "from_channel": "channel-2",
             "to_chain": "stargaze",
-            "to_channel": "channel-2"
+            "to_channel": "channel-235"
           }
         ],
         "symbol": "ETH",
-        "trace_path": "transfer/channel-2/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+        "trace_path": "transfer/channel-235/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
       }
     ],
     "terp": [
       {
         "dest_chain": "terp",
-        "dest_denom": "ibc/C58C201CBC7CF1A884DF9EA105338092049E855B0D8B6445312D9748948A5397",
+        "dest_denom": "ibc/7AE2B0FD4D084438C7910E6B294E0979A422936B65EC1F4BF67DEE4EC311741B",
+        "hop_count": 1,
+        "origin_chain": "akash",
+        "origin_denom": "uakt",
+        "preferred": true,
+        "route": [
+          {
+            "from_chain": "osmosis",
+            "from_channel": "channel-6738",
+            "to_chain": "terp",
+            "to_channel": "channel-1"
+          }
+        ],
+        "symbol": "AKT",
+        "trace_path": "transfer/channel-1/transfer/channel-1/uakt"
+      },
+      {
+        "dest_chain": "terp",
+        "dest_denom": "ibc/3EFF20694A413A17072C69EE1B2EF5F0FF6ADB01C7BA1366EB949FE4AD17E83A",
         "hop_count": 1,
         "origin_chain": "akash",
         "origin_denom": "uakt",
@@ -2915,35 +2933,35 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           }
         ],
         "symbol": "AKT",
-        "trace_path": "transfer/channel-110258/transfer/channel-1/uakt"
+        "trace_path": "transfer/channel-11/transfer/channel-1/uakt"
       },
       {
         "dest_chain": "terp",
-        "dest_denom": "ibc/D706D9C1576892488B5F42BFF06E4C9E27E9CC088896641F12840397B8050040",
+        "dest_denom": "ibc/CF57A83CED6CEC7D706631B5DC53ABC21B7EDA7DF7490732B4361E6D5DD19C73",
         "hop_count": 1,
-        "origin_chain": "akash",
-        "origin_denom": "uakt",
-        "preferred": false,
+        "origin_chain": "osmosis",
+        "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           }
         ],
-        "symbol": "AKT",
-        "trace_path": "transfer/channel-6738/transfer/channel-1/uakt"
+        "symbol": "WBTC",
+        "trace_path": "transfer/channel-1/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
       },
       {
         "dest_chain": "terp",
-        "dest_denom": "ibc/02DB0C7201ECC8B9753FE51145F91163AC72ECF7DF21F045B6B1BC6063D37222",
+        "dest_denom": "ibc/A23FD550904DB23428DFC019CD6ABD52AB0C406DAAA549D6AEAF5E63FC5C98CD",
         "hop_count": 1,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
@@ -2951,35 +2969,35 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           }
         ],
         "symbol": "WBTC",
-        "trace_path": "transfer/channel-110258/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+        "trace_path": "transfer/channel-11/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
       },
       {
         "dest_chain": "terp",
-        "dest_denom": "ibc/AAE4285A155B9C09CEFAC3F01369866B0CC881A286A069C70A3E9CF31F6A237B",
+        "dest_denom": "ibc/9CA884DC564774BA48A9AF21BF9ABADD2FE1A505E936C80439103CAE956BAE64",
         "hop_count": 1,
-        "origin_chain": "osmosis",
-        "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
-        "preferred": false,
+        "origin_chain": "atomone",
+        "origin_denom": "uatone",
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           }
         ],
-        "symbol": "WBTC",
-        "trace_path": "transfer/channel-6738/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+        "symbol": "ATONE",
+        "trace_path": "transfer/channel-1/transfer/channel-94814/uatone"
       },
       {
         "dest_chain": "terp",
-        "dest_denom": "ibc/92C87FFD22F788D94ECFF1835F333A6F594CDEB734E3D1B83CCDC139757386C5",
+        "dest_denom": "ibc/19854C8C6D3D04DF399957B22ABEFE65633A1215B4B91539E1A551830BEA4700",
         "hop_count": 1,
         "origin_chain": "atomone",
         "origin_denom": "uatone",
@@ -2987,35 +3005,35 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           }
         ],
         "symbol": "ATONE",
-        "trace_path": "transfer/channel-110258/transfer/channel-94814/uatone"
+        "trace_path": "transfer/channel-11/transfer/channel-94814/uatone"
       },
       {
         "dest_chain": "terp",
-        "dest_denom": "ibc/ACD301C3C914AF54B673AB9E550B029FF77D9FEE5A8683BB0A81DFEE5417FFA7",
+        "dest_denom": "ibc/ADD33E9703A911023E73181FCA39B022094A1832F0C2311152A927E580E28B5F",
         "hop_count": 1,
-        "origin_chain": "atomone",
-        "origin_denom": "uatone",
-        "preferred": false,
+        "origin_chain": "osmosis",
+        "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           }
         ],
-        "symbol": "ATONE",
-        "trace_path": "transfer/channel-6738/transfer/channel-94814/uatone"
+        "symbol": "SPICE",
+        "trace_path": "transfer/channel-1/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
       },
       {
         "dest_chain": "terp",
-        "dest_denom": "ibc/B6B6B4518F28E2389375FEA0B1CA04F24135EBCC95F24F808E2EBB157AC84BFF",
+        "dest_denom": "ibc/45CC178B3DBDDFC9ED70A0F89C93584537DD9CEDF878915D1A571A9D44A24294",
         "hop_count": 1,
         "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
@@ -3023,35 +3041,35 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           }
         ],
         "symbol": "SPICE",
-        "trace_path": "transfer/channel-110258/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+        "trace_path": "transfer/channel-11/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
       },
       {
         "dest_chain": "terp",
-        "dest_denom": "ibc/6BFF9160E2AA4BD874CE8274E7D6E69B3BF285BD944B756AAA93E8BC48C08C48",
+        "dest_denom": "ibc/406AE2A657026B1ABB7994D28E3CBE699C526D0418FD4A3ACAAC0BC26D2B54EC",
         "hop_count": 1,
-        "origin_chain": "osmosis",
-        "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
-        "preferred": false,
+        "origin_chain": "penumbra",
+        "origin_denom": "upenumbra",
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           }
         ],
-        "symbol": "SPICE",
-        "trace_path": "transfer/channel-6738/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+        "symbol": "UM",
+        "trace_path": "transfer/channel-1/transfer/channel-79703/upenumbra"
       },
       {
         "dest_chain": "terp",
-        "dest_denom": "ibc/05D05688173A5906190A1652DCCB7A9C4C30128A0FAA1E83C3235CDFE07440A6",
+        "dest_denom": "ibc/6B32258CACFCBB5486A47CB1EAF4B6F5AD76C9E372E5F3CB08B3D1C606F9F39E",
         "hop_count": 1,
         "origin_chain": "penumbra",
         "origin_denom": "upenumbra",
@@ -3059,35 +3077,35 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           }
         ],
         "symbol": "UM",
-        "trace_path": "transfer/channel-110258/transfer/channel-79703/upenumbra"
+        "trace_path": "transfer/channel-11/transfer/channel-79703/upenumbra"
       },
       {
         "dest_chain": "terp",
-        "dest_denom": "ibc/593603DDD1729B6B4EC57136C05638D51D8C09360C75A1EE403E2701A11E3754",
+        "dest_denom": "ibc/E6A14427945A957F30D05A686EC4C70420F778EB94999F0A1C2B9F420ACB9AE1",
         "hop_count": 1,
-        "origin_chain": "penumbra",
-        "origin_denom": "upenumbra",
-        "preferred": false,
+        "origin_chain": "cosmoshub",
+        "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
+        "preferred": true,
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-1",
+            "from_channel": "channel-6738",
             "to_chain": "terp",
-            "to_channel": "channel-6738"
+            "to_channel": "channel-1"
           }
         ],
-        "symbol": "UM",
-        "trace_path": "transfer/channel-6738/transfer/channel-79703/upenumbra"
+        "symbol": "ETH",
+        "trace_path": "transfer/channel-1/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
       },
       {
         "dest_chain": "terp",
-        "dest_denom": "ibc/232D683C61C322E33F486266455AC5C111F5B0BF977177D60089464434EE5C15",
+        "dest_denom": "ibc/1F5076EB0FAAC31F2D8B935BB21D18A122EE354F80CAEEA90E7E2D8C8C7E5879",
         "hop_count": 1,
         "origin_chain": "cosmoshub",
         "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
@@ -3095,31 +3113,13 @@
         "route": [
           {
             "from_chain": "osmosis",
-            "from_channel": "channel-11",
+            "from_channel": "channel-110258",
             "to_chain": "terp",
-            "to_channel": "channel-110258"
+            "to_channel": "channel-11"
           }
         ],
         "symbol": "ETH",
-        "trace_path": "transfer/channel-110258/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
-      },
-      {
-        "dest_chain": "terp",
-        "dest_denom": "ibc/1E90CE65259979501EE3ED7D24D19EA97E2BB016ABF205A72A51E3A13F21333D",
-        "hop_count": 1,
-        "origin_chain": "cosmoshub",
-        "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
-        "preferred": false,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-1",
-            "to_chain": "terp",
-            "to_channel": "channel-6738"
-          }
-        ],
-        "symbol": "ETH",
-        "trace_path": "transfer/channel-6738/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+        "trace_path": "transfer/channel-11/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
       }
     ]
   }
