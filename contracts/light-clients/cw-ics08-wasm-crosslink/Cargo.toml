@@ -22,10 +22,13 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 hex = { workspace = true }
-ed25519-zebra = { workspace = true }
 
 # cw-orch interface (optional)
 cw-orch = { workspace = true, optional = true }
 
 [dev-dependencies]
 crosslink-light-client = { workspace = true }
+
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.2", features = ["js"] }

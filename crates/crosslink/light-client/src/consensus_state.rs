@@ -2,7 +2,7 @@
 //!
 //! Stores the finalized state commitment at a given TFL height.
 
-use zebra_crosslink::{ZcashDeserialize, ZcashSerialize};
+use crate::types::{SerializationError, ZcashDeserialize, ZcashSerialize};
 
 /// Consensus state at a specific BFT height.
 #[derive(Clone, Debug, PartialEq)]
@@ -33,7 +33,7 @@ impl ZcashSerialize for ConsensusState {
 impl ZcashDeserialize for ConsensusState {
     fn zcash_deserialize<R: std::io::Read>(
         mut reader: R,
-    ) -> Result<Self, zebra_crosslink::SerializationError> {
+    ) -> Result<Self, SerializationError> {
         let mut one = [0u8; 4];
         let mut two = [0u8; 4];
         let mut three = [0u8; 32];

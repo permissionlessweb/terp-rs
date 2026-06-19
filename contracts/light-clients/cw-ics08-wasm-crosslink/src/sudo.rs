@@ -6,8 +6,9 @@ use crate::{
     state,
 };
 use cosmwasm_std::{Deps, DepsMut};
+use crosslink_light_client::ZcashSerialize;
 use crosslink_light_client::{
-    ZcashDeserialize, ZcashSerialize, header::CrosslinkHeader, membership, update, verify,
+    ZcashDeserialize, header::CrosslinkHeader, membership, update, verify,
 };
 use ibc_proto::ibc::core::client::v1::Height;
 
@@ -86,7 +87,7 @@ pub fn update_state(
     )?;
 
     // Verify the header
-    verify::verify_header(&client_state, &consensus_state, &header)
+    verify::verify_header(deps.api, &client_state, &consensus_state, &header)
         .map_err(ContractError::VerifyClientMessageFailed)?;
 
     // Update consensus state and client state

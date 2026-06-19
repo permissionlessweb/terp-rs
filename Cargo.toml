@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/crosslink/light-client","crates/light-clients/cw-ics08-wasm-crosslink","crates/nips", "crates/sdk", "proto", "tests", "tools/gen-tools"]
+members = ["crates/crosslink/light-client","contracts/light-clients/cw-ics08-wasm-crosslink","crates/nips", "crates/sdk", "proto", "tests", "tools/gen-tools"]
 
 [workspace.package]
 edition    = "2024"
@@ -23,5 +23,6 @@ cosmwasm-std = { path = "../cosmwasm/packages/std" }
 crosslink-light-client = { path = "crates/crosslink/light-client", default-features = false }
 cw-orch = {path = "../cw-orchestrator/cw-orch"}
 cw2 = { path = "../cw-minus/packages/cw2" }
-ibc-proto = { path = "../ibc-proto-rs" }
+ibc-proto = { path = "../ibc-proto-rs", default-features = false }
 prost       = "0.14"
+    

@@ -5,15 +5,26 @@ edition = { workspace = true }
 repository = { workspace = true }
 description = "Core light client verification primitives for Zcash Crosslink TFL"
 
+[features]
+# default = ["sigverify"]
+# sigverify = ["dep:ed25519-zebra", "dep:rand", "dep:rand08"]
+
 [dependencies]
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true, features = ["std"] }
 hex = { workspace = true }
 thiserror = { workspace = true }
-zebra-crosslink = { path = "../../../../zebra-crosslink/zebra-crosslink" }
-ed25519-zebra = { workspace = true }
-rand = { workspace = true, features = ["std", "thread_rng"] }
-# rand 0.8 for compatibility with ed25519-zebra's rand_core 0.6
-rand08 = { package = "rand", version = "0.8", features = ["std", "std_rng"] }
 blake3 = "1.5"
 byteorder = "1.5.0"
+
+# Signature verification — lightweight, wasm-compatible
+ed25519-zebra = { workspace = true }
+cosmwasm-std = { workspace = true }
+rand = { workspace = true, features = ["std", "thread_rng"], optional = true }
+# rand 0.8 for compatibility with ed25519-zebra's rand_core 0.6
+rand08 = { package = "rand", version = "0.8", features = ["std", "std_rng"], optional = true }
+
+[dev-dependencies]
+# Full zebra-crosslink crate imported ONLY for type invariance tests
+zebra-crosslink = { path = "../../../../zebra-crosslink/zebra-crosslink" }
+zebra-chain = { path = "../../../../zebra-crosslink/zebra-chain" }

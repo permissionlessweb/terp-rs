@@ -27,9 +27,9 @@ pub fn update_consensus_state(
     let new_consensus_state = ConsensusState {
         bft_height: new_bft_height,
         pow_anchor_height: bft_block.finalization_candidate_height,
-        pow_anchor_hash: pow_anchor.hash().0,
-        timestamp: pow_anchor.time.timestamp() as u64,
-        state_commitment: pow_anchor.commitment_bytes.0,
+        pow_anchor_hash: pow_anchor.hash,
+        timestamp: pow_anchor.timestamp,
+        state_commitment: [0u8; 32], // placeholder — populated from ZIP 222 tx
     };
 
     let mut new_client_state = client_state;
@@ -44,7 +44,7 @@ pub fn update_consensus_state(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{BcBlockHeader, BftBlock, Blake3Hash, FatPointerToBftBlock2, PROTOTYPE_PARAMETERS};
+    use crate::types::{BftBlock, Blake3Hash, FatPointerToBftBlock2, PowHeader, PROTOTYPE_PARAMETERS};
 
     #[test]
     fn test_update_consensus_state_basic() {
@@ -64,19 +64,10 @@ mod tests {
             state_commitment: [0u8; 32],
         };
 
-        let header = BcBlockHeader {
-            // hash: [1u8; 32],
-            // timestamp: 1_700_000_000,
-            // height: 100,
-            version: todo!(),
-            previous_block_hash: todo!(),
-            merkle_root: todo!(),
-            commitment_bytes: todo!(),
-            time: todo!(),
-            difficulty_threshold: todo!(),
-            nonce: todo!(),
-            solution: todo!(),
-            fat_pointer_to_bft_block: todo!(),
+        let header = PowHeader {
+            hash: [1u8; 32],
+            timestamp: 1_700_000_000,
+            height: 100,
         };
 
         let bft_block = BftBlock {

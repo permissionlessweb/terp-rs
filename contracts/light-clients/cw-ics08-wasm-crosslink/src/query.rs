@@ -48,7 +48,7 @@ pub fn verify_client_message(
     let consensus_state =
         state::get_crosslink_consensus_state(deps.storage, client_state.latest_bft_height)?;
 
-    verify::verify_header(&client_state, &consensus_state, &header)
+    verify::verify_header(deps.api, &client_state, &consensus_state, &header)
         .map_err(ContractError::VerifyClientMessageFailed)?;
 
     Ok(Binary::default())

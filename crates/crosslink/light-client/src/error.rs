@@ -13,6 +13,12 @@ pub enum CrosslinkIBCError {
     #[error("invalid bft block: {0}")]
     InvalidBftBlock(String),
 
+    #[error("{0}")]
+    FromHexError(#[from] hex::FromHexError),
+
+    #[error("{0}")]
+    VerificationError(#[from] cosmwasm_std::VerificationError),
+
     /// Ed25519 signature verification failed.
     #[error("signature verification failed")]
     SignatureVerificationFailed,

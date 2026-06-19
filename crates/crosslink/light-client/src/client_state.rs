@@ -2,11 +2,12 @@
 //!
 //! Stores the latest finalized TFL state, the finalizer roster,
 //! and the crosslink protocol parameters.
-
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
-use zebra_crosslink::{ZcashDeserialize, ZcashSerialize};
 
-use crate::{Blake3Hash, ZcashCrosslinkParameters};
+use crate::Blake3Hash;
+use crate::types::{
+    SerializationError, ZcashCrosslinkParameters, ZcashDeserialize, ZcashSerialize,
+};
 
 /// A finalizer (validator) in the TFL roster.
 #[derive(Clone, Debug, PartialEq)]
@@ -105,7 +106,7 @@ impl ZcashSerialize for ClientState {
 impl ZcashDeserialize for ClientState {
     fn zcash_deserialize<R: std::io::Read>(
         mut reader: R,
-    ) -> Result<Self, zebra_crosslink::SerializationError> {
+    ) -> Result<Self, SerializationError> {
         let mut one = [0u8; 8];
         let mut two = [0u8; 8];
         let mut three = [0u8; 4];
@@ -141,7 +142,7 @@ impl ZcashDeserialize for ClientState {
             latest_finalized_pow_height,
             latest_finalized_pow_hash,
             finalizer_roster,
-            is_frozen: bool::try_from(u8::from_le_bytes(is_frozen))?,
+            is_frozen: is_frozen[0] != 0,
         })
     }
 }

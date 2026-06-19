@@ -3,9 +3,9 @@
 //! A [`CrosslinkHeader`] bundles a BFT block with its signed fat pointer
 //! so the light client can verify TFL finality.
 
-use crate::{BcBlockHeader, BftBlock, Blake3Hash, FatPointerToBftBlock2};
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
-use zebra_crosslink::{SerializationError, ZcashDeserialize, ZcashSerialize};
+
+use crate::types::{BftBlock, Blake3Hash, FatPointerToBftBlock2, PowHeader, SerializationError, ZcashDeserialize, ZcashSerialize};
 
 /// The client update message payload.
 ///
@@ -32,7 +32,7 @@ impl CrosslinkHeader {
 
     /// The PoW anchor block (finalization candidate) from the BFT block.
     #[must_use]
-    pub fn finalization_candidate(&self) -> &BcBlockHeader {
+    pub fn finalization_candidate(&self) -> &PowHeader {
         self.bft_block.finalization_candidate()
     }
 
@@ -46,7 +46,6 @@ impl CrosslinkHeader {
 }
 
 impl ZcashSerialize for CrosslinkHeader {
-    #[allow(clippy::unwrap_in_result)]
     fn zcash_serialize<W: std::io::Write>(&self, mut writer: W) -> Result<(), std::io::Error> {
         writer.write_u32::<LittleEndian>(self.trusted_bft_height)?;
         self.bft_block.zcash_serialize(&mut writer)?;

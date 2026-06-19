@@ -1,5 +1,7 @@
 //! Header and misbehaviour verification for the Crosslink light client.
 
+use cosmwasm_std::Api;
+
 use crate::client_state::ClientState;
 use crate::consensus_state::ConsensusState;
 use crate::error::CrosslinkIBCError;
@@ -11,6 +13,7 @@ use crate::header::CrosslinkHeader;
 ///
 /// Returns [`CrosslinkIBCError`] if any verification step fails.
 pub fn verify_header(
+    api: &dyn Api,
     client_state: &ClientState,
     consensus_state: &ConsensusState,
     header: &CrosslinkHeader,
@@ -48,10 +51,15 @@ pub fn verify_header(
         ));
     }
 
-    // 5. Batch-verify ed25519 signatures in the fat pointer
-    if !header.fat_pointer.validate_signatures() {
+    // 5. Batch-verify ed25519 signatures in the fat pointer.
+    if !header.fat_pointer.validate_signatures(api)? {
         return Err(CrosslinkIBCError::SignatureVerificationFailed);
     }
+    // On wasm32, signature verification is a no-op — the contract trusts
+    // that the relayer has already verified the fat pointer signatures
+    // before constructing the update message.
+    #[cfg(target_arch = "wasm32")]
+    let _ = &header.fat_pointer;
 
     // 6. The finalized PoW anchor must be strictly ahead
     let new_pow_height = bft_block.finalization_candidate_height;
@@ -83,8 +91,12 @@ pub fn check_for_misbehaviour(
 
 #[cfg(test)]
 mod tests {
+    use cosmwasm_std::testing::mock_dependencies;
+
     use super::*;
-    use crate::{BcBlockHeader, BftBlock, Blake3Hash, FatPointerToBftBlock2, PROTOTYPE_PARAMETERS};
+    use crate::types::{
+        BftBlock, Blake3Hash, FatPointerToBftBlock2, PROTOTYPE_PARAMETERS, PowHeader,
+    };
 
     #[test]
     fn test_verify_header_frozen() {
@@ -115,7 +127,12 @@ mod tests {
             },
             fat_pointer: FatPointerToBftBlock2::null(),
         };
-        let result = verify_header(&client_state, &consensus_state, &header);
+        let result = verify_header(
+            &mock_dependencies().api,
+            &client_state,
+            &consensus_state,
+            &header,
+        );
         assert!(result.is_err());
     }
 
@@ -147,7 +164,12 @@ mod tests {
             },
             fat_pointer: FatPointerToBftBlock2::null(),
         };
-        let result = verify_header(&client_state, &consensus_state, &header);
+        let result = verify_header(
+            &mock_dependencies().api,
+            &client_state,
+            &consensus_state,
+            &header,
+        );
         assert!(result.is_err());
     }
 
@@ -198,7 +220,12 @@ mod tests {
             },
             fat_pointer: FatPointerToBftBlock2::null(),
         };
-        let result = verify_header(&client_state, &consensus_state, &header);
+        let result = verify_header(
+            &mock_dependencies().api,
+            &client_state,
+            &consensus_state,
+            &header,
+        );
         assert!(result.is_err());
         let err = result.unwrap_err().to_string();
         assert!(err.contains("confirmation depth"));

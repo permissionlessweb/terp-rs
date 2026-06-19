@@ -52,4 +52,4 @@ toml = "1.1.2"
 tracing = "0.1"
 tracing-subscriber = "0.3.23"
 which = "8.0.2"
-cw-ics08-wasm-crosslink = {path = "../crates/light-clients/cw-ics08-wasm-crosslink", features = ["interface"]}
+cw-ics08-wasm-crosslink = {path = "../contracts/light-clients/cw-ics08-wasm-crosslink", features = ["interface"]}
