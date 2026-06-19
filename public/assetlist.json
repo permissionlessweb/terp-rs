@@ -36,14 +36,14 @@
       "type_asset": "sdk.coin"
     },
     {
-      "base": "ibc/2E4CF68617591638A6CBD7DA3E8CAF8C9C0B34AAB4878775A0B16ADDC56E4389",
+      "base": "ibc/ED3433FEFECE0B9EC584F0EBAB31E8AB6A7A187537F3E5B1D8A80998986E7ACF",
       "coingecko_id": "akash-network",
       "denom_units": [
         {
           "aliases": [
             "uakt"
           ],
-          "denom": "ibc/2E4CF68617591638A6CBD7DA3E8CAF8C9C0B34AAB4878775A0B16ADDC56E4389",
+          "denom": "ibc/ED3433FEFECE0B9EC584F0EBAB31E8AB6A7A187537F3E5B1D8A80998986E7ACF",
           "exponent": 0
         },
         {
@@ -169,14 +169,14 @@
       "type_asset": "ics20"
     },
     {
-      "base": "ibc/ADD33E9703A911023E73181FCA39B022094A1832F0C2311152A927E580E28B5F",
+      "base": "ibc/45CC178B3DBDDFC9ED70A0F89C93584537DD9CEDF878915D1A571A9D44A24294",
       "coingecko_id": "spice-2",
       "denom_units": [
         {
           "aliases": [
             "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
           ],
-          "denom": "ibc/ADD33E9703A911023E73181FCA39B022094A1832F0C2311152A927E580E28B5F",
+          "denom": "ibc/45CC178B3DBDDFC9ED70A0F89C93584537DD9CEDF878915D1A571A9D44A24294",
           "exponent": 0
         },
         {
@@ -206,7 +206,7 @@
         {
           "chain": {
             "channel_id": "",
-            "path": "transfer/channel-1/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+            "path": "transfer/channel-11/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
           },
           "counterparty": {
             "base_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
@@ -219,13 +219,13 @@
       "type_asset": "sdk.coin"
     },
     {
-      "base": "ibc/406AE2A657026B1ABB7994D28E3CBE699C526D0418FD4A3ACAAC0BC26D2B54EC",
+      "base": "ibc/6B32258CACFCBB5486A47CB1EAF4B6F5AD76C9E372E5F3CB08B3D1C606F9F39E",
       "denom_units": [
         {
           "aliases": [
             "upenumbra"
           ],
-          "denom": "ibc/406AE2A657026B1ABB7994D28E3CBE699C526D0418FD4A3ACAAC0BC26D2B54EC",
+          "denom": "ibc/6B32258CACFCBB5486A47CB1EAF4B6F5AD76C9E372E5F3CB08B3D1C606F9F39E",
           "exponent": 0
         },
         {
@@ -268,13 +268,13 @@
       "type_asset": "ics20"
     },
     {
-      "base": "ibc/E6A14427945A957F30D05A686EC4C70420F778EB94999F0A1C2B9F420ACB9AE1",
+      "base": "ibc/1F5076EB0FAAC31F2D8B935BB21D18A122EE354F80CAEEA90E7E2D8C8C7E5879",
       "denom_units": [
         {
           "aliases": [
             "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF"
           ],
-          "denom": "ibc/E6A14427945A957F30D05A686EC4C70420F778EB94999F0A1C2B9F420ACB9AE1",
+          "denom": "ibc/1F5076EB0FAAC31F2D8B935BB21D18A122EE354F80CAEEA90E7E2D8C8C7E5879",
           "exponent": 0
         },
         {

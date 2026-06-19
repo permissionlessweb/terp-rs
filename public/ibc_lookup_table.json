@@ -1,55 +1,83 @@
 {
   "akash": {
-    "ibc/30DA732F4DA2E0407393B60597B8C4EB0801A0F4CE13DEFFADF7817DD1745A8E": {
+    "ibc/0572998B998B9D8BBF3650FF6218EE8CC8B89FC3F05C90579C79741104C52038": {
       "hop_count": 2,
       "origin_chain": "osmosis",
-      "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
-      "symbol": "WBTC",
-      "trace_path": "transfer/channel-1/transfer/channel-115/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+      "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+      "symbol": "SPICE",
+      "trace_path": "transfer/channel-11/transfer/channel-139/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
     },
-    "ibc/3CDA1340A04DDD78CAE3E360154A1A8E9824FDB586851F24B2618A937A2AC995": {
+    "ibc/127DC1606A8D769AEB271CA4C83B67DCCE2548401BCE8AEDD534E309CBC82E4B": {
+      "hop_count": 2,
+      "origin_chain": "terp",
+      "origin_denom": "uthiol",
+      "symbol": "THIOL",
+      "trace_path": "transfer/channel-139/transfer/channel-13/uthiol"
+    },
+    "ibc/7B679F39373D03A4C56CCB3654D964306A80E2DF2B9003FCEB748E0CD92EFC9A": {
       "hop_count": 2,
       "origin_chain": "penumbra",
       "origin_denom": "upenumbra",
       "symbol": "UM",
-      "trace_path": "transfer/channel-115/transfer/channel-79703/upenumbra"
+      "trace_path": "transfer/channel-139/transfer/channel-79703/upenumbra"
     },
-    "ibc/6243F552F5D6A14BACB8F445BCDE3F346517DBB25AB82D25FD1052223481FBD8": {
+    "ibc/8182661D80F8DEE6D99AB5DD2BE6697F436818BF23ECFA71F2CB715F8E7CF7DB": {
       "hop_count": 2,
-      "origin_chain": "akash",
-      "origin_denom": "uakt",
-      "symbol": "AKT",
-      "trace_path": "transfer/channel-115/transfer/channel-1/uakt"
+      "origin_chain": "terp",
+      "origin_denom": "uthiol",
+      "symbol": "THIOL",
+      "trace_path": "transfer/channel-139/transfer/channel-110258/uthiol"
     },
-    "ibc/800DB401FB484B5532BF3BDC93684A3E9B9D69EF1B761A87D0A003DBE3023DB0": {
+    "ibc/81F1F03308F253972BBA88BF296C40B964072F605ABB98F431B794F73A5BC2FC": {
       "hop_count": 2,
       "origin_chain": "cosmoshub",
       "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
       "symbol": "ETH",
-      "trace_path": "transfer/channel-115/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+      "trace_path": "transfer/channel-139/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
     },
-    "ibc/887785B16572D384D8CF9D88785AA755FBF627E572E6DBCA410734E0CA253AE8": {
-      "hop_count": 2,
-      "origin_chain": "osmosis",
-      "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
-      "symbol": "SPICE",
-      "trace_path": "transfer/channel-1/transfer/channel-115/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
-    },
-    "ibc/CDFD15D6E3BA0375EBCACC2B90D53EACF54F165B48A41B25762480B29F98CAC0": {
+    "ibc/ACB214700BF3930E34210071159C48F5E61E424A514C3446B723F6CADC209654": {
       "hop_count": 2,
       "origin_chain": "atomone",
       "origin_denom": "uatone",
       "symbol": "ATONE",
-      "trace_path": "transfer/channel-115/transfer/channel-94814/uatone"
+      "trace_path": "transfer/channel-139/transfer/channel-94814/uatone"
+    },
+    "ibc/B3E81972FF1E1182B4E1F35B0A8356E9F5CF60DBDB6B24E4D086C182A8C76079": {
+      "hop_count": 2,
+      "origin_chain": "terp",
+      "origin_denom": "uterp",
+      "symbol": "TERP",
+      "trace_path": "transfer/channel-139/transfer/channel-110258/uterp"
+    },
+    "ibc/B92EA79A98FF7E8ED7410364870D317BE549940400C9ABD084BCB03583636620": {
+      "hop_count": 2,
+      "origin_chain": "terp",
+      "origin_denom": "uterp",
+      "symbol": "TERP",
+      "trace_path": "transfer/channel-139/transfer/channel-13/uterp"
+    },
+    "ibc/CAB6ADBF7C637493F7A5266782C0EB319AF0E2C83A123C60DC6710C4D5DE2C48": {
+      "hop_count": 2,
+      "origin_chain": "akash",
+      "origin_denom": "uakt",
+      "symbol": "AKT",
+      "trace_path": "transfer/channel-139/transfer/channel-1/uakt"
+    },
+    "ibc/E1D175E97F3882DB2C5A6DF20C7AC8A84ECC920D10B80C420E97E9BDA417D59F": {
+      "hop_count": 2,
+      "origin_chain": "osmosis",
+      "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
+      "symbol": "WBTC",
+      "trace_path": "transfer/channel-11/transfer/channel-139/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
     }
   },
   "atomone": {
-    "ibc/1CC118EA390B9DF516D4801AA19098E36D586F6CD671BACFF7F7B04DD45D80E6": {
+    "ibc/27455319225D1F4C697A9E9FB7B5DB0C7EEF5A0FE68936596CE094F1E8D06944": {
       "hop_count": 2,
       "origin_chain": "osmosis",
       "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
       "symbol": "SPICE",
-      "trace_path": "transfer/channel-1/transfer/channel-13/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+      "trace_path": "transfer/channel-11/transfer/channel-13/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
     },
     "ibc/2F97F0ED1B7801FB62C3087503AC7A6F38BE3C7CCFCAF839E66D86C5E17EA665": {
       "hop_count": 2,
@@ -58,19 +86,26 @@
       "symbol": "ETH",
       "trace_path": "transfer/channel-13/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
     },
-    "ibc/66B21CA47561AEF72EA947CC13EA1377D5DC0E0CCDB0B6884E64CC2C26DEA67C": {
-      "hop_count": 2,
-      "origin_chain": "osmosis",
-      "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
-      "symbol": "WBTC",
-      "trace_path": "transfer/channel-1/transfer/channel-13/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
-    },
     "ibc/6EA343A45CD49D9BF077A7FC3F96D672449303214402B787B6BED32288B7E798": {
       "hop_count": 2,
       "origin_chain": "atomone",
       "origin_denom": "uatone",
       "symbol": "ATONE",
       "trace_path": "transfer/channel-13/transfer/channel-94814/uatone"
+    },
+    "ibc/806456C4D6FC441515FB0451015E0ADAEDE3FDD82C75D6F566CF1B252743A88D": {
+      "hop_count": 2,
+      "origin_chain": "terp",
+      "origin_denom": "uterp",
+      "symbol": "TERP",
+      "trace_path": "transfer/channel-13/transfer/channel-139/uterp"
+    },
+    "ibc/8DE97F8CA1278E965BFB787E4C51A252790B13857D0784636822F301CB3E3E90": {
+      "hop_count": 2,
+      "origin_chain": "terp",
+      "origin_denom": "uthiol",
+      "symbol": "THIOL",
+      "trace_path": "transfer/channel-13/transfer/channel-139/uthiol"
     },
     "ibc/B9FC357FAC52D872E3DF495766B9385A53022578037F5F52CD9F44F0063BCC6A": {
       "hop_count": 2,
@@ -85,314 +120,143 @@
       "origin_denom": "uakt",
       "symbol": "AKT",
       "trace_path": "transfer/channel-13/transfer/channel-1/uakt"
-    }
-  },
-  "evmos": {
-    "ibc/21B46568FF0299C321BD64B2F0C937382FE8B2DB68606A4179C16DB33A9E6159": {
-      "hop_count": 2,
-      "origin_chain": "penumbra",
-      "origin_denom": "upenumbra",
-      "symbol": "UM",
-      "trace_path": "transfer/channel-101/transfer/channel-79703/upenumbra"
     },
-    "ibc/50A29065374378C6C71A3CDCB46821043FEAC0224C57BCD145B74879E188F3CD": {
+    "ibc/C1FF185ABC6E224983280545B565A08FAF12780C0613FDC83E56299696CEAA8E": {
+      "hop_count": 2,
+      "origin_chain": "terp",
+      "origin_denom": "uthiol",
+      "symbol": "THIOL",
+      "trace_path": "transfer/channel-13/transfer/channel-110258/uthiol"
+    },
+    "ibc/D6BC41949787DB38C1E8C52E246FECCED9280F48ED844B6051EBD04FD65E673B": {
+      "hop_count": 2,
+      "origin_chain": "terp",
+      "origin_denom": "uterp",
+      "symbol": "TERP",
+      "trace_path": "transfer/channel-13/transfer/channel-110258/uterp"
+    },
+    "ibc/F29B2D57D8DB312E773BDE8EB0205840368B2BD5E972582F6E112358B3E80B2F": {
       "hop_count": 2,
       "origin_chain": "osmosis",
       "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
       "symbol": "WBTC",
-      "trace_path": "transfer/channel-1/transfer/channel-101/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
-    },
-    "ibc/518DC8EDCAAC70600A9C1CC32EFD09B115594E7A878DF41611A4BC0C06C6B06A": {
-      "hop_count": 2,
-      "origin_chain": "atomone",
-      "origin_denom": "uatone",
-      "symbol": "ATONE",
-      "trace_path": "transfer/channel-101/transfer/channel-94814/uatone"
-    },
-    "ibc/A640FDB41DE0E6C82B13E522E29D1E6849D0BC127945139772561BA7EF509DCB": {
-      "hop_count": 2,
-      "origin_chain": "cosmoshub",
-      "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
-      "symbol": "ETH",
-      "trace_path": "transfer/channel-101/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
-    },
-    "ibc/DB4E258C3DBD7433C46337DBA7D17DFB88FE88ED65A5412D8A4995CCEAD3606B": {
-      "hop_count": 2,
-      "origin_chain": "akash",
-      "origin_denom": "uakt",
-      "symbol": "AKT",
-      "trace_path": "transfer/channel-101/transfer/channel-1/uakt"
-    },
-    "ibc/DCE2DC6B81E2DB2049970E9CB24BE113EEEE228503341B4AAB27794FB5A9080F": {
-      "hop_count": 2,
-      "origin_chain": "osmosis",
-      "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
-      "symbol": "SPICE",
-      "trace_path": "transfer/channel-1/transfer/channel-101/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+      "trace_path": "transfer/channel-11/transfer/channel-13/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
     }
   },
-  "gitopia": {
-    "ibc/406AE2A657026B1ABB7994D28E3CBE699C526D0418FD4A3ACAAC0BC26D2B54EC": {
+  "osmosis": {
+    "ibc/1177913478F39BF6CA0728C0E4EBFBBAC34F167BA3177CFB8B9448EF15EBC3EA": {
       "hop_count": 2,
-      "origin_chain": "penumbra",
-      "origin_denom": "upenumbra",
-      "symbol": "UM",
-      "trace_path": "transfer/channel-1/transfer/channel-79703/upenumbra"
+      "origin_chain": "terp",
+      "origin_denom": "uterp",
+      "symbol": "TERP",
+      "trace_path": "transfer/channel-110258/transfer/channel-13/uterp"
     },
-    "ibc/480CA70A0DFBC224AD32E39E3724984D5AC2EB02875D567BDE1AD8B498913C2A": {
+    "ibc/4E67FDF6E794B2B1C5BC6F029FE3332C56A47645095275F40A27D70522F05040": {
       "hop_count": 2,
-      "origin_chain": "osmosis",
-      "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
-      "symbol": "SPICE",
-      "trace_path": "transfer/channel-1/transfer/channel-1/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+      "origin_chain": "terp",
+      "origin_denom": "uthiol",
+      "symbol": "THIOL",
+      "trace_path": "transfer/channel-110258/transfer/channel-139/uthiol"
     },
-    "ibc/6E303906AA4D91A223B90CE1BC0A367EB034D1EF5C8736D8A8704DE00C0FF99D": {
+    "ibc/E46AE835F4A64D5C6CA393B65D30163AEAF3995E5002134E7EDD5384559D2DCC": {
       "hop_count": 2,
-      "origin_chain": "osmosis",
-      "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
-      "symbol": "WBTC",
-      "trace_path": "transfer/channel-1/transfer/channel-1/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+      "origin_chain": "terp",
+      "origin_denom": "uterp",
+      "symbol": "TERP",
+      "trace_path": "transfer/channel-110258/transfer/channel-139/uterp"
     },
-    "ibc/7AE2B0FD4D084438C7910E6B294E0979A422936B65EC1F4BF67DEE4EC311741B": {
+    "ibc/FB50A30E34B579A6E0CE60CC3DD6AA50A1A50AE0392842829FC6145A3F56F963": {
       "hop_count": 2,
-      "origin_chain": "akash",
-      "origin_denom": "uakt",
-      "symbol": "AKT",
-      "trace_path": "transfer/channel-1/transfer/channel-1/uakt"
-    },
-    "ibc/9CA884DC564774BA48A9AF21BF9ABADD2FE1A505E936C80439103CAE956BAE64": {
-      "hop_count": 2,
-      "origin_chain": "atomone",
-      "origin_denom": "uatone",
-      "symbol": "ATONE",
-      "trace_path": "transfer/channel-1/transfer/channel-94814/uatone"
-    },
-    "ibc/E6A14427945A957F30D05A686EC4C70420F778EB94999F0A1C2B9F420ACB9AE1": {
-      "hop_count": 2,
-      "origin_chain": "cosmoshub",
-      "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
-      "symbol": "ETH",
-      "trace_path": "transfer/channel-1/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
-    }
-  },
-  "juno": {
-    "ibc/13C0ADE877464E960FC5F7FB779FA4DD8D606BEDCB7A74D4089EA2628D43C262": {
-      "hop_count": 2,
-      "origin_chain": "penumbra",
-      "origin_denom": "upenumbra",
-      "symbol": "UM",
-      "trace_path": "transfer/channel-393/transfer/channel-79703/upenumbra"
-    },
-    "ibc/53734AD1CEDB4B2204FD1853E0A441D29FE3E7EC00BEBD74E8527E971E4BA6EA": {
-      "hop_count": 2,
-      "origin_chain": "cosmoshub",
-      "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
-      "symbol": "ETH",
-      "trace_path": "transfer/channel-393/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
-    },
-    "ibc/5BD96F44E3C1851FF534BD28AA7F804C595500BFF7646189D3CC5BD34B45672A": {
-      "hop_count": 2,
-      "origin_chain": "osmosis",
-      "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
-      "symbol": "WBTC",
-      "trace_path": "transfer/channel-1/transfer/channel-393/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
-    },
-    "ibc/88A51D1A97788A63170B7EA6045511968B7D1A9AAF8C1FBD7663F8FB8385D541": {
-      "hop_count": 2,
-      "origin_chain": "osmosis",
-      "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
-      "symbol": "SPICE",
-      "trace_path": "transfer/channel-1/transfer/channel-393/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
-    },
-    "ibc/CEBEF5475A3B40DAD75171CB74AAEABC1D12AE3A06488904189DFF3B717A4252": {
-      "hop_count": 2,
-      "origin_chain": "atomone",
-      "origin_denom": "uatone",
-      "symbol": "ATONE",
-      "trace_path": "transfer/channel-393/transfer/channel-94814/uatone"
-    },
-    "ibc/EC3AAA73709DDC1113A1B0C136A752C31091D14849C54F681A4382541312039C": {
-      "hop_count": 2,
-      "origin_chain": "akash",
-      "origin_denom": "uakt",
-      "symbol": "AKT",
-      "trace_path": "transfer/channel-393/transfer/channel-1/uakt"
-    }
-  },
-  "omniflix": {
-    "ibc/2D04255B51F3E4921BDEA115B3872C4DDEFF1EEBC83084086EB03C92AEC77F79": {
-      "hop_count": 2,
-      "origin_chain": "osmosis",
-      "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
-      "symbol": "WBTC",
-      "trace_path": "transfer/channel-1/transfer/channel-33/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
-    },
-    "ibc/8FA9E2E8F1404ED4D9BD3753A7E8867881418FC75E7EB1F8F355F580230D238C": {
-      "hop_count": 2,
-      "origin_chain": "akash",
-      "origin_denom": "uakt",
-      "symbol": "AKT",
-      "trace_path": "transfer/channel-33/transfer/channel-1/uakt"
-    },
-    "ibc/A8B12F51125AA14A5AD4029A4CB65B675C68F791798C9CBA3F8758772A7F0079": {
-      "hop_count": 2,
-      "origin_chain": "atomone",
-      "origin_denom": "uatone",
-      "symbol": "ATONE",
-      "trace_path": "transfer/channel-33/transfer/channel-94814/uatone"
-    },
-    "ibc/AB2DF646C73866C02CDA80B7FDB22F87CEAA850BF75CE02F00F2D0FD718C2F07": {
-      "hop_count": 2,
-      "origin_chain": "osmosis",
-      "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
-      "symbol": "SPICE",
-      "trace_path": "transfer/channel-1/transfer/channel-33/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
-    },
-    "ibc/AE352E425DAEE4CFB41CD1A94E73A46390FA43AEF07822728AEA84DCAF2F1AB5": {
-      "hop_count": 2,
-      "origin_chain": "cosmoshub",
-      "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
-      "symbol": "ETH",
-      "trace_path": "transfer/channel-33/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
-    },
-    "ibc/C8D6C238837FFBB478946F7C65B26BBF90630D0BD0CE7E51179AAA14554D03BA": {
-      "hop_count": 2,
-      "origin_chain": "penumbra",
-      "origin_denom": "upenumbra",
-      "symbol": "UM",
-      "trace_path": "transfer/channel-33/transfer/channel-79703/upenumbra"
-    }
-  },
-  "secret": {
-    "ibc/3D972351461535572028805DACF5A453E88703500A21DB7E184E0B91A8E0AEEB": {
-      "hop_count": 2,
-      "origin_chain": "penumbra",
-      "origin_denom": "upenumbra",
-      "symbol": "UM",
-      "trace_path": "transfer/channel-100/transfer/channel-79703/upenumbra"
-    },
-    "ibc/520FE6922535E00035F6C263321DBD5FFE064DB318EE7E5F6B3EF4B6E2282527": {
-      "hop_count": 2,
-      "origin_chain": "atomone",
-      "origin_denom": "uatone",
-      "symbol": "ATONE",
-      "trace_path": "transfer/channel-100/transfer/channel-94814/uatone"
-    },
-    "ibc/5D9E30DCCC21E59DB3C3EE0D08BD416196BD0C0CA02F47445247B5400F029FD4": {
-      "hop_count": 2,
-      "origin_chain": "cosmoshub",
-      "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
-      "symbol": "ETH",
-      "trace_path": "transfer/channel-100/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
-    },
-    "ibc/91154A777BF342627DB72768BD02A3195385B0A0AB6CEE4895D2EC8E9DFA7765": {
-      "hop_count": 2,
-      "origin_chain": "akash",
-      "origin_denom": "uakt",
-      "symbol": "AKT",
-      "trace_path": "transfer/channel-100/transfer/channel-1/uakt"
-    },
-    "ibc/B550E25A8DBE677423919155CD141D6303498FFDC437EDA0E24F12612884C611": {
-      "hop_count": 2,
-      "origin_chain": "osmosis",
-      "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
-      "symbol": "SPICE",
-      "trace_path": "transfer/channel-1/transfer/channel-100/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
-    },
-    "ibc/C3BFDFCC25D66FC0DE35D9070B056E6EFA5D352B51FC3D6DBC935B7C6076DFAB": {
-      "hop_count": 2,
-      "origin_chain": "osmosis",
-      "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
-      "symbol": "WBTC",
-      "trace_path": "transfer/channel-1/transfer/channel-100/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
-    }
-  },
-  "stargaze": {
-    "ibc/55A4B536A3D44AEE1314D798F3A73A436CD15F9C1F2652FA02D6E4FBFB13E9B0": {
-      "hop_count": 2,
-      "origin_chain": "atomone",
-      "origin_denom": "uatone",
-      "symbol": "ATONE",
-      "trace_path": "transfer/channel-235/transfer/channel-94814/uatone"
-    },
-    "ibc/5A93865DF1E514DACB181614626A8911583E30935F5D6A415933ED6E7E33E795": {
-      "hop_count": 2,
-      "origin_chain": "penumbra",
-      "origin_denom": "upenumbra",
-      "symbol": "UM",
-      "trace_path": "transfer/channel-235/transfer/channel-79703/upenumbra"
-    },
-    "ibc/724E543712050A4D927145E0B581EB3C58E826DD82D114EA9560F4EC59E15380": {
-      "hop_count": 2,
-      "origin_chain": "osmosis",
-      "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
-      "symbol": "SPICE",
-      "trace_path": "transfer/channel-1/transfer/channel-235/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
-    },
-    "ibc/CDFBBDA5E532FDBD887D978C9EE5AC99C53B2DC38D72FACC17D88F7745056421": {
-      "hop_count": 2,
-      "origin_chain": "akash",
-      "origin_denom": "uakt",
-      "symbol": "AKT",
-      "trace_path": "transfer/channel-235/transfer/channel-1/uakt"
-    },
-    "ibc/E1234B623C2670BE6479B801DCE6BAAD75EDABE2D2FD6508EB9A4806830D2D2C": {
-      "hop_count": 2,
-      "origin_chain": "cosmoshub",
-      "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
-      "symbol": "ETH",
-      "trace_path": "transfer/channel-235/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
-    },
-    "ibc/F265AA5FCD1F4017CA55AB3A034CAD9A706776BDEDBFE98E10483DB3BF86EEE9": {
-      "hop_count": 2,
-      "origin_chain": "osmosis",
-      "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
-      "symbol": "WBTC",
-      "trace_path": "transfer/channel-1/transfer/channel-235/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+      "origin_chain": "terp",
+      "origin_denom": "uthiol",
+      "symbol": "THIOL",
+      "trace_path": "transfer/channel-110258/transfer/channel-13/uthiol"
     }
   },
   "terp": {
-    "ibc/406AE2A657026B1ABB7994D28E3CBE699C526D0418FD4A3ACAAC0BC26D2B54EC": {
-      "hop_count": 1,
-      "origin_chain": "penumbra",
-      "origin_denom": "upenumbra",
-      "symbol": "UM",
-      "trace_path": "transfer/channel-1/transfer/channel-79703/upenumbra"
-    },
-    "ibc/7AE2B0FD4D084438C7910E6B294E0979A422936B65EC1F4BF67DEE4EC311741B": {
-      "hop_count": 1,
-      "origin_chain": "akash",
-      "origin_denom": "uakt",
-      "symbol": "AKT",
-      "trace_path": "transfer/channel-1/transfer/channel-1/uakt"
-    },
-    "ibc/9CA884DC564774BA48A9AF21BF9ABADD2FE1A505E936C80439103CAE956BAE64": {
+    "ibc/19854C8C6D3D04DF399957B22ABEFE65633A1215B4B91539E1A551830BEA4700": {
       "hop_count": 1,
       "origin_chain": "atomone",
       "origin_denom": "uatone",
       "symbol": "ATONE",
-      "trace_path": "transfer/channel-1/transfer/channel-94814/uatone"
+      "trace_path": "transfer/channel-11/transfer/channel-94814/uatone"
     },
-    "ibc/ADD33E9703A911023E73181FCA39B022094A1832F0C2311152A927E580E28B5F": {
-      "hop_count": 1,
-      "origin_chain": "osmosis",
-      "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
-      "symbol": "SPICE",
-      "trace_path": "transfer/channel-1/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
-    },
-    "ibc/CF57A83CED6CEC7D706631B5DC53ABC21B7EDA7DF7490732B4361E6D5DD19C73": {
-      "hop_count": 1,
-      "origin_chain": "osmosis",
-      "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
-      "symbol": "WBTC",
-      "trace_path": "transfer/channel-1/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
-    },
-    "ibc/E6A14427945A957F30D05A686EC4C70420F778EB94999F0A1C2B9F420ACB9AE1": {
+    "ibc/1F5076EB0FAAC31F2D8B935BB21D18A122EE354F80CAEEA90E7E2D8C8C7E5879": {
       "hop_count": 1,
       "origin_chain": "cosmoshub",
       "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
       "symbol": "ETH",
-      "trace_path": "transfer/channel-1/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+      "trace_path": "transfer/channel-11/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+    },
+    "ibc/3EFF20694A413A17072C69EE1B2EF5F0FF6ADB01C7BA1366EB949FE4AD17E83A": {
+      "hop_count": 1,
+      "origin_chain": "akash",
+      "origin_denom": "uakt",
+      "symbol": "AKT",
+      "trace_path": "transfer/channel-11/transfer/channel-1/uakt"
+    },
+    "ibc/45CC178B3DBDDFC9ED70A0F89C93584537DD9CEDF878915D1A571A9D44A24294": {
+      "hop_count": 1,
+      "origin_chain": "osmosis",
+      "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+      "symbol": "SPICE",
+      "trace_path": "transfer/channel-11/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+    },
+    "ibc/52A6739EEEE63EC79097E7CAEB0359E2FCE1DD0EE3E03B0F420A50FA00D5B103": {
+      "hop_count": 1,
+      "origin_chain": "terp",
+      "origin_denom": "uthiol",
+      "symbol": "THIOL",
+      "trace_path": "transfer/channel-10/transfer/channel-13/uthiol"
+    },
+    "ibc/6B32258CACFCBB5486A47CB1EAF4B6F5AD76C9E372E5F3CB08B3D1C606F9F39E": {
+      "hop_count": 1,
+      "origin_chain": "penumbra",
+      "origin_denom": "upenumbra",
+      "symbol": "UM",
+      "trace_path": "transfer/channel-11/transfer/channel-79703/upenumbra"
+    },
+    "ibc/8E4F42F7E8522F1752EA58386F1165753FE2E88A056343E109B43B3EEA510AAB": {
+      "hop_count": 1,
+      "origin_chain": "terp",
+      "origin_denom": "uthiol",
+      "symbol": "THIOL",
+      "trace_path": "transfer/channel-11/transfer/channel-110258/uthiol"
+    },
+    "ibc/95E58248E240E699639A655F788278688032894A396983A7A015D618C853852D": {
+      "hop_count": 1,
+      "origin_chain": "terp",
+      "origin_denom": "uthiol",
+      "symbol": "THIOL",
+      "trace_path": "transfer/channel-9/transfer/channel-139/uthiol"
+    },
+    "ibc/985A5C9C732EAF82D62A3FCA5BF8307256A716BB358B406FC45E4C467D5C3D0C": {
+      "hop_count": 1,
+      "origin_chain": "terp",
+      "origin_denom": "uterp",
+      "symbol": "TERP",
+      "trace_path": "transfer/channel-11/transfer/channel-110258/uterp"
+    },
+    "ibc/A23FD550904DB23428DFC019CD6ABD52AB0C406DAAA549D6AEAF5E63FC5C98CD": {
+      "hop_count": 1,
+      "origin_chain": "osmosis",
+      "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
+      "symbol": "WBTC",
+      "trace_path": "transfer/channel-11/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+    },
+    "ibc/DF733DC7440B309715D6A2812E99D366EE331983A20CC620C7AB751A1B01E1B0": {
+      "hop_count": 1,
+      "origin_chain": "terp",
+      "origin_denom": "uterp",
+      "symbol": "TERP",
+      "trace_path": "transfer/channel-10/transfer/channel-13/uterp"
+    },
+    "ibc/E33B06BB97AEACCA859686933E03E02C951B15755064D11D60A3D660C6090889": {
+      "hop_count": 1,
+      "origin_chain": "terp",
+      "origin_denom": "uterp",
+      "symbol": "TERP",
+      "trace_path": "transfer/channel-9/transfer/channel-139/uterp"
     }
   }
 }

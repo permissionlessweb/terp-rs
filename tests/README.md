@@ -56,6 +56,75 @@ tests/
 
 ## The IBC info pipeline (`bin/ibc_info.rs`)
 
+
+```mermaid
+flowchart TD
+    subgraph "Generated Artifacts"
+        direction TB
+        
+        A[public/ibc-data/*.json] -->|Schema: ibc_data.schema.json| B[IBC Connections & Channels]
+        B --> C[chain_1 / chain_2 - Alphabetical ordering]
+        B --> D[channels array - preferred tags, status, ordering, version]
+        
+        E[public/assetlist.json] --> F[Terp Assets]
+        F --> G[Native uterp + uthiol]
+        F --> H[IBC Assets with full traces]
+        F --> I[Reverse Terp natives on counterparties]
+        
+        J[public/ibc_lookup_table.json] --> K[Simplified Lookup: dest_chain → ibc_denom → origin]
+        
+        M[public/ibc_routing_table.json] --> N[Full Routing Table]
+        N --> O[IBCAssetRoute - hops, preferred, trace_path]
+        
+        Q[state.json + terp-state.json] --> R[ibc_data + channels]
+        Q --> S[Per-chain assets with traces]
+    end
+
+    style A fill:#e3f2fd
+    style E fill:#e8f5e9
+    style J fill:#fff3e0
+    style M fill:#f3e5f5
+    style Q fill:#fce4ec
+```
+
+
+
+
+```mermaid
+sequenceDiagram
+    participant Query as IBC Queries (Terp gRPC)
+    participant State as cw-orchestrator State
+    participant IBCData as IBC Data Builder
+    participant Assets as Asset Derivation
+    participant Graph as Channel Graph
+    participant Routing as Routing Table
+    participant FS as Filesystem / UI
+
+    Query->>Query: Query clients → connections → channels
+    Query->>IBCData: Raw channels (Terp as chain_1)
+    
+    IBCData->>IBCData: finalize_channels_for_ibc_entry()
+    IBCData->>IBCData: Alpha ordering (chain_1/chain_2)
+    IBCData->>IBCData: Set preferred transfer channel + tags
+    IBCData->>State: Write ibc_data to state.json
+    IBCData->>FS: Write public/ibc-data/*.json
+    
+    State->>Assets: build_channel_to_chain_map()
+    Assets->>Assets: derive_terp_ibc_denom()
+    Note over Assets: Compute IBC hash = sha256("transfer/{channel}/{denom}")
+    Assets->>Assets: build_ibc_asset_entry() with traces
+    Assets->>Assets: Add Terp natives (uterp/uthiol) to CPs
+    
+    Assets->>FS: Update assetlist.json + terp-state.json
+    
+    State->>Graph: IBCChannelGraph::build_from_state()
+    Graph->>Graph: Build bidirectional edges with preferred flag
+    
+    Graph->>Routing: IBCAssetRoutingTable::premine(graph, chain_assets, max_hops=3)
+    Routing->>Routing: BFS routes + compute_ibc_denom_for_route()
+    Routing->>FS: Write ibc_lookup_table.json + ibc_routing_table.json
+```
+
 This binary connects to live chain nodes (Terp mainnet, Osmosis, etc.), queries the IBC state, and produces schema-compliant output files:
 
 ```

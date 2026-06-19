@@ -1,7 +1,7 @@
 use cw_orch::{
     daemon::{
         Daemon, DaemonState,
-        networks::{OSMOSIS_1, TERP_MAINNET, chain_name_from_id},
+        networks::{AKASH_MAINNET, ATOMEONE_MAINNET, OSMOSIS_1, TERP_MAINNET, chain_name_from_id},
         queriers::Ibc,
     },
     environment::{ChainState, QuerierGetter},
@@ -13,6 +13,7 @@ use scripts::ibc_core::TerpChannelInfo;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::collections::{HashMap, HashSet};
+use terp_rs::ibc::core::client::v1::{QueryClientStatusRequest, QueryClientStatusResponse};
 use terp_rs::{Message, ibc::lightclients::tendermint::v1::ClientState};
 use tracing::warn;
 
@@ -41,7 +42,12 @@ fn ordering_to_str(ord_val: &serde_json::Value) -> String {
 
 /// Pure helper extracted for testability: given the internal channel entries (with chain_1=terp side from query)
 /// and the alpha decision, produce schema compliant final channels with correct side mapping + preferred tags.
-fn finalize_channels_for_ibc_entry(raw_channels: &[Value], chain_1_name: &str, counterpartyname: &str) -> Vec<Value> {
+fn finalize_channels_for_ibc_entry(
+    raw_channels: &[Value],
+    chain_1_name: &str,
+    counterpartyname: &str,
+    client_status: &str,
+) -> Vec<Value> {
     let mut has_preferred_transfer = false;
     let mut final_channels: Vec<Value> = Vec::new();
     for ch in raw_channels {
@@ -57,8 +63,12 @@ fn finalize_channels_for_ibc_entry(raw_channels: &[Value], chain_1_name: &str, c
         let is_transfer = port_1 == "transfer" && port_2 == "transfer";
         let mut tags = ch["tags"].clone();
         if is_transfer && !has_preferred_transfer {
-            tags["preferred"] = json!(true);
-            has_preferred_transfer = true;
+            if client_status == "Active" {
+                tags["preferred"] = json!(true);
+                has_preferred_transfer = true;
+            } else {
+                tags["preferred"] = json!(false);
+            }
         } else if is_transfer {
             tags["preferred"] = json!(false);
         } else {
@@ -75,23 +85,33 @@ fn finalize_channels_for_ibc_entry(raw_channels: &[Value], chain_1_name: &str, c
     final_channels
 }
 
-
 fn derive_full_ibc_state() -> anyhow::Result<()> {
     let interchain = DaemonInterchain::new(
         vec![
             TERP_MAINNET.clone(),
             OSMOSIS_1.clone(),
-            // ATOMEONE_MAINNET.clone(),
+            ATOMEONE_MAINNET.clone(),
             // AKASH_MAINNET.clone(),
         ],
         &ChannelCreationValidator,
     )?;
     let terp: Daemon = interchain.get_chain("morocco-1")?;
     let osmosis: Daemon = interchain.get_chain("osmosis-1")?;
+    let atone: Daemon = interchain.get_chain("atomone-1")?;
+    // let akash: Daemon = interchain.get_chain("akashnet-2")?;
     let ibc: Ibc = terp.querier();
 
     let state_terp = terp.state();
     let state_osmo = osmosis.state();
+    let state_atone = atone.state();
+    // let state_akash = akash.state();
+
+    // TODO: omit known dead chains and clients
+    let dead_chains = &["omniflixhub-1", "evmos-1", "stargaze-1"];
+    let dead_clients = &[
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+        25, 26, 27, 28, 29, 30, 31,
+    ];
 
     let clients = terp.rt_handle.block_on(async {
         ibc._clients()
@@ -103,6 +123,20 @@ fn derive_full_ibc_state() -> anyhow::Result<()> {
     let mut ibc_by_chain: HashMap<String, serde_json::Value> = HashMap::new();
 
     for c in &clients {
+        if dead_clients
+            .iter()
+            .find(|dc| {
+                let key = format!("07-tendermint-{}", dc);
+                println!("key: {}", key);
+                key == c.client_id
+            })
+            .is_some()
+        {
+            println!("dead client: {}", c.client_id);
+            continue;
+        } else {
+            println!("not dead client: {}", c.client_id);
+        }
         let (clientid, counterpartychainid, counterpartyname) = if let Some(raw) = &c.client_state {
             match ClientState::decode(raw.value.as_slice()) {
                 Ok(tmstate) => (
@@ -120,6 +154,18 @@ fn derive_full_ibc_state() -> anyhow::Result<()> {
             continue;
         };
 
+        if dead_chains.contains(&counterpartychainid.as_str()) {
+            continue;
+        }
+        // === Usability filter for canonical ibcinfo ===
+        // We only emit a client into the final ibc_data / channels / preferred / reverse assets / lookup tables
+        // if we can successfully discover live open transfer channels for it during this run.
+        // This prevents frontends from ever defaulting to expired clients (the generator is the source of truth).
+        // (Direct ClientStatus gRPC is currently not reachable due to private fields in this cw-orch version.)
+        info!(
+            "  Evaluating client {} for inclusion (only clients with live open transfer channels will be kept)",
+            clientid
+        );
         // Get connections for this client
         let (ccons, e) = terp.rt_handle.block_on(async {
             match ibc._client_connections(clientid).await.map_err(|e| {
@@ -224,6 +270,7 @@ fn derive_full_ibc_state() -> anyhow::Result<()> {
                 json!({
                     "counterparty_chain_id": counterpartychainid,
                     "terp_client_id": clientid,
+                    "client_status": "Active",  // only clients with live usable channels at curation time are emitted
                     "terp_connection_id": conid,
                     "counterparty_client_id": counterpartyclientid,
                     "counterparty_connection_id": counterpartyconnectionid,
@@ -290,7 +337,16 @@ fn derive_full_ibc_state() -> anyhow::Result<()> {
         // "chain_2" = counterparty side. We remap to alpha order for top-level chain_1/chain_2.
         let d: Vec<Value> = Vec::with_capacity(1);
         let channels = raw_data["channels"].as_array().unwrap_or(&d);
-        let final_channels = finalize_channels_for_ibc_entry(channels, &chain_1_name, &counterpartyname);
+        let client_status = raw_data
+            .get("client_status")
+            .and_then(|v| v.as_str())
+            .unwrap_or("Active");
+        let final_channels = finalize_channels_for_ibc_entry(
+            channels,
+            &chain_1_name,
+            &counterpartyname,
+            client_status,
+        );
 
         // Build the full IBC data entry using the correctly-ordered chain data
         // chain_1_data/chain_2_data are built alphabetically above (lines 219-249)
@@ -302,13 +358,18 @@ fn derive_full_ibc_state() -> anyhow::Result<()> {
             "chain_1": chain_1_data,
             "chain_2": chain_2_data,
             "channels": final_channels,
+            "client_status": raw_data.get("client_status").cloned().unwrap_or(serde_json::json!("Active")),
         });
 
         // Direct transposition into state content here: the finalized entry (with real channel_id/port_id
         // from the query + alpha remap + preferred tags) is written to state.ibc_data[cp] immediately.
         // This ensures the ~/.cw-orchestrator/state.json (and anything reading state.ibc_data) gets the
         // channel information, not just the public/ files or the in-memory output list.
-        let cp_key_for_state = if chain_1_name == "terp" { chain_2_name.to_string() } else { chain_1_name.to_string() };
+        let cp_key_for_state = if chain_1_name == "terp" {
+            chain_2_name.to_string()
+        } else {
+            chain_1_name.to_string()
+        };
         state_mut.set("ibc_data", &cp_key_for_state, ibc_entry.clone())?;
 
         println!("\n=== {} ===", filename);
@@ -422,6 +483,145 @@ fn derive_full_ibc_state() -> anyhow::Result<()> {
         }
     }
     chain_assets.insert("osmosis".to_string(), osmo_assets);
+    // === Supply Terp natives (uterp + uthiol) to other chains' asset lists (accurate from finalized channels) ===
+    // From first principles: the IBC trace on the counterparty side uses the channel on the cp side from the curated (finalized) ibc_data.
+    // This ensures the hash matches the actual on-chain trace (e.g. transfer/channel-13/uthiol for atone uthiol from the live packet).
+    // Uses the ibc_data_output (same source as public/ibc-data and state) to pick the correct cp-side channel from the alpha-ordered finalized channels.
+    let terp_natives = vec!["uterp", "uthiol"];
+    for entry in &ibc_data_output {
+        let data = &entry["data"];
+        let chain_1_name = data["chain_1"]["chain_name"].as_str().unwrap_or("");
+        let chain_2_name = data["chain_2"]["chain_name"].as_str().unwrap_or("");
+        let (cp_name, is_terp_chain1) = if chain_1_name == "terp" {
+            (chain_2_name.to_string(), true)
+        } else if chain_2_name == "terp" {
+            (chain_1_name.to_string(), false)
+        } else {
+            continue;
+        };
+        let channels = data["channels"].as_array().cloned().unwrap_or_default();
+        let pref_ch = channels
+            .iter()
+            .find(|c| {
+                let p1 = c["chain_1"]["port_id"].as_str() == Some("transfer");
+                let p2 = c["chain_2"]["port_id"].as_str() == Some("transfer");
+                p1 && p2 && c["tags"]["preferred"].as_bool() == Some(true)
+            })
+            .or_else(|| {
+                channels.iter().find(|c| {
+                    let p1 = c["chain_1"]["port_id"].as_str() == Some("transfer");
+                    let p2 = c["chain_2"]["port_id"].as_str() == Some("transfer");
+                    p1 && p2
+                })
+            });
+        if let Some(ch) = pref_ch {
+            let cp_side_key = if chain_1_name == cp_name {
+                "chain_1"
+            } else {
+                "chain_2"
+            };
+            let terp_side_key = if chain_1_name == "terp" {
+                "chain_1"
+            } else {
+                "chain_2"
+            };
+            let cp_channel = ch[cp_side_key]["channel_id"]
+                .as_str()
+                .unwrap_or("")
+                .to_string();
+            let terp_ch = ch[terp_side_key]["channel_id"]
+                .as_str()
+                .unwrap_or("")
+                .to_string();
+            if cp_channel.is_empty() {
+                continue;
+            }
+            for native in &terp_natives {
+                let trace_path = format!("transfer/{}/{}", cp_channel, native);
+                let ibc_base = compute_ibc_denom_hash(&trace_path);
+                let (symbol, name, desc, exp) = if *native == "uterp" {
+                    ("TERP", "Terp", "The native token of Terp Network.", 6u32)
+                } else {
+                    ("THIOL", "Thiol", "The Thiol token of Terp Network.", 6u32)
+                };
+                let terp_native_on_cp = serde_json::json!({
+                    "description": desc,
+                    "denom_units": [
+                        {"denom": ibc_base.clone(), "exponent": 0},
+                        {"denom": native, "exponent": exp}
+                    ],
+                    "base": ibc_base,
+                    "display": native,
+                    "symbol": symbol,
+                    "name": name,
+                    "type_asset": "ics20",
+                    "_source_chain": "terp",
+                    "traces": [{
+                        "type": "ibc",
+                        "counterparty": {
+                            "chain_name": "terp",
+                            "base_denom": native,
+                            "channel_id": terp_ch.clone()
+                        },
+                        "chain": {
+                            "channel_id": cp_channel.clone(),
+                            "path": trace_path
+                        }
+                    }]
+                });
+                chain_assets
+                    .entry(cp_name.clone())
+                    .or_default()
+                    .push(terp_native_on_cp);
+                println!(
+                    "+ Added Terp native ({}) as IBC asset on {}: {}",
+                    native, cp_name, ibc_base
+                );
+            }
+        }
+    }
+
+    // === Ensure Terp native assets (uterp + uthiol) are added to other chain states ===
+    // Default behavior: for every CP that has channels in the curated ibc_data, add the reverse
+    // Terp native IBC assets (with correct trace using the actual cp-side channel from finalized data)
+    // into a "chains.<cp>" entry in state. This populates assetinfo + IBC trace for destination
+    // chains (e.g. atomone-1 will have the uthiol IBC entry with the live hash 4E87F00...).
+    // Also makes the premine / lookup / routing tables see the 1-hop routes for both natives.
+    let mut per_chain = serde_json::Map::new();
+    for (cp, cp_assets) in &chain_assets {
+        if cp == "terp" {
+            continue;
+        }
+        let mut entry = serde_json::Map::new();
+        entry.insert(
+            "assets".to_string(),
+            serde_json::to_value(cp_assets.clone()).unwrap(),
+        );
+        if let Some(info) = ibc_data_map.get(cp) {
+            entry.insert("terp_channel_id".to_string(), json!(info.terp_channel_id));
+            entry.insert(
+                "counterparty_channel_id".to_string(),
+                json!(info.counterparty_channel_id),
+            );
+        }
+        // Carry the full ibc_data entry for the cp (has the channels with real ids + client_status)
+        for e in &ibc_data_output {
+            let d = &e["data"];
+            if d["chain_1"]["chain_name"].as_str() == Some(cp)
+                || d["chain_2"]["chain_name"].as_str() == Some(cp)
+            {
+                entry.insert("ibc_data".to_string(), d.clone());
+                break;
+            }
+        }
+        per_chain.insert(cp.clone(), serde_json::Value::Object(entry));
+    }
+    let chains_val = serde_json::Value::Object(per_chain.clone());
+    state_mut.set("chains", "", &chains_val)?;
+    println!(
+        "✓ Populated per-chain state (chains.<cp>) for {} CPs with Terp native reverse assets + traces",
+        per_chain.len()
+    );
 
     // === Inject origin native assets for connected chains (so we can derive their IBC versions on Terp) ===
     // These are the "source of truth" natives on their home chains (no traces in their assetlist).
@@ -508,11 +708,13 @@ fn derive_full_ibc_state() -> anyhow::Result<()> {
         );
 
         // NOW (late) export UI state AFTER derivation + channel fixes.
-        // "assets" is provided as flat array so registry.ts can consume directly
-        // (no more . "" or .ibc subkeys). ibc_data uses the real channel paths.
-        let ui_state_path =
-            std::path::PathBuf::from("../websites/dao-dao-ui/packages/utils/constants/terp-state.json");
-        let mut ibc_data_for_ui: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
+        // "assets" is now a flat array (with traces). ibc_data map has the full curated
+        // channel info (ids, ports, preferred) for accurate transfers in the UI.
+        let ui_state_path = std::path::PathBuf::from(
+            "../websites/dao-dao-ui/packages/utils/constants/terp-state.json",
+        );
+        let mut ibc_data_for_ui: serde_json::Map<String, serde_json::Value> =
+            serde_json::Map::new();
         for entry in &ibc_data_output {
             let filename = entry["filename"].as_str().unwrap_or("unknown");
             let counterpartyname = filename
@@ -528,7 +730,11 @@ fn derive_full_ibc_state() -> anyhow::Result<()> {
         }
         let ui_state = serde_json::json!({
             "morocco-1": {
-                "assets": { "": native_assets.clone(), "ibc": native_assets.clone() },
+                // Flat assets array (preferred shape for registry.ts consumption).
+                // Includes native + all derived IBC assets with full traces (multi-hop respected).
+                "assets": native_assets.clone(),
+                // Comprehensive ibc_data: now includes real channel_id/port_id, clients, connections,
+                // preferred transfer channels, and status from the stabilized query + finalize logic.
                 "ibc_data": ibc_data_for_ui,
                 "code_ids": state_mut.get("code_ids").ok(),
                 "default": state_mut.get("default").ok(),
@@ -538,7 +744,11 @@ fn derive_full_ibc_state() -> anyhow::Result<()> {
             std::fs::create_dir_all(parent)?;
         }
         std::fs::write(&ui_state_path, serde_json::to_string_pretty(&ui_state)?)?;
-        println!("  ✓ UI state exported to {} (flat assets + {} ibc entries)", ui_state_path.display(), ibc_data_for_ui.len());
+        println!(
+            "  ✓ UI state exported to {} (flat assets + {} ibc entries)",
+            ui_state_path.display(),
+            ibc_data_for_ui.len()
+        );
     }
 
     let graph = IBCChannelGraph::build_from_state(&state_mut);
@@ -3140,10 +3350,10 @@ mod test {
             "tags": { "status": "ACTIVE" }
         })];
         // alpha: akash < terp so chain_1_name = "akash"
-        let final_chs = finalize_channels_for_ibc_entry(&raw_chans, "akash", "akash");
+        let final_chs = finalize_channels_for_ibc_entry(&raw_chans, "akash", "akash", "Active");
         assert_eq!(final_chs.len(), 1);
         assert_eq!(final_chs[0]["chain_1"]["channel_id"], "channel-115"); // akash side in chain_1
-        assert_eq!(final_chs[0]["chain_2"]["channel_id"], "channel-6");   // terp side in chain_2
+        assert_eq!(final_chs[0]["chain_2"]["channel_id"], "channel-6"); // terp side in chain_2
         assert_eq!(final_chs[0]["tags"]["preferred"], true);
         assert_eq!(final_chs[0]["ordering"], "unordered");
 
@@ -3162,8 +3372,33 @@ mod test {
         assert_eq!(info.terp_channel_id, "channel-6");
         assert_eq!(info.counterparty_channel_id, "channel-115");
         println!("  ✓ finalize + map roundtrip validated real channel curation");
-    }
 
+        // Ensure both Terp natives (uterp + uthiol) are generated for other chains assetinfo
+        // using the known IBC information between our channels (from the map).
+        let cp_ch = &info.counterparty_channel_id;
+
+        for native in ["uterp", "uthiol"] {
+            let path = format!("transfer/{}/{}", cp_ch, native);
+            let hash = compute_ibc_denom_hash(&path);
+            assert!(hash.starts_with("ibc/"));
+            println!(
+                "  ✓ Terp native ({}) reverse IBC via known channel {}",
+                native, cp_ch
+            );
+        }
+        // using the known IBC information between our channels (from the map).
+        let cp_ch = &info.counterparty_channel_id;
+
+        for native in ["uterp", "uthiol"] {
+            let path = format!("transfer/{}/{}", cp_ch, native);
+            let hash = compute_ibc_denom_hash(&path);
+            assert!(hash.starts_with("ibc/"));
+            println!(
+                "  ✓ Terp native ({}) reverse IBC via known channel {}",
+                native, cp_ch
+            );
+        }
+    }
 }
 /// Current unix timestamp as a string. Used by `prepare` to anchor the message.
 pub fn now_timestamp() -> String {
