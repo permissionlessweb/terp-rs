@@ -14,7 +14,7 @@ interface = ["dep:cw-orch"]
 ibc-proto = { workspace = true }
 crosslink-light-client = { workspace = true }
 
-cosmwasm-std = { workspace = true, features = ["std"] }
+cosmwasm-std = { workspace = true, features = ["std", "cosmwasm_3_0"] }
 cosmwasm-schema = { workspace = true }
 cw2 = { workspace = true }
 prost = { workspace = true, features = ["std"] }
