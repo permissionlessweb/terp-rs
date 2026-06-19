@@ -1,0 +1,19 @@
+[package]
+name = "crosslink-light-client"
+version = "0.1.0"
+edition = { workspace = true }
+repository = { workspace = true }
+description = "Core light client verification primitives for Zcash Crosslink TFL"
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true, features = ["std"] }
+hex = { workspace = true }
+thiserror = { workspace = true }
+zebra-crosslink = { path = "../../../../zebra-crosslink/zebra-crosslink" }
+ed25519-zebra = { workspace = true }
+rand = { workspace = true, features = ["std", "thread_rng"] }
+# rand 0.8 for compatibility with ed25519-zebra's rand_core 0.6
+rand08 = { package = "rand", version = "0.8", features = ["std", "std_rng"] }
+blake3 = "1.5"
+byteorder = "1.5.0"

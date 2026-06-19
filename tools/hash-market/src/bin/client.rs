@@ -3,6 +3,8 @@
 //! This binary polls an Ethereum node for proof data and submits it to the
 //! hash-market-server sidecar. Config is the canonical `hash_market::config::ClientConfig`.
 
+//  TODO: add custody client for signing/handing of signing key
+
 use anyhow::{Context, Result};
 use clap::Parser;
 use hash_market::client;

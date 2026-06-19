@@ -1,3 +1,27 @@
 [workspace]
 resolver = "2"
-members = ["crates/nips", "crates/sdk", "proto", "tests", "tools/gen-tools"]
+members = ["crates/crosslink/light-client","crates/light-clients/cw-ics08-wasm-crosslink","crates/nips", "crates/sdk", "proto", "tests", "tools/gen-tools"]
+
+[workspace.package]
+edition    = "2024"
+repository = "https://github.com/terpnetwork/terp-rs"
+keywords   = ["cosmos", "ibc", "sp1", "tendermint", "ethereum", "bridge", "solidity", "eureka"]
+
+
+[workspace.dependencies]
+serde           = { version = "1.0", default-features = false }
+serde_json      = { version = "1.0", default-features = false }
+hex             = { version = "0.4", default-features = false }
+thiserror          = { version = "2.0", default-features = false }
+
+# Ensure `alloc` is enabled for ed25519-zebra so cosmwasm-crypto can import its batch module
+ed25519-zebra      = { version = "4.2", default-features = false }
+rand      = { version = "0.9", default-features = false }
+rand08 = { package = "rand", version = "0.8", features = ["std", "std_rng"] }
+cosmwasm-schema = { path = "../cosmwasm/packages/schema" }
+cosmwasm-std = { path = "../cosmwasm/packages/std" }
+crosslink-light-client = { path = "crates/crosslink/light-client", default-features = false }
+cw-orch = {path = "../cw-orchestrator/cw-orch"}
+cw2 = { path = "../cw-minus/packages/cw2" }
+ibc-proto = { path = "../ibc-proto-rs" }
+prost       = "0.14"
