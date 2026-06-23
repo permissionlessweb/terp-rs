@@ -980,7 +980,7 @@ impl ::prost::Name for ForwardRelayerAddress {
 }
 /// QueryIncentivizedPacketsRequest defines the request type for the IncentivizedPackets rpc
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryIncentivizedPacketsRequest {
     /// pagination defines an optional pagination for the request.
     #[prost(message, optional, tag = "1")]
@@ -1068,7 +1068,7 @@ impl ::prost::Name for QueryIncentivizedPacketResponse {
 /// QueryIncentivizedPacketsForChannelRequest defines the request type for querying for all incentivized packets
 /// for a specific channel
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryIncentivizedPacketsForChannelRequest {
     /// pagination defines an optional pagination for the request.
     #[prost(message, optional, tag = "1")]
@@ -1316,7 +1316,7 @@ impl ::prost::Name for QueryCounterpartyPayeeResponse {
 }
 /// QueryFeeEnabledChannelsRequest defines the request type for the FeeEnabledChannels rpc
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryFeeEnabledChannelsRequest {
     /// pagination defines an optional pagination for the request.
     #[prost(message, optional, tag = "1")]

@@ -55,7 +55,7 @@ pub struct Commission {
     pub commission_rates: ::core::option::Option<CommissionRates>,
     /// update_time is the last time the commission rate was changed.
     #[prost(message, optional, tag = "2")]
-    pub update_time: ::core::option::Option<::pbjson_types::Timestamp>,
+    pub update_time: ::core::option::Option<crate::Timestamp>,
 }
 impl ::prost::Name for Commission {
     const NAME: &'static str = "Commission";
@@ -113,7 +113,7 @@ pub struct Validator {
     pub operator_address: ::prost::alloc::string::String,
     /// consensus_pubkey is the consensus public key of the validator, as a Protobuf Any.
     #[prost(message, optional, tag = "2")]
-    pub consensus_pubkey: ::core::option::Option<::pbjson_types::Any>,
+    pub consensus_pubkey: ::core::option::Option<crate::Any>,
     /// jailed defined whether the validator has been jailed from bonded status or not.
     #[prost(bool, tag = "3")]
     pub jailed: bool,
@@ -134,7 +134,7 @@ pub struct Validator {
     pub unbonding_height: i64,
     /// unbonding_time defines, if unbonding, the min time for the validator to complete unbonding.
     #[prost(message, optional, tag = "9")]
-    pub unbonding_time: ::core::option::Option<::pbjson_types::Timestamp>,
+    pub unbonding_time: ::core::option::Option<crate::Timestamp>,
     /// commission defines the commission parameters.
     #[prost(message, optional, tag = "10")]
     pub commission: ::core::option::Option<Commission>,
@@ -318,7 +318,7 @@ pub struct UnbondingDelegationEntry {
     pub creation_height: i64,
     /// completion_time is the unix time for unbonding completion.
     #[prost(message, optional, tag = "2")]
-    pub completion_time: ::core::option::Option<::pbjson_types::Timestamp>,
+    pub completion_time: ::core::option::Option<crate::Timestamp>,
     /// initial_balance defines the tokens initially scheduled to receive at completion.
     #[prost(string, tag = "3")]
     pub initial_balance: ::prost::alloc::string::String,
@@ -351,7 +351,7 @@ pub struct RedelegationEntry {
     pub creation_height: i64,
     /// completion_time defines the unix time for redelegation completion.
     #[prost(message, optional, tag = "2")]
-    pub completion_time: ::core::option::Option<::pbjson_types::Timestamp>,
+    pub completion_time: ::core::option::Option<crate::Timestamp>,
     /// initial_balance defines the initial balance when redelegation started.
     #[prost(string, tag = "3")]
     pub initial_balance: ::prost::alloc::string::String,
@@ -411,7 +411,7 @@ impl ::prost::Name for Redelegation {
 pub struct Params {
     /// unbonding_time is the time duration of unbonding.
     #[prost(message, optional, tag = "1")]
-    pub unbonding_time: ::core::option::Option<::pbjson_types::Duration>,
+    pub unbonding_time: ::core::option::Option<crate::Duration>,
     /// max_validators is the maximum number of validators.
     #[prost(uint32, tag = "2")]
     pub max_validators: u32,
@@ -631,7 +631,7 @@ pub struct MsgCreateValidator {
     #[prost(string, tag = "5")]
     pub validator_address: ::prost::alloc::string::String,
     #[prost(message, optional, tag = "6")]
-    pub pubkey: ::core::option::Option<::pbjson_types::Any>,
+    pub pubkey: ::core::option::Option<crate::Any>,
     #[prost(message, optional, tag = "7")]
     pub value: ::core::option::Option<super::super::base::v1beta1::Coin>,
 }
@@ -765,7 +765,7 @@ impl ::prost::Name for MsgBeginRedelegate {
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct MsgBeginRedelegateResponse {
     #[prost(message, optional, tag = "1")]
-    pub completion_time: ::core::option::Option<::pbjson_types::Timestamp>,
+    pub completion_time: ::core::option::Option<crate::Timestamp>,
 }
 impl ::prost::Name for MsgBeginRedelegateResponse {
     const NAME: &'static str = "MsgBeginRedelegateResponse";
@@ -804,7 +804,7 @@ impl ::prost::Name for MsgUndelegate {
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct MsgUndelegateResponse {
     #[prost(message, optional, tag = "1")]
-    pub completion_time: ::core::option::Option<::pbjson_types::Timestamp>,
+    pub completion_time: ::core::option::Option<crate::Timestamp>,
     /// amount returns the amount of undelegated coins
     ///
     /// Since: cosmos-sdk 0.48

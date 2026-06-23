@@ -2,7 +2,7 @@
 /// ClientState defines a solo machine client that tracks the current consensus
 /// state and if the client is frozen.
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ClientState {
     /// latest sequence of the client state
     #[prost(uint64, tag = "1")]
@@ -31,7 +31,7 @@ impl ::prost::Name for ClientState {
 pub struct ConsensusState {
     /// public key of the solo machine
     #[prost(message, optional, tag = "1")]
-    pub public_key: ::core::option::Option<::pbjson_types::Any>,
+    pub public_key: ::core::option::Option<crate::Any>,
     /// diversifier allows the same public key to be reused across different solo
     /// machine clients (potentially on different chains) without being considered
     /// misbehaviour.
@@ -59,7 +59,7 @@ pub struct Header {
     #[prost(bytes = "vec", tag = "2")]
     pub signature: ::prost::alloc::vec::Vec<u8>,
     #[prost(message, optional, tag = "3")]
-    pub new_public_key: ::core::option::Option<::pbjson_types::Any>,
+    pub new_public_key: ::core::option::Option<crate::Any>,
     #[prost(string, tag = "4")]
     pub new_diversifier: ::prost::alloc::string::String,
 }
@@ -175,7 +175,7 @@ impl ::prost::Name for SignBytes {
 pub struct HeaderData {
     /// header public key
     #[prost(message, optional, tag = "1")]
-    pub new_pub_key: ::core::option::Option<::pbjson_types::Any>,
+    pub new_pub_key: ::core::option::Option<crate::Any>,
     /// header diversifier
     #[prost(string, tag = "2")]
     pub new_diversifier: ::prost::alloc::string::String,

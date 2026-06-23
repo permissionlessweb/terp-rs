@@ -1889,7 +1889,7 @@ impl ::prost::Name for QueryChannelResponse {
 }
 /// QueryChannelsRequest is the request type for the Query/Channels RPC method
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryChannelsRequest {
     /// pagination request
     #[prost(message, optional, tag = "1")]
@@ -1936,7 +1936,7 @@ impl ::prost::Name for QueryChannelsResponse {
 /// QueryConnectionChannelsRequest is the request type for the
 /// Query/QueryConnectionChannels RPC method
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryConnectionChannelsRequest {
     /// connection unique identifier
     #[prost(string, tag = "1")]
@@ -2009,7 +2009,7 @@ impl ::prost::Name for QueryChannelClientStateRequest {
 /// QueryChannelClientStateResponse is the Response type for the
 /// Query/QueryChannelClientState RPC method
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryChannelClientStateResponse {
     /// client state associated with the channel
     #[prost(message, optional, tag = "1")]
@@ -2068,7 +2068,7 @@ impl ::prost::Name for QueryChannelConsensusStateRequest {
 pub struct QueryChannelConsensusStateResponse {
     /// consensus state associated with the channel
     #[prost(message, optional, tag = "1")]
-    pub consensus_state: ::core::option::Option<::pbjson_types::Any>,
+    pub consensus_state: ::core::option::Option<crate::Any>,
     /// client ID associated with the consensus state
     #[prost(string, tag = "2")]
     pub client_id: ::prost::alloc::string::String,
@@ -2143,7 +2143,7 @@ impl ::prost::Name for QueryPacketCommitmentResponse {
 /// QueryPacketCommitmentsRequest is the request type for the
 /// Query/QueryPacketCommitments RPC method
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryPacketCommitmentsRequest {
     /// port unique identifier
     #[prost(string, tag = "1")]
@@ -2298,7 +2298,7 @@ impl ::prost::Name for QueryPacketAcknowledgementResponse {
 /// QueryPacketAcknowledgementsRequest is the request type for the
 /// Query/QueryPacketCommitments RPC method
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryPacketAcknowledgementsRequest {
     /// port unique identifier
     #[prost(string, tag = "1")]

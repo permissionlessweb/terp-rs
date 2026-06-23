@@ -407,7 +407,7 @@ impl ::prost::Name for Ics27Account {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct CosmosTx {
     #[prost(message, repeated, tag = "1")]
-    pub messages: ::prost::alloc::vec::Vec<::pbjson_types::Any>,
+    pub messages: ::prost::alloc::vec::Vec<super::super::super::Any>,
 }
 impl ::prost::Name for CosmosTx {
     const NAME: &'static str = "CosmosTx";

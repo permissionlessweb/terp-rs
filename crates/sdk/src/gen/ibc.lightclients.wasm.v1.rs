@@ -575,7 +575,7 @@ pub mod msg_server {
 }
 /// QueryChecksumsRequest is the request type for the Query/Checksums RPC method.
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryChecksumsRequest {
     /// pagination defines an optional pagination for the request.
     #[prost(message, optional, tag = "1")]
@@ -595,7 +595,7 @@ impl ::prost::Name for QueryChecksumsRequest {
 }
 /// QueryChecksumsResponse is the response type for the Query/Checksums RPC method.
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryChecksumsResponse {
     /// checksums is a list of the hex encoded checksums of all wasm codes stored.
     #[prost(string, repeated, tag = "1")]
@@ -1127,5 +1127,25 @@ impl ::prost::Name for ClientMessage {
     }
     fn type_url() -> ::prost::alloc::string::String {
         "/ibc.lightclients.wasm.v1.ClientMessage".into()
+    }
+}
+/// Checksums defines a list of all checksums that are stored
+///
+/// Deprecated: This message is deprecated in favor of storing the checksums
+/// using a Collections.KeySet.
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct Checksums {
+    #[prost(bytes = "vec", repeated, tag = "1")]
+    pub checksums: ::prost::alloc::vec::Vec<::prost::alloc::vec::Vec<u8>>,
+}
+impl ::prost::Name for Checksums {
+    const NAME: &'static str = "Checksums";
+    const PACKAGE: &'static str = "ibc.lightclients.wasm.v1";
+    fn full_name() -> ::prost::alloc::string::String {
+        "ibc.lightclients.wasm.v1.Checksums".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/ibc.lightclients.wasm.v1.Checksums".into()
     }
 }

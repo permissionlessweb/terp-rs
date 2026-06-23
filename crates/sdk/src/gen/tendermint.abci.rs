@@ -112,7 +112,7 @@ impl ::prost::Name for RequestInfo {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RequestInitChain {
     #[prost(message, optional, tag = "1")]
-    pub time: ::core::option::Option<::pbjson_types::Timestamp>,
+    pub time: ::core::option::Option<crate::Timestamp>,
     #[prost(string, tag = "2")]
     pub chain_id: ::prost::alloc::string::String,
     #[prost(message, optional, tag = "3")]
@@ -335,7 +335,7 @@ pub struct RequestPrepareProposal {
     #[prost(int64, tag = "5")]
     pub height: i64,
     #[prost(message, optional, tag = "6")]
-    pub time: ::core::option::Option<::pbjson_types::Timestamp>,
+    pub time: ::core::option::Option<crate::Timestamp>,
     #[prost(bytes = "vec", tag = "7")]
     pub next_validators_hash: ::prost::alloc::vec::Vec<u8>,
     /// address of the public key of the validator proposing the block.
@@ -367,7 +367,7 @@ pub struct RequestProcessProposal {
     #[prost(int64, tag = "5")]
     pub height: i64,
     #[prost(message, optional, tag = "6")]
-    pub time: ::core::option::Option<::pbjson_types::Timestamp>,
+    pub time: ::core::option::Option<crate::Timestamp>,
     #[prost(bytes = "vec", tag = "7")]
     pub next_validators_hash: ::prost::alloc::vec::Vec<u8>,
     /// address of the public key of the original proposer of the block.
@@ -1161,7 +1161,7 @@ pub struct Misbehavior {
     pub height: i64,
     /// The corresponding time where the offense occurred
     #[prost(message, optional, tag = "4")]
-    pub time: ::core::option::Option<::pbjson_types::Timestamp>,
+    pub time: ::core::option::Option<crate::Timestamp>,
     /// Total voting power of the validator set in case the ABCI application does
     /// not store historical validators.
     /// <https://github.com/tendermint/tendermint/issues/4581>

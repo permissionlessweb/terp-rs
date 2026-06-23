@@ -10,8 +10,11 @@
     unused_imports
 )]
 
+// TODO: import into monorepo
 pub use ibc::Any;
+pub use ibc_proto::google::protobuf::{Duration, Timestamp};
 pub use prost::{Message, Name};
+
 // ---------------------------------------------------------------------------
 // PyO3 Python bindings (enabled with `--features python`)
 // ---------------------------------------------------------------------------
@@ -33,12 +36,22 @@ pub mod cosmos {
             include!("gen/cosmos.auth.v1beta1.rs");
         }
     }
+    pub mod authz {
+        pub mod v1beta1 {
+            include!("gen/cosmos.authz.v1beta1.rs");
+        }
+    }
     pub mod bank {
         pub mod v1beta1 {
             include!("gen/cosmos.bank.v1beta1.rs");
         }
     }
     pub mod base {
+        pub mod abci {
+            pub mod v1beta1 {
+                include!("gen/cosmos.base.abci.v1beta1.rs");
+            }
+        }
         pub mod query {
             pub mod v1beta1 {
                 include!("gen/cosmos.base.query.v1beta1.rs");
@@ -48,14 +61,78 @@ pub mod cosmos {
             include!("gen/cosmos.base.v1beta1.rs");
         }
     }
+
+    pub mod crypto {
+
+        pub mod secp256k1 {
+            include!("gen/cosmos.crypto.secp256k1.rs");
+        }
+        pub mod secp256r1 {
+            include!("gen/cosmos.crypto.secp256r1.rs");
+        }
+        pub mod ed25519 {
+            include!("gen/cosmos.crypto.ed25519.rs");
+        }
+        pub mod hd {
+            pub mod v1 {
+                include!("gen/cosmos.crypto.hd.v1.rs");
+            }
+        }
+        pub mod keyring {
+            pub mod v1 {
+                include!("gen/cosmos.crypto.keyring.v1.rs");
+            }
+        }
+        pub mod multisig {
+            include!("gen/cosmos.crypto.multisig.rs");
+            pub mod v1beta1 {
+                include!("gen/cosmos.crypto.multisig.v1beta1.rs");
+            }
+        }
+    }
+
+    pub mod feegrant {
+        pub mod v1beta1 {
+            include!("gen/cosmos.feegrant.v1beta1.rs");
+        }
+    }
+    pub mod gov {
+        pub mod v1beta1 {
+            include!("gen/cosmos.gov.v1beta1.rs");
+        }
+        pub mod v1 {
+            include!("gen/cosmos.gov.v1.rs");
+        }
+    }
     pub mod ics23 {
         pub mod v1 {
             include!("gen/cosmos.ics23.v1.rs");
         }
     }
+
+    pub mod staking {
+        pub mod v1 {
+            include!("gen/cosmos.staking.v1beta1.rs");
+        }
+    }
     pub mod upgrade {
         pub mod v1beta1 {
             include!("gen/cosmos.upgrade.v1beta1.rs");
+        }
+    }
+    pub mod tx {
+        pub mod v1beta1 {
+            include!("gen/cosmos.tx.v1beta1.rs");
+        }
+        pub mod config {
+            pub mod v1 {
+                include!("gen/cosmos.upgrade.v1beta1.rs");
+            }
+        }
+        pub mod signing {
+            pub mod v1beta1 {
+                include!("gen/cosmos.tx.signing.v1beta1.rs");
+            }
         }
     }
 }
@@ -172,12 +249,26 @@ pub mod ibc {
         }
     }
     pub mod lightclients {
+
+        pub mod localhost {
+            pub mod v1 {
+                include!("gen/ibc.lightclients.localhost.v1.rs");
+            }
+            pub mod v2 {
+                include!("gen/ibc.lightclients.localhost.v2.rs");
+            }
+        }
+
         pub mod attestations {
             pub mod v1 {
                 include!("gen/ibc.lightclients.attestations.v1.rs");
             }
         }
+
         pub mod solomachine {
+            pub mod v1 {
+                include!("gen/ibc.lightclients.solomachine.v1.rs");
+            }
             pub mod v2 {
                 include!("gen/ibc.lightclients.solomachine.v2.rs");
             }
@@ -185,6 +276,7 @@ pub mod ibc {
                 include!("gen/ibc.lightclients.solomachine.v3.rs");
             }
         }
+
         pub mod tendermint {
             pub mod v1 {
                 include!("gen/ibc.lightclients.tendermint.v1.rs");
@@ -207,8 +299,14 @@ pub mod osmosis {
 }
 
 pub mod tendermint {
+    pub mod abci {
+        include!("gen/tendermint.abci.rs");
+    }
     pub mod crypto {
         include!("gen/tendermint.crypto.rs");
+    }
+    pub mod p2p {
+        include!("gen/tendermint.p2p.rs");
     }
     pub mod types {
         include!("gen/tendermint.types.rs");

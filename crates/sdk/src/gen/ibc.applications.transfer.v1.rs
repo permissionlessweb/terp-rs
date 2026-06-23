@@ -25,6 +25,26 @@ impl ::prost::Name for Params {
         "/ibc.applications.transfer.v1.Params".into()
     }
 }
+/// Hop defines a port ID, channel ID pair specifying where tokens must be forwarded
+/// next in a multihop transfer.
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct Hop {
+    #[prost(string, tag = "1")]
+    pub port_id: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub channel_id: ::prost::alloc::string::String,
+}
+impl ::prost::Name for Hop {
+    const NAME: &'static str = "Hop";
+    const PACKAGE: &'static str = "ibc.applications.transfer.v1";
+    fn full_name() -> ::prost::alloc::string::String {
+        "ibc.applications.transfer.v1.Hop".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/ibc.applications.transfer.v1.Hop".into()
+    }
+}
 /// MsgTransfer defines a msg to transfer fungible tokens (i.e Coins) between
 /// ICS20 enabled chains. See ICS Spec here:
 /// <https://github.com/cosmos/ibc/tree/master/spec/app/ics-020-fungible-token-transfer#data-structures>
@@ -66,14 +86,6 @@ pub struct MsgTransfer {
     /// optional encoding
     #[prost(string, tag = "9")]
     pub encoding: ::prost::alloc::string::String,
-    /// boolean flag to indicate if the transfer message
-    /// is sent with the IBC v2 protocol but uses v1 channel identifiers.
-    /// In this case, the v1 channel identifiers function as aliases to the
-    /// underlying client ids.
-    /// This only needs to be set if the channel IDs
-    /// are V1 channel identifiers.
-    #[prost(bool, tag = "10")]
-    pub use_aliasing: bool,
 }
 impl ::prost::Name for MsgTransfer {
     const NAME: &'static str = "MsgTransfer";
@@ -587,25 +599,6 @@ impl ::prost::Name for Denom {
         "/ibc.applications.transfer.v1.Denom".into()
     }
 }
-/// Hop defines a port ID, channel ID pair specifying a unique "hop" in a trace
-#[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct Hop {
-    #[prost(string, tag = "1")]
-    pub port_id: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    pub channel_id: ::prost::alloc::string::String,
-}
-impl ::prost::Name for Hop {
-    const NAME: &'static str = "Hop";
-    const PACKAGE: &'static str = "ibc.applications.transfer.v1";
-    fn full_name() -> ::prost::alloc::string::String {
-        "ibc.applications.transfer.v1.Hop".into()
-    }
-    fn type_url() -> ::prost::alloc::string::String {
-        "/ibc.applications.transfer.v1.Hop".into()
-    }
-}
 /// FungibleTokenPacketData defines a struct for the packet payload
 /// See FungibleTokenPacketData spec:
 /// <https://github.com/cosmos/ibc/tree/master/spec/app/ics-020-fungible-token-transfer#data-structures>
@@ -711,7 +704,7 @@ impl ::prost::Name for QueryDenomResponse {
 /// QueryDenomsRequest is the request type for the Query/Denoms RPC
 /// method
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryDenomsRequest {
     /// pagination defines an optional pagination for the request.
     #[prost(message, optional, tag = "1")]

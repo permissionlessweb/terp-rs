@@ -59,44 +59,6 @@ impl ::prost::Name for SimpleValidator {
         "/tendermint.types.SimpleValidator".into()
     }
 }
-/// BlockIdFlag indicates which BlockID the signature is for
-#[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
-#[repr(i32)]
-pub enum BlockIdFlag {
-    /// indicates an error condition
-    Unknown = 0,
-    /// the vote was not received
-    Absent = 1,
-    /// voted for the block that received the majority
-    Commit = 2,
-    /// voted for nil
-    Nil = 3,
-}
-impl BlockIdFlag {
-    /// String value of the enum field names used in the ProtoBuf definition.
-    ///
-    /// The values are not transformed in any way and thus are considered stable
-    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
-    pub fn as_str_name(&self) -> &'static str {
-        match self {
-            Self::Unknown => "BLOCK_ID_FLAG_UNKNOWN",
-            Self::Absent => "BLOCK_ID_FLAG_ABSENT",
-            Self::Commit => "BLOCK_ID_FLAG_COMMIT",
-            Self::Nil => "BLOCK_ID_FLAG_NIL",
-        }
-    }
-    /// Creates an enum from field names used in the ProtoBuf definition.
-    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
-        match value {
-            "BLOCK_ID_FLAG_UNKNOWN" => Some(Self::Unknown),
-            "BLOCK_ID_FLAG_ABSENT" => Some(Self::Absent),
-            "BLOCK_ID_FLAG_COMMIT" => Some(Self::Commit),
-            "BLOCK_ID_FLAG_NIL" => Some(Self::Nil),
-            _ => None,
-        }
-    }
-}
 /// PartsetHeader
 #[derive(serde::Serialize, serde::Deserialize)]
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
@@ -167,7 +129,7 @@ pub struct Header {
     #[prost(int64, tag = "3")]
     pub height: i64,
     #[prost(message, optional, tag = "4")]
-    pub time: ::core::option::Option<::pbjson_types::Timestamp>,
+    pub time: ::core::option::Option<crate::Timestamp>,
     /// prev block info
     #[prost(message, optional, tag = "5")]
     pub last_block_id: ::core::option::Option<BlockId>,
@@ -235,7 +197,7 @@ impl ::prost::Name for Data {
         "/tendermint.types.Data".into()
     }
 }
-/// Vote represents a prevote or precommit vote from validators for
+/// Vote represents a prevote, precommit, or commit vote from validators for
 /// consensus.
 #[derive(serde::Serialize, serde::Deserialize)]
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
@@ -250,24 +212,13 @@ pub struct Vote {
     #[prost(message, optional, tag = "4")]
     pub block_id: ::core::option::Option<BlockId>,
     #[prost(message, optional, tag = "5")]
-    pub timestamp: ::core::option::Option<::pbjson_types::Timestamp>,
+    pub timestamp: ::core::option::Option<crate::Timestamp>,
     #[prost(bytes = "vec", tag = "6")]
     pub validator_address: ::prost::alloc::vec::Vec<u8>,
     #[prost(int32, tag = "7")]
     pub validator_index: i32,
-    /// Vote signature by the validator if they participated in consensus for the
-    /// associated block.
     #[prost(bytes = "vec", tag = "8")]
     pub signature: ::prost::alloc::vec::Vec<u8>,
-    /// Vote extension provided by the application. Only valid for precommit
-    /// messages.
-    #[prost(bytes = "vec", tag = "9")]
-    pub extension: ::prost::alloc::vec::Vec<u8>,
-    /// Vote extension signature by the validator if they participated in
-    /// consensus for the associated block.
-    /// Only valid for precommit messages.
-    #[prost(bytes = "vec", tag = "10")]
-    pub extension_signature: ::prost::alloc::vec::Vec<u8>,
 }
 impl ::prost::Name for Vote {
     const NAME: &'static str = "Vote";
@@ -311,7 +262,7 @@ pub struct CommitSig {
     #[prost(bytes = "vec", tag = "2")]
     pub validator_address: ::prost::alloc::vec::Vec<u8>,
     #[prost(message, optional, tag = "3")]
-    pub timestamp: ::core::option::Option<::pbjson_types::Timestamp>,
+    pub timestamp: ::core::option::Option<crate::Timestamp>,
     #[prost(bytes = "vec", tag = "4")]
     pub signature: ::prost::alloc::vec::Vec<u8>,
 }
@@ -323,59 +274,6 @@ impl ::prost::Name for CommitSig {
     }
     fn type_url() -> ::prost::alloc::string::String {
         "/tendermint.types.CommitSig".into()
-    }
-}
-#[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct ExtendedCommit {
-    #[prost(int64, tag = "1")]
-    pub height: i64,
-    #[prost(int32, tag = "2")]
-    pub round: i32,
-    #[prost(message, optional, tag = "3")]
-    pub block_id: ::core::option::Option<BlockId>,
-    #[prost(message, repeated, tag = "4")]
-    pub extended_signatures: ::prost::alloc::vec::Vec<ExtendedCommitSig>,
-}
-impl ::prost::Name for ExtendedCommit {
-    const NAME: &'static str = "ExtendedCommit";
-    const PACKAGE: &'static str = "tendermint.types";
-    fn full_name() -> ::prost::alloc::string::String {
-        "tendermint.types.ExtendedCommit".into()
-    }
-    fn type_url() -> ::prost::alloc::string::String {
-        "/tendermint.types.ExtendedCommit".into()
-    }
-}
-/// ExtendedCommitSig retains all the same fields as CommitSig but adds vote
-/// extension-related fields. We use two signatures to ensure backwards compatibility.
-/// That is the digest of the original signature is still the same in prior versions
-#[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct ExtendedCommitSig {
-    #[prost(enumeration = "BlockIdFlag", tag = "1")]
-    pub block_id_flag: i32,
-    #[prost(bytes = "vec", tag = "2")]
-    pub validator_address: ::prost::alloc::vec::Vec<u8>,
-    #[prost(message, optional, tag = "3")]
-    pub timestamp: ::core::option::Option<::pbjson_types::Timestamp>,
-    #[prost(bytes = "vec", tag = "4")]
-    pub signature: ::prost::alloc::vec::Vec<u8>,
-    /// Vote extension data
-    #[prost(bytes = "vec", tag = "5")]
-    pub extension: ::prost::alloc::vec::Vec<u8>,
-    /// Vote extension signature
-    #[prost(bytes = "vec", tag = "6")]
-    pub extension_signature: ::prost::alloc::vec::Vec<u8>,
-}
-impl ::prost::Name for ExtendedCommitSig {
-    const NAME: &'static str = "ExtendedCommitSig";
-    const PACKAGE: &'static str = "tendermint.types";
-    fn full_name() -> ::prost::alloc::string::String {
-        "tendermint.types.ExtendedCommitSig".into()
-    }
-    fn type_url() -> ::prost::alloc::string::String {
-        "/tendermint.types.ExtendedCommitSig".into()
     }
 }
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -392,7 +290,7 @@ pub struct Proposal {
     #[prost(message, optional, tag = "5")]
     pub block_id: ::core::option::Option<BlockId>,
     #[prost(message, optional, tag = "6")]
-    pub timestamp: ::core::option::Option<::pbjson_types::Timestamp>,
+    pub timestamp: ::core::option::Option<crate::Timestamp>,
     #[prost(bytes = "vec", tag = "7")]
     pub signature: ::prost::alloc::vec::Vec<u8>,
 }
@@ -485,6 +383,40 @@ impl ::prost::Name for TxProof {
         "/tendermint.types.TxProof".into()
     }
 }
+/// BlockIdFlag indicates which BlcokID the signature is for
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum BlockIdFlag {
+    Unknown = 0,
+    Absent = 1,
+    Commit = 2,
+    Nil = 3,
+}
+impl BlockIdFlag {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::Unknown => "BLOCK_ID_FLAG_UNKNOWN",
+            Self::Absent => "BLOCK_ID_FLAG_ABSENT",
+            Self::Commit => "BLOCK_ID_FLAG_COMMIT",
+            Self::Nil => "BLOCK_ID_FLAG_NIL",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "BLOCK_ID_FLAG_UNKNOWN" => Some(Self::Unknown),
+            "BLOCK_ID_FLAG_ABSENT" => Some(Self::Absent),
+            "BLOCK_ID_FLAG_COMMIT" => Some(Self::Commit),
+            "BLOCK_ID_FLAG_NIL" => Some(Self::Nil),
+            _ => None,
+        }
+    }
+}
 /// SignedMsgType is a type of signed message in the consensus.
 #[derive(serde::Serialize, serde::Deserialize)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
@@ -519,5 +451,256 @@ impl SignedMsgType {
             "SIGNED_MSG_TYPE_PROPOSAL" => Some(Self::Proposal),
             _ => None,
         }
+    }
+}
+/// ConsensusParams contains consensus critical parameters that determine the
+/// validity of blocks.
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct ConsensusParams {
+    #[prost(message, optional, tag = "1")]
+    pub block: ::core::option::Option<BlockParams>,
+    #[prost(message, optional, tag = "2")]
+    pub evidence: ::core::option::Option<EvidenceParams>,
+    #[prost(message, optional, tag = "3")]
+    pub validator: ::core::option::Option<ValidatorParams>,
+    #[prost(message, optional, tag = "4")]
+    pub version: ::core::option::Option<VersionParams>,
+}
+impl ::prost::Name for ConsensusParams {
+    const NAME: &'static str = "ConsensusParams";
+    const PACKAGE: &'static str = "tendermint.types";
+    fn full_name() -> ::prost::alloc::string::String {
+        "tendermint.types.ConsensusParams".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/tendermint.types.ConsensusParams".into()
+    }
+}
+/// BlockParams contains limits on the block size.
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct BlockParams {
+    /// Max block size, in bytes.
+    /// Note: must be greater than 0
+    #[prost(int64, tag = "1")]
+    pub max_bytes: i64,
+    /// Max gas per block.
+    /// Note: must be greater or equal to -1
+    #[prost(int64, tag = "2")]
+    pub max_gas: i64,
+}
+impl ::prost::Name for BlockParams {
+    const NAME: &'static str = "BlockParams";
+    const PACKAGE: &'static str = "tendermint.types";
+    fn full_name() -> ::prost::alloc::string::String {
+        "tendermint.types.BlockParams".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/tendermint.types.BlockParams".into()
+    }
+}
+/// EvidenceParams determine how we handle evidence of malfeasance.
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct EvidenceParams {
+    /// Max age of evidence, in blocks.
+    ///
+    /// The basic formula for calculating this is: MaxAgeDuration / {average block
+    /// time}.
+    #[prost(int64, tag = "1")]
+    pub max_age_num_blocks: i64,
+    /// Max age of evidence, in time.
+    ///
+    /// It should correspond with an app's "unbonding period" or other similar
+    /// mechanism for handling [Nothing-At-Stake
+    /// attacks](<https://github.com/ethereum/wiki/wiki/Proof-of-Stake-FAQ#what-is-the-nothing-at-stake-problem-and-how-can-it-be-fixed>).
+    #[prost(message, optional, tag = "2")]
+    pub max_age_duration: ::core::option::Option<crate::Duration>,
+    /// This sets the maximum size of total evidence in bytes that can be committed in a single block.
+    /// and should fall comfortably under the max block bytes.
+    /// Default is 1048576 or 1MB
+    #[prost(int64, tag = "3")]
+    pub max_bytes: i64,
+}
+impl ::prost::Name for EvidenceParams {
+    const NAME: &'static str = "EvidenceParams";
+    const PACKAGE: &'static str = "tendermint.types";
+    fn full_name() -> ::prost::alloc::string::String {
+        "tendermint.types.EvidenceParams".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/tendermint.types.EvidenceParams".into()
+    }
+}
+/// ValidatorParams restrict the public key types validators can use.
+/// NOTE: uses ABCI pubkey naming, not Amino names.
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct ValidatorParams {
+    #[prost(string, repeated, tag = "1")]
+    pub pub_key_types: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+}
+impl ::prost::Name for ValidatorParams {
+    const NAME: &'static str = "ValidatorParams";
+    const PACKAGE: &'static str = "tendermint.types";
+    fn full_name() -> ::prost::alloc::string::String {
+        "tendermint.types.ValidatorParams".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/tendermint.types.ValidatorParams".into()
+    }
+}
+/// VersionParams contains the ABCI application version.
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct VersionParams {
+    #[prost(uint64, tag = "1")]
+    pub app: u64,
+}
+impl ::prost::Name for VersionParams {
+    const NAME: &'static str = "VersionParams";
+    const PACKAGE: &'static str = "tendermint.types";
+    fn full_name() -> ::prost::alloc::string::String {
+        "tendermint.types.VersionParams".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/tendermint.types.VersionParams".into()
+    }
+}
+/// HashedParams is a subset of ConsensusParams.
+///
+/// It is hashed into the Header.ConsensusHash.
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct HashedParams {
+    #[prost(int64, tag = "1")]
+    pub block_max_bytes: i64,
+    #[prost(int64, tag = "2")]
+    pub block_max_gas: i64,
+}
+impl ::prost::Name for HashedParams {
+    const NAME: &'static str = "HashedParams";
+    const PACKAGE: &'static str = "tendermint.types";
+    fn full_name() -> ::prost::alloc::string::String {
+        "tendermint.types.HashedParams".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/tendermint.types.HashedParams".into()
+    }
+}
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Evidence {
+    #[prost(oneof = "evidence::Sum", tags = "1, 2")]
+    pub sum: ::core::option::Option<evidence::Sum>,
+}
+/// Nested message and enum types in `Evidence`.
+pub mod evidence {
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Sum {
+        #[prost(message, tag = "1")]
+        DuplicateVoteEvidence(super::DuplicateVoteEvidence),
+        #[prost(message, tag = "2")]
+        LightClientAttackEvidence(super::LightClientAttackEvidence),
+    }
+}
+impl ::prost::Name for Evidence {
+    const NAME: &'static str = "Evidence";
+    const PACKAGE: &'static str = "tendermint.types";
+    fn full_name() -> ::prost::alloc::string::String {
+        "tendermint.types.Evidence".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/tendermint.types.Evidence".into()
+    }
+}
+/// DuplicateVoteEvidence contains evidence of a validator signed two conflicting votes.
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct DuplicateVoteEvidence {
+    #[prost(message, optional, tag = "1")]
+    pub vote_a: ::core::option::Option<Vote>,
+    #[prost(message, optional, tag = "2")]
+    pub vote_b: ::core::option::Option<Vote>,
+    #[prost(int64, tag = "3")]
+    pub total_voting_power: i64,
+    #[prost(int64, tag = "4")]
+    pub validator_power: i64,
+    #[prost(message, optional, tag = "5")]
+    pub timestamp: ::core::option::Option<crate::Timestamp>,
+}
+impl ::prost::Name for DuplicateVoteEvidence {
+    const NAME: &'static str = "DuplicateVoteEvidence";
+    const PACKAGE: &'static str = "tendermint.types";
+    fn full_name() -> ::prost::alloc::string::String {
+        "tendermint.types.DuplicateVoteEvidence".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/tendermint.types.DuplicateVoteEvidence".into()
+    }
+}
+/// LightClientAttackEvidence contains evidence of a set of validators attempting to mislead a light client.
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct LightClientAttackEvidence {
+    #[prost(message, optional, tag = "1")]
+    pub conflicting_block: ::core::option::Option<LightBlock>,
+    #[prost(int64, tag = "2")]
+    pub common_height: i64,
+    #[prost(message, repeated, tag = "3")]
+    pub byzantine_validators: ::prost::alloc::vec::Vec<Validator>,
+    #[prost(int64, tag = "4")]
+    pub total_voting_power: i64,
+    #[prost(message, optional, tag = "5")]
+    pub timestamp: ::core::option::Option<crate::Timestamp>,
+}
+impl ::prost::Name for LightClientAttackEvidence {
+    const NAME: &'static str = "LightClientAttackEvidence";
+    const PACKAGE: &'static str = "tendermint.types";
+    fn full_name() -> ::prost::alloc::string::String {
+        "tendermint.types.LightClientAttackEvidence".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/tendermint.types.LightClientAttackEvidence".into()
+    }
+}
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct EvidenceList {
+    #[prost(message, repeated, tag = "1")]
+    pub evidence: ::prost::alloc::vec::Vec<Evidence>,
+}
+impl ::prost::Name for EvidenceList {
+    const NAME: &'static str = "EvidenceList";
+    const PACKAGE: &'static str = "tendermint.types";
+    fn full_name() -> ::prost::alloc::string::String {
+        "tendermint.types.EvidenceList".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/tendermint.types.EvidenceList".into()
+    }
+}
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Block {
+    #[prost(message, optional, tag = "1")]
+    pub header: ::core::option::Option<Header>,
+    #[prost(message, optional, tag = "2")]
+    pub data: ::core::option::Option<Data>,
+    #[prost(message, optional, tag = "3")]
+    pub evidence: ::core::option::Option<EvidenceList>,
+    #[prost(message, optional, tag = "4")]
+    pub last_commit: ::core::option::Option<Commit>,
+}
+impl ::prost::Name for Block {
+    const NAME: &'static str = "Block";
+    const PACKAGE: &'static str = "tendermint.types";
+    fn full_name() -> ::prost::alloc::string::String {
+        "tendermint.types.Block".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/tendermint.types.Block".into()
     }
 }

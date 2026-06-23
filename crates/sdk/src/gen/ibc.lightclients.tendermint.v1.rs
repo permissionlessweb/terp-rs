@@ -11,13 +11,13 @@ pub struct ClientState {
     /// duration of the period since the LatestTimestamp during which the
     /// submitted headers are valid for upgrade
     #[prost(message, optional, tag = "3")]
-    pub trusting_period: ::core::option::Option<::pbjson_types::Duration>,
+    pub trusting_period: ::core::option::Option<crate::Duration>,
     /// duration of the staking unbonding period
     #[prost(message, optional, tag = "4")]
-    pub unbonding_period: ::core::option::Option<::pbjson_types::Duration>,
+    pub unbonding_period: ::core::option::Option<crate::Duration>,
     /// defines how much new (untrusted) header's Time can drift into the future.
     #[prost(message, optional, tag = "5")]
-    pub max_clock_drift: ::core::option::Option<::pbjson_types::Duration>,
+    pub max_clock_drift: ::core::option::Option<crate::Duration>,
     /// Block height when the client was frozen due to a misbehaviour
     #[prost(message, optional, tag = "6")]
     pub frozen_height: ::core::option::Option<
@@ -68,7 +68,7 @@ pub struct ConsensusState {
     /// timestamp that corresponds to the block height in which the ConsensusState
     /// was stored.
     #[prost(message, optional, tag = "1")]
-    pub timestamp: ::core::option::Option<::pbjson_types::Timestamp>,
+    pub timestamp: ::core::option::Option<crate::Timestamp>,
     /// commitment root (i.e app hash)
     #[prost(message, optional, tag = "2")]
     pub root: ::core::option::Option<

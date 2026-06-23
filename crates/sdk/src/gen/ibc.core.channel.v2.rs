@@ -1035,7 +1035,7 @@ impl ::prost::Name for QueryPacketCommitmentResponse {
 }
 /// QueryPacketCommitmentsRequest is the request type for the Query/PacketCommitments RPC method.
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryPacketCommitmentsRequest {
     /// client unique identifier
     #[prost(string, tag = "1")]
@@ -1130,7 +1130,7 @@ impl ::prost::Name for QueryPacketAcknowledgementResponse {
 /// QueryPacketAcknowledgementsRequest is the request type for the
 /// Query/QueryPacketCommitments RPC method
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryPacketAcknowledgementsRequest {
     /// client unique identifier
     #[prost(string, tag = "1")]

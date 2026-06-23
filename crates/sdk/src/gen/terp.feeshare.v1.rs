@@ -771,7 +771,7 @@ pub mod msg_server {
 }
 /// QueryFeeSharesRequest is the request type for the Query/FeeShares RPC method.
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryFeeSharesRequest {
     /// pagination defines an optional pagination for the request.
     #[prost(message, optional, tag = "1")]
@@ -884,7 +884,7 @@ impl ::prost::Name for QueryParamsResponse {
 /// QueryDeployerFeeSharesRequest is the request type for the
 /// Query/DeployerFeeShares RPC method.
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryDeployerFeeSharesRequest {
     /// deployer_address in bech32 format
     #[prost(string, tag = "1")]
@@ -908,7 +908,7 @@ impl ::prost::Name for QueryDeployerFeeSharesRequest {
 /// QueryDeployerFeeSharesResponse is the response type for the
 /// Query/DeployerFeeShares RPC method.
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryDeployerFeeSharesResponse {
     /// contract_addresses is the slice of registered contract addresses for a
     /// deployer
@@ -933,7 +933,7 @@ impl ::prost::Name for QueryDeployerFeeSharesResponse {
 /// QueryWithdrawerFeeSharesRequest is the request type for the
 /// Query/WithdrawerFeeShares RPC method.
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryWithdrawerFeeSharesRequest {
     /// withdrawer_address in bech32 format
     #[prost(string, tag = "1")]
@@ -957,7 +957,7 @@ impl ::prost::Name for QueryWithdrawerFeeSharesRequest {
 /// QueryWithdrawerFeeSharesResponse is the response type for the
 /// Query/WithdrawerFeeShares RPC method.
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryWithdrawerFeeSharesResponse {
     /// contract_addresses is the slice of registered contract addresses for a
     /// withdrawer

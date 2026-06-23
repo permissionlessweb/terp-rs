@@ -296,7 +296,7 @@ pub struct MsgConnectionOpenTry {
     /// Deprecated: this field is unused.
     #[deprecated]
     #[prost(message, optional, tag = "3")]
-    pub client_state: ::core::option::Option<::pbjson_types::Any>,
+    pub client_state: ::core::option::Option<crate::Any>,
     #[prost(message, optional, tag = "4")]
     pub counterparty: ::core::option::Option<Counterparty>,
     #[prost(uint64, tag = "5")]
@@ -365,7 +365,7 @@ pub struct MsgConnectionOpenAck {
     /// Deprecated: this field is unused.
     #[deprecated]
     #[prost(message, optional, tag = "4")]
-    pub client_state: ::core::option::Option<::pbjson_types::Any>,
+    pub client_state: ::core::option::Option<crate::Any>,
     #[prost(message, optional, tag = "5")]
     pub proof_height: ::core::option::Option<super::super::client::v1::Height>,
     /// proof of the initialization the connection on Chain B: `UNINITIALIZED ->  TRYOPEN`
@@ -1170,7 +1170,7 @@ impl ::prost::Name for QueryConnectionResponse {
 /// QueryConnectionsRequest is the request type for the Query/Connections RPC
 /// method
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryConnectionsRequest {
     #[prost(message, optional, tag = "1")]
     pub pagination: ::core::option::Option<
@@ -1280,7 +1280,7 @@ impl ::prost::Name for QueryConnectionClientStateRequest {
 /// QueryConnectionClientStateResponse is the response type for the
 /// Query/ConnectionClientState RPC method
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryConnectionClientStateResponse {
     /// client state associated with the channel
     #[prost(message, optional, tag = "1")]
@@ -1334,7 +1334,7 @@ impl ::prost::Name for QueryConnectionConsensusStateRequest {
 pub struct QueryConnectionConsensusStateResponse {
     /// consensus state associated with the channel
     #[prost(message, optional, tag = "1")]
-    pub consensus_state: ::core::option::Option<::pbjson_types::Any>,
+    pub consensus_state: ::core::option::Option<crate::Any>,
     /// client ID associated with the consensus state
     #[prost(string, tag = "2")]
     pub client_id: ::prost::alloc::string::String,

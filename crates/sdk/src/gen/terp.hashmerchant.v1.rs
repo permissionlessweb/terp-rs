@@ -999,7 +999,7 @@ impl ::prost::Name for QueryRegisteredChainResponse {
 }
 /// --- RegisteredChains ---
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryRegisteredChainsRequest {
     #[prost(message, optional, tag = "1")]
     pub pagination: ::core::option::Option<
@@ -1071,7 +1071,7 @@ impl ::prost::Name for QueryRegisteredContractResponse {
 }
 /// --- RegisteredContracts ---
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryRegisteredContractsRequest {
     #[prost(message, optional, tag = "1")]
     pub pagination: ::core::option::Option<
@@ -1145,7 +1145,7 @@ impl ::prost::Name for QueryHashRootResponse {
 }
 /// --- HashRoots ---
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryHashRootsRequest {
     #[prost(string, tag = "1")]
     pub chain_uid: ::prost::alloc::string::String,

@@ -12,7 +12,7 @@ fn main() -> anyhow::Result<()> {
     println!("root: {}", root.display());
 
     // Output directory for generated Rust source files.
-    let target_dir = root.join("../crates").join("sdk").join("gen");
+    let target_dir = root.join("../crates").join("sdk").join("src").join("gen");
     std::fs::create_dir_all(&target_dir)?;
     let target_dir = target_dir.canonicalize()?;
     println!("target_dir: {}", target_dir.display());
@@ -109,7 +109,7 @@ fn main() -> anyhow::Result<()> {
     let mut config = prost_build::Config::new();
     // DOWNLOAD AND ENSURE DEFAULT CHAIN PROTOS EXIST IN EXPECTED PATH
     // As recommended in pbjson_types docs.
-    config.extern_path(".google.protobuf", "::pbjson_types");
+    config.extern_path(".google.protobuf", "crate");
     config.compile_well_known_types();
     config.type_attribute(".", SERDE_JSON);
 
@@ -294,14 +294,11 @@ fn main() -> anyhow::Result<()> {
                         for l in struct_start..=struct_end {
                             if lines[l].contains("ibc_proto::cosmos::base::v1beta1::Coin")
                                 || lines[l].contains("ibc_proto::cosmos::base::v1beta1::DecCoin")
-                                || lines[l]
-                                    .contains("ibc_proto::ibc::core::commitment::v1::MerkleProof")
-                                || lines[l].contains(
-                                    "ibc_proto::cosmos::base::query::v1beta1::PageRequest",
-                                )
-                                || lines[l].contains(
-                                    "ibc_proto::cosmos::base::query::v1beta1::PageResponse",
-                                )
+                                || lines[l].contains("ibc::core::commitment::v1::MerkleProof")
+                                || lines[l].contains("cosmos::base::query::v1beta1::PageRequest")
+                                || lines[l].contains("cosmos::base::query::v1beta1::PageResponse")
+                                || lines[l].contains("Option<ConsensusState>")
+                                || lines[l].contains("IdentifiedClientState")
                             {
                                 has_problematic_type = true;
                                 break;
@@ -330,6 +327,8 @@ fn main() -> anyhow::Result<()> {
             let new_content = new_lines.join("\n");
             if new_content != content {
                 fs::write(entry.path(), new_content)?;
+            } else {
+                fs::write(entry.path(), content)?;
             }
         }
     }

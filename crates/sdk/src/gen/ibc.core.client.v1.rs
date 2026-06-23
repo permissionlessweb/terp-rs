@@ -2,14 +2,14 @@
 /// IdentifiedClientState defines a client state with an additional client
 /// identifier field.
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct IdentifiedClientState {
     /// client identifier
     #[prost(string, tag = "1")]
     pub client_id: ::prost::alloc::string::String,
     /// client state
     #[prost(message, optional, tag = "2")]
-    pub client_state: ::core::option::Option<::pbjson_types::Any>,
+    pub client_state: ::core::option::Option<crate::Any>,
 }
 impl ::prost::Name for IdentifiedClientState {
     const NAME: &'static str = "IdentifiedClientState";
@@ -31,7 +31,7 @@ pub struct ConsensusStateWithHeight {
     pub height: ::core::option::Option<Height>,
     /// consensus state
     #[prost(message, optional, tag = "2")]
-    pub consensus_state: ::core::option::Option<::pbjson_types::Any>,
+    pub consensus_state: ::core::option::Option<crate::Any>,
 }
 impl ::prost::Name for ConsensusStateWithHeight {
     const NAME: &'static str = "ConsensusStateWithHeight";
@@ -200,11 +200,11 @@ impl ::prost::Name for IdentifiedGenesisMetadata {
 pub struct MsgCreateClient {
     /// light client state
     #[prost(message, optional, tag = "1")]
-    pub client_state: ::core::option::Option<::pbjson_types::Any>,
+    pub client_state: ::core::option::Option<crate::Any>,
     /// consensus state associated with the client that corresponds to a given
     /// height.
     #[prost(message, optional, tag = "2")]
-    pub consensus_state: ::core::option::Option<::pbjson_types::Any>,
+    pub consensus_state: ::core::option::Option<crate::Any>,
     /// signer address
     #[prost(string, tag = "3")]
     pub signer: ::prost::alloc::string::String,
@@ -246,7 +246,7 @@ pub struct MsgUpdateClient {
     pub client_id: ::prost::alloc::string::String,
     /// client message to update the light client
     #[prost(message, optional, tag = "2")]
-    pub client_message: ::core::option::Option<::pbjson_types::Any>,
+    pub client_message: ::core::option::Option<crate::Any>,
     /// signer address
     #[prost(string, tag = "3")]
     pub signer: ::prost::alloc::string::String,
@@ -285,11 +285,11 @@ pub struct MsgUpgradeClient {
     pub client_id: ::prost::alloc::string::String,
     /// upgraded client state
     #[prost(message, optional, tag = "2")]
-    pub client_state: ::core::option::Option<::pbjson_types::Any>,
+    pub client_state: ::core::option::Option<crate::Any>,
     /// upgraded consensus state, only contains enough information to serve as a
     /// basis of trust in update logic
     #[prost(message, optional, tag = "3")]
-    pub consensus_state: ::core::option::Option<::pbjson_types::Any>,
+    pub consensus_state: ::core::option::Option<crate::Any>,
     /// proof that old chain committed to new client
     #[prost(bytes = "vec", tag = "4")]
     pub proof_upgrade_client: ::prost::alloc::vec::Vec<u8>,
@@ -322,6 +322,47 @@ impl ::prost::Name for MsgUpgradeClientResponse {
     }
     fn type_url() -> ::prost::alloc::string::String {
         "/ibc.core.client.v1.MsgUpgradeClientResponse".into()
+    }
+}
+/// MsgSubmitMisbehaviour defines an sdk.Msg type that submits Evidence for
+/// light client misbehaviour.
+/// This message has been deprecated. Use MsgUpdateClient instead.
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct MsgSubmitMisbehaviour {
+    /// client unique identifier
+    #[prost(string, tag = "1")]
+    pub client_id: ::prost::alloc::string::String,
+    /// misbehaviour used for freezing the light client
+    #[prost(message, optional, tag = "2")]
+    pub misbehaviour: ::core::option::Option<crate::Any>,
+    /// signer address
+    #[prost(string, tag = "3")]
+    pub signer: ::prost::alloc::string::String,
+}
+impl ::prost::Name for MsgSubmitMisbehaviour {
+    const NAME: &'static str = "MsgSubmitMisbehaviour";
+    const PACKAGE: &'static str = "ibc.core.client.v1";
+    fn full_name() -> ::prost::alloc::string::String {
+        "ibc.core.client.v1.MsgSubmitMisbehaviour".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/ibc.core.client.v1.MsgSubmitMisbehaviour".into()
+    }
+}
+/// MsgSubmitMisbehaviourResponse defines the Msg/SubmitMisbehaviour response
+/// type.
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct MsgSubmitMisbehaviourResponse {}
+impl ::prost::Name for MsgSubmitMisbehaviourResponse {
+    const NAME: &'static str = "MsgSubmitMisbehaviourResponse";
+    const PACKAGE: &'static str = "ibc.core.client.v1";
+    fn full_name() -> ::prost::alloc::string::String {
+        "ibc.core.client.v1.MsgSubmitMisbehaviourResponse".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/ibc.core.client.v1.MsgSubmitMisbehaviourResponse".into()
     }
 }
 /// MsgRecoverClient defines the message used to recover a frozen or expired client.
@@ -380,7 +421,7 @@ pub struct MsgIbcSoftwareUpgrade {
     /// deprecated in the Cosmos SDK to allow for this logic to exist solely in
     /// the 02-client module.
     #[prost(message, optional, tag = "2")]
-    pub upgraded_client_state: ::core::option::Option<::pbjson_types::Any>,
+    pub upgraded_client_state: ::core::option::Option<crate::Any>,
     /// signer address
     #[prost(string, tag = "3")]
     pub signer: ::prost::alloc::string::String,
@@ -649,6 +690,31 @@ pub mod msg_client {
                 .insert(GrpcMethod::new("ibc.core.client.v1.Msg", "UpgradeClient"));
             self.inner.unary(req, path, codec).await
         }
+        /// SubmitMisbehaviour defines a rpc handler method for MsgSubmitMisbehaviour.
+        pub async fn submit_misbehaviour(
+            &mut self,
+            request: impl tonic::IntoRequest<super::MsgSubmitMisbehaviour>,
+        ) -> std::result::Result<
+            tonic::Response<super::MsgSubmitMisbehaviourResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/ibc.core.client.v1.Msg/SubmitMisbehaviour",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("ibc.core.client.v1.Msg", "SubmitMisbehaviour"));
+            self.inner.unary(req, path, codec).await
+        }
         /// RecoverClient defines a rpc handler method for MsgRecoverClient.
         pub async fn recover_client(
             &mut self,
@@ -789,6 +855,14 @@ pub mod msg_server {
             request: tonic::Request<super::MsgUpgradeClient>,
         ) -> std::result::Result<
             tonic::Response<super::MsgUpgradeClientResponse>,
+            tonic::Status,
+        >;
+        /// SubmitMisbehaviour defines a rpc handler method for MsgSubmitMisbehaviour.
+        async fn submit_misbehaviour(
+            &self,
+            request: tonic::Request<super::MsgSubmitMisbehaviour>,
+        ) -> std::result::Result<
+            tonic::Response<super::MsgSubmitMisbehaviourResponse>,
             tonic::Status,
         >;
         /// RecoverClient defines a rpc handler method for MsgRecoverClient.
@@ -1015,6 +1089,51 @@ pub mod msg_server {
                     let inner = self.inner.clone();
                     let fut = async move {
                         let method = UpgradeClientSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/ibc.core.client.v1.Msg/SubmitMisbehaviour" => {
+                    #[allow(non_camel_case_types)]
+                    struct SubmitMisbehaviourSvc<T: Msg>(pub Arc<T>);
+                    impl<
+                        T: Msg,
+                    > tonic::server::UnaryService<super::MsgSubmitMisbehaviour>
+                    for SubmitMisbehaviourSvc<T> {
+                        type Response = super::MsgSubmitMisbehaviourResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::MsgSubmitMisbehaviour>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as Msg>::submit_misbehaviour(&inner, request).await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = SubmitMisbehaviourSvc(inner);
                         let codec = tonic_prost::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(
@@ -1273,7 +1392,7 @@ impl ::prost::Name for QueryClientStateRequest {
 pub struct QueryClientStateResponse {
     /// client state associated with the request identifier
     #[prost(message, optional, tag = "1")]
-    pub client_state: ::core::option::Option<::pbjson_types::Any>,
+    pub client_state: ::core::option::Option<crate::Any>,
     /// merkle proof of existence
     #[prost(bytes = "vec", tag = "2")]
     pub proof: ::prost::alloc::vec::Vec<u8>,
@@ -1294,7 +1413,7 @@ impl ::prost::Name for QueryClientStateResponse {
 /// QueryClientStatesRequest is the request type for the Query/ClientStates RPC
 /// method
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryClientStatesRequest {
     /// pagination request
     #[prost(message, optional, tag = "1")]
@@ -1373,7 +1492,7 @@ impl ::prost::Name for QueryConsensusStateRequest {
 pub struct QueryConsensusStateResponse {
     /// consensus state associated with the client identifier at the given height
     #[prost(message, optional, tag = "1")]
-    pub consensus_state: ::core::option::Option<::pbjson_types::Any>,
+    pub consensus_state: ::core::option::Option<crate::Any>,
     /// merkle proof of existence
     #[prost(bytes = "vec", tag = "2")]
     pub proof: ::prost::alloc::vec::Vec<u8>,
@@ -1394,7 +1513,7 @@ impl ::prost::Name for QueryConsensusStateResponse {
 /// QueryConsensusStatesRequest is the request type for the Query/ConsensusStates
 /// RPC method.
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryConsensusStatesRequest {
     /// client identifier
     #[prost(string, tag = "1")]
@@ -1442,7 +1561,7 @@ impl ::prost::Name for QueryConsensusStatesResponse {
 /// QueryConsensusStateHeightsRequest is the request type for Query/ConsensusStateHeights
 /// RPC method.
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryConsensusStateHeightsRequest {
     /// client identifier
     #[prost(string, tag = "1")]
@@ -1618,7 +1737,7 @@ impl ::prost::Name for QueryUpgradedClientStateRequest {
 pub struct QueryUpgradedClientStateResponse {
     /// client state associated with the request identifier
     #[prost(message, optional, tag = "1")]
-    pub upgraded_client_state: ::core::option::Option<::pbjson_types::Any>,
+    pub upgraded_client_state: ::core::option::Option<crate::Any>,
 }
 impl ::prost::Name for QueryUpgradedClientStateResponse {
     const NAME: &'static str = "QueryUpgradedClientStateResponse";
@@ -1652,7 +1771,7 @@ impl ::prost::Name for QueryUpgradedConsensusStateRequest {
 pub struct QueryUpgradedConsensusStateResponse {
     /// Consensus state associated with the request identifier
     #[prost(message, optional, tag = "1")]
-    pub upgraded_consensus_state: ::core::option::Option<::pbjson_types::Any>,
+    pub upgraded_consensus_state: ::core::option::Option<crate::Any>,
 }
 impl ::prost::Name for QueryUpgradedConsensusStateResponse {
     const NAME: &'static str = "QueryUpgradedConsensusStateResponse";

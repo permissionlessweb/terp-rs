@@ -199,17 +199,11 @@ pub struct ProofSpec {
     #[prost(message, optional, tag = "2")]
     pub inner_spec: ::core::option::Option<InnerSpec>,
     /// max_depth (if > 0) is the maximum number of InnerOps allowed (mainly for fixed-depth tries)
-    /// the max_depth is interpreted as 128 if set to 0
     #[prost(int32, tag = "3")]
     pub max_depth: i32,
     /// min_depth (if > 0) is the minimum number of InnerOps allowed (mainly for fixed-depth tries)
     #[prost(int32, tag = "4")]
     pub min_depth: i32,
-    /// prehash_key_before_comparison is a flag that indicates whether to use the
-    /// prehash_key specified by LeafOp to compare lexical ordering of keys for
-    /// non-existence proofs.
-    #[prost(bool, tag = "5")]
-    pub prehash_key_before_comparison: bool,
 }
 impl ::prost::Name for ProofSpec {
     const NAME: &'static str = "ProofSpec";
@@ -241,7 +235,6 @@ pub struct InnerSpec {
     pub child_size: i32,
     #[prost(int32, tag = "3")]
     pub min_prefix_length: i32,
-    /// the max prefix length must be less than the minimum prefix length + child size
     #[prost(int32, tag = "4")]
     pub max_prefix_length: i32,
     /// empty child is the prehash image that is used when one child is nil (eg. 20 bytes of 0)
@@ -404,14 +397,11 @@ pub enum HashOp {
     NoHash = 0,
     Sha256 = 1,
     Sha512 = 2,
-    Keccak256 = 3,
+    Keccak = 3,
     Ripemd160 = 4,
     /// ripemd160(sha256(x))
     Bitcoin = 5,
     Sha512256 = 6,
-    Blake2b512 = 7,
-    Blake2s256 = 8,
-    Blake3 = 9,
 }
 impl HashOp {
     /// String value of the enum field names used in the ProtoBuf definition.
@@ -423,13 +413,10 @@ impl HashOp {
             Self::NoHash => "NO_HASH",
             Self::Sha256 => "SHA256",
             Self::Sha512 => "SHA512",
-            Self::Keccak256 => "KECCAK256",
+            Self::Keccak => "KECCAK",
             Self::Ripemd160 => "RIPEMD160",
             Self::Bitcoin => "BITCOIN",
             Self::Sha512256 => "SHA512_256",
-            Self::Blake2b512 => "BLAKE2B_512",
-            Self::Blake2s256 => "BLAKE2S_256",
-            Self::Blake3 => "BLAKE3",
         }
     }
     /// Creates an enum from field names used in the ProtoBuf definition.
@@ -438,13 +425,10 @@ impl HashOp {
             "NO_HASH" => Some(Self::NoHash),
             "SHA256" => Some(Self::Sha256),
             "SHA512" => Some(Self::Sha512),
-            "KECCAK256" => Some(Self::Keccak256),
+            "KECCAK" => Some(Self::Keccak),
             "RIPEMD160" => Some(Self::Ripemd160),
             "BITCOIN" => Some(Self::Bitcoin),
             "SHA512_256" => Some(Self::Sha512256),
-            "BLAKE2B_512" => Some(Self::Blake2b512),
-            "BLAKE2S_256" => Some(Self::Blake2s256),
-            "BLAKE3" => Some(Self::Blake3),
             _ => None,
         }
     }
