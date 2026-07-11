@@ -2,11 +2,10 @@
 
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Binary;
-
 /// The instantiate message.
 #[cw_serde]
 pub struct InstantiateMsg {
-    /// The serialized Crosslink [`ClientState`].
+    /// The serialized Crosslink [`CrosslinkLightClientState`].
     pub client_state: Binary,
     /// The serialized Crosslink [`ConsensusState`].
     pub consensus_state: Binary,
@@ -19,14 +18,20 @@ pub struct InstantiateMsg {
 pub enum ExecuteMsg {}
 
 /// The query message.
+#[cfg_attr(feature = "interface", derive(cw_orch::QueryFns))]
+#[derive(cosmwasm_schema::QueryResponses)]
 #[cw_serde]
 pub enum QueryMsg {
+    #[returns(Binary)]
     /// Verify a client message.
     VerifyClientMessage(VerifyClientMessageMsg),
     /// Check for misbehaviour.
+    #[returns(CheckForMisbehaviourResult)]
     CheckForMisbehaviour(CheckForMisbehaviourMsg),
     /// Get the timestamp at a given height.
+    #[returns(TimestampAtHeightResult)]
     TimestampAtHeight(TimestampAtHeightMsg),
+    #[returns(StatusResult)]
     /// Get the status of the client.
     Status(StatusMsg),
 }
@@ -173,4 +178,25 @@ pub struct MerklePath {
 pub struct UpdateStateResult {
     /// The heights that were updated.
     pub heights: Vec<Height>,
+}
+
+/// Result of a status query.
+#[cw_serde]
+pub struct StatusResult {
+    /// The client status string.
+    pub(crate) status: String,
+}
+
+/// Result of a check-for-misbehaviour query.
+#[cw_serde]
+pub struct CheckForMisbehaviourResult {
+    /// Whether misbehaviour was found.
+    pub(crate) found_misbehaviour: bool,
+}
+
+/// Result of a timestamp-at-height query.
+#[cw_serde]
+pub struct TimestampAtHeightResult {
+    /// The Unix timestamp in seconds.
+    pub(crate) timestamp: u64,
 }

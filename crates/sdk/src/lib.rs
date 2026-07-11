@@ -11,9 +11,12 @@
 )]
 
 // TODO: import into monorepo
+pub use cosmos::base::v1beta1::Coin;
 pub use ibc::Any;
 pub use ibc_proto::google::protobuf::{Duration, Timestamp};
 pub use prost::{Message, Name};
+
+mod modules;
 
 // ---------------------------------------------------------------------------
 // PyO3 Python bindings (enabled with `--features python`)

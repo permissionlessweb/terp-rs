@@ -1,6 +1,14 @@
 [workspace]
 resolver = "2"
-members = ["crates/crosslink/light-client","contracts/light-clients/cw-ics08-wasm-crosslink","crates/nips", "crates/sdk", "proto", "tests", "tools/gen-tools"]
+members = [
+    "crates/crosslink/light-client",
+    "contracts/light-clients/cw-ics08-wasm-crosslink",
+    "crates/nips",
+    "crates/sdk",
+    "proto",
+    "tests",
+    "tools/gen-tools"
+    ]
 
 [workspace.package]
 edition    = "2024"

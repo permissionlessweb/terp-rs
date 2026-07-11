@@ -3,33 +3,11 @@
 use cosmwasm_std::{Binary, Deps, Env, to_json_binary};
 use crosslink_light_client::header::CrosslinkHeader;
 use crosslink_light_client::{ZcashDeserialize, verify};
-use serde::Serialize;
 
 use crate::ContractError;
 use crate::custom_query::CrosslinkCustomQuery;
-use crate::msg::{CheckForMisbehaviourMsg, TimestampAtHeightMsg, VerifyClientMessageMsg};
+use crate::msg::*;
 use crate::state;
-
-/// Result of a status query.
-#[derive(Serialize)]
-struct StatusResult {
-    /// The client status string.
-    status: String,
-}
-
-/// Result of a check-for-misbehaviour query.
-#[derive(Serialize)]
-struct CheckForMisbehaviourResult {
-    /// Whether misbehaviour was found.
-    found_misbehaviour: bool,
-}
-
-/// Result of a timestamp-at-height query.
-#[derive(Serialize)]
-struct TimestampAtHeightResult {
-    /// The Unix timestamp in seconds.
-    timestamp: u64,
-}
 
 /// Verify a client message.
 ///
