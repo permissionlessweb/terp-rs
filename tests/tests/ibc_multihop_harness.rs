@@ -291,10 +291,10 @@ async fn query_denom_trace_path(chain: &dyn Chain, ibc_denom: &str) -> Option<St
         if output2.exit_code != 0 {
             return None;
         }
-        return parse_trace_path(output2.stdout_str());
+        return parse_trace_path(&output2.stdout_str());
     }
 
-    parse_trace_path(output.stdout_str())
+    parse_trace_path(&output.stdout_str())
 }
 
 fn parse_trace_path(stdout: &str) -> Option<String> {
