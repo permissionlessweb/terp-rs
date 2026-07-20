@@ -22,7 +22,7 @@ Package name: `scripts` (in `Cargo.toml`).
 
 3. **Sidecar lifecycle** — a fleet of off-chain services (hashmarket, merkle-server, indexer, MinIO, Nostr relay) that run alongside the chain during integration tests.
 
-4. **Multi-chain IBC testing** — `ict-rs` Docker-spawned chain environments with Hermes relayer for end-to-end IBC transfer validation.
+4. **Multi-chain IBC authenticity harness** — `#[ignore]`d 4-chain line Docker test (`tests/tests/ibc_multihop_harness.rs`) that proves predicted IBC denoms against live bank balances and denom traces (see below).
 
 ---
 
@@ -184,15 +184,22 @@ All synchronous, no Docker required. In `tests/tests/ibc_info.rs`:
 
 ---
 
-## Multi-chain IBC test (Docker)
+## Multi-chain IBC authenticity harness (Docker, ignored)
 
-`test_multichain_ibc_info_routing` in `tests/tests/ibc_info.rs` — spawns 4 real Terp chain containers via ict-rs, creates IBC channels with Hermes relayer, creates 16 tokenfactory tokens, executes single/double/triple/quadruple-hop transfers, validates IBC denoms after each step.
+**Implemented, not claimed green in CI.** Live proof lives in:
 
+- Test: [`tests/tests/ibc_multihop_harness.rs`](tests/ibc_multihop_harness.rs) — `test_line_four_chain_tokenfactory_multihop`
+- Notes: [`data/ibc/harness/README.md`](data/ibc/harness/README.md)
+
+Topology: line **A—B—C—D** (`terp-a`…`terp-d`), Hermes links only on adjacent pairs, 16 tokenfactory denoms (4 per chain), scenarios 1–6 hop-by-hop ICS-20. Pass means **predict == denom_trace == bank balance denom**.
+
+```sh
+cargo test -p scripts --test ibc_multihop_harness -- --ignored --nocapture
 ```
-cargo test --test ibc_info -- --nocapture --ignored
-```
 
-Requires Docker and `ghcr.io/terpnetwork/terp-core:v5.2.0-zk-localterp` image.
+Requires Docker and a Terp image (default `terpnetwork/terp-core:local-zk`, overridable via `ICT_IMAGE_*` / `TERP_IMAGE_*`). There is no `tests/tests/ibc_info.rs` multichain test; offline schema/derivation coverage is separate from this harness.
+
+Pure path/hash helper checks in the same file run without Docker (not ignored).
 
 ---
 
@@ -215,10 +222,20 @@ docker pull ghcr.io/terpnetwork/terp-core:v5.2.0-zk-localterp
 cargo run --bin ibc
 ```
 
-### Schema validation tests (no Docker)
+### Offline IBC helpers / unit tests (no Docker)
 
 ```sh
-cargo test -p scripts --test ibc_info -- --skip test_multichain_ibc_info_routing --nocapture
+# Pure path prediction helpers in the multihop harness file (not ignored)
+cargo test -p scripts --test ibc_multihop_harness -- --nocapture
+
+# Lib pure derivation (ibc_core)
+cargo test -p scripts --lib ibc_core -- --nocapture
+```
+
+### Live multi-hop authenticity (Docker, ignored)
+
+```sh
+cargo test -p scripts --test ibc_multihop_harness -- --ignored --nocapture
 ```
 
 ### Full integration e2e
