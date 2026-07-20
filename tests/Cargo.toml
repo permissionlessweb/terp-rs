@@ -27,6 +27,8 @@ docker = []
 nostr = []
 zk = ["cosmwasm-std/zk", "dep:zk-test-press"]
 hash-market = ["dep:hash-market"]
+# Pulls billboards suite (terp721-account). Off by default so pure lib/tests compile.
+account = ["dep:terp-account-scripts"]
 
 [dependencies]
 anyhow = "1.0"
@@ -52,7 +54,9 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 sha2 = "0.11.0-pre.4"
 tempfile = "3.27.0"
-terp-account-scripts = { path = "../../terp-account-billboards/scripts" }
+# Optional: suite module is currently commented out; enabling pulls terp721-account
+# which needs terp-account/full in this workspace layout.
+terp-account-scripts = { path = "../../terp-account-billboards/scripts", optional = true }
 terp-rs  = { path = "../crates/sdk" }
 tokio = { version = "1", features = ["full"] }
 toml = "1.1.2"

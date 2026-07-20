@@ -1,4 +1,5 @@
 // pub mod environments;
+pub mod ibc;
 pub mod ibc_core;
 // pub mod suite;
 // pub use environments::{nostr, quickspawn};

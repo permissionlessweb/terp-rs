@@ -1,0 +1,20 @@
+{
+  "_comment": "Pins for preferred direct routes only; hop_count must match path structure",
+  "osmosis": {
+    "AKT": {
+      "origin_chain": "akash",
+      "origin_denom": "uakt",
+      "hop_count": 1,
+      "trace_path": "transfer/channel-1/uakt",
+      "ibc_denom": "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4"
+    }
+  },
+  "terp": {
+    "AKT": {
+      "origin_chain": "akash",
+      "origin_denom": "uakt",
+      "hop_count": 1,
+      "trace_path": "transfer/channel-9/uakt"
+    }
+  }
+}
