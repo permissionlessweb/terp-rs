@@ -2,7 +2,9 @@
 
 Live Docker proof that **predicted** ICS-20 denom traces match **observed** bank balances and denom traces after hop-by-hop transfers.
 
-Implementation: [`tests/tests/ibc_multihop_harness.rs`](../../../tests/ibc_multihop_harness.rs)
+Implementation: [`tests/tests/ibc_multihop_harness.rs`](../../tests/ibc_multihop_harness.rs)
+
+Uses `scripts::ibc::PredictedWorld` + `check_invariants` on the discovered line topology **before** transfers (same lib path as `ibc generate` / `ibc validate`).
 
 ## Topology
 

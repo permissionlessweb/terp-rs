@@ -23,13 +23,28 @@ pub fn ordering_to_str(ord_val: &serde_json::Value) -> String {
 ///
 /// `chain_1_name` is the alpha-ordered first chain name in the final entry.
 /// Raw channels store terp on chain_1 and counterparty on chain_2.
+///
+/// Preferred policy for transfer ports:
+/// 1. If any raw transfer channel already has `tags.preferred == true`, keep only those
+///    (and demote other transfers).
+/// 2. Else mark the first transfer preferred when `client_status == "Active"`.
+/// Non-transfer ports are never preferred (excluded from routing graph anyway).
 pub fn finalize_channels_for_ibc_entry(
     raw_channels: &[Value],
     chain_1_name: &str,
     _counterparty_name: &str,
     client_status: &str,
 ) -> Vec<Value> {
-    let mut has_preferred_transfer = false;
+    // Pre-scan: explicit preferred transfer on raw (terp=chain_1 layout)
+    let has_explicit_preferred_transfer = raw_channels.iter().any(|ch| {
+        let p1 = ch["chain_1"]["port_id"].as_str().unwrap_or("");
+        let p2 = ch["chain_2"]["port_id"].as_str().unwrap_or("");
+        p1 == "transfer"
+            && p2 == "transfer"
+            && ch["tags"]["preferred"].as_bool() == Some(true)
+    });
+
+    let mut assigned_auto_preferred = false;
     let mut final_channels: Vec<Value> = Vec::new();
     for ch in raw_channels {
         let stored_terp = &ch["chain_1"];
@@ -43,17 +58,25 @@ pub fn finalize_channels_for_ibc_entry(
         let port_2 = out_c2["port_id"].as_str().unwrap_or("");
         let is_transfer = port_1 == "transfer" && port_2 == "transfer";
         let mut tags = ch["tags"].clone();
-        if is_transfer && !has_preferred_transfer {
-            if client_status == "Active" {
+        if !tags.is_object() {
+            tags = json!({});
+        }
+        if is_transfer {
+            let explicit = ch["tags"]["preferred"].as_bool() == Some(true);
+            if has_explicit_preferred_transfer {
+                tags["preferred"] = json!(explicit);
+            } else if !assigned_auto_preferred && client_status == "Active" {
                 tags["preferred"] = json!(true);
-                has_preferred_transfer = true;
+                assigned_auto_preferred = true;
             } else {
                 tags["preferred"] = json!(false);
             }
-        } else if is_transfer {
-            tags["preferred"] = json!(false);
         } else {
-            tags["preferred"] = json!(true);
+            // Never preferred for routing / UI transfer default
+            tags["preferred"] = json!(false);
+        }
+        if tags.get("status").is_none() {
+            tags["status"] = json!("ACTIVE");
         }
         final_channels.push(json!({
             "chain_1": { "channel_id": out_c1["channel_id"], "port_id": out_c1["port_id"] },
@@ -234,5 +257,54 @@ mod tests {
             let hash = compute_ibc_denom_hash(&path);
             assert!(hash.starts_with("ibc/"));
         }
+    }
+
+    #[test]
+    fn explicit_preferred_second_transfer_channel() {
+        // Two transfer channels; only second marked preferred in raw
+        let raw = vec![
+            json!({
+                "chain_1": { "channel_id": "channel-1", "port_id": "transfer" },
+                "chain_2": { "channel_id": "channel-10", "port_id": "transfer" },
+                "ordering": 1,
+                "version": "ics20-1",
+                "tags": { "status": "ACTIVE", "preferred": false }
+            }),
+            json!({
+                "chain_1": { "channel_id": "channel-2", "port_id": "transfer" },
+                "chain_2": { "channel_id": "channel-20", "port_id": "transfer" },
+                "ordering": 1,
+                "version": "ics20-1",
+                "tags": { "status": "ACTIVE", "preferred": true }
+            }),
+            json!({
+                "chain_1": { "channel_id": "channel-99", "port_id": "wasm.xyz" },
+                "chain_2": { "channel_id": "channel-99", "port_id": "wasm.xyz" },
+                "ordering": 1,
+                "version": "ics27-1",
+                "tags": { "status": "ACTIVE" }
+            }),
+        ];
+        // alpha: osmosis < terp → chain_1_name = osmosis, remap swaps sides
+        let final_chs = finalize_channels_for_ibc_entry(&raw, "osmosis", "osmosis", "Active");
+        assert_eq!(final_chs.len(), 3);
+        assert_eq!(final_chs[0]["tags"]["preferred"], false);
+        assert_eq!(final_chs[1]["tags"]["preferred"], true);
+        assert_eq!(final_chs[2]["tags"]["preferred"], false); // non-transfer never preferred
+        // After remap (osmosis first): chain_1 has cp channels 10/20
+        assert_eq!(final_chs[1]["chain_1"]["channel_id"], "channel-20");
+        assert_eq!(final_chs[1]["chain_2"]["channel_id"], "channel-2");
+
+        let entry = json!({
+            "chain_1": { "chain_name": "osmosis", "chain_id": "osmosis-1", "client_id": "c1", "connection_id": "n1" },
+            "chain_2": { "chain_name": "terp", "chain_id": "morocco-1", "client_id": "c2", "connection_id": "n2" },
+            "channels": final_chs
+        });
+        let mut map_data = serde_json::Map::new();
+        map_data.insert("osmosis".into(), entry);
+        let map = build_channel_to_chain_map(&serde_json::Value::Object(map_data));
+        let info = map.get("osmosis").unwrap();
+        assert_eq!(info.terp_channel_id, "channel-2");
+        assert_eq!(info.counterparty_channel_id, "channel-20");
     }
 }

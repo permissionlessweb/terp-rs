@@ -216,11 +216,15 @@ cargo build --bin hash-market-client -p hash-market --features "client"
 docker pull ghcr.io/terpnetwork/terp-core:v5.2.0-zk-localterp
 ```
 
-### IBC info pipeline
+### IBC info pipeline (lib-backed)
 
 ```sh
-cargo run --bin ibc
+cargo run -p scripts --bin ibc -- generate   # default if no subcommand
+cargo run -p scripts --bin ibc -- validate --public-dir ../public
+cargo run -p scripts --bin ibc -- compare --public-dir ../public --strict
 ```
+
+`generate` runs `scripts::ibc::check_invariants` and **fails closed** on hard errors. Writes `public/ibc_generation_meta.json`.
 
 ### Offline IBC helpers / unit tests (no Docker)
 

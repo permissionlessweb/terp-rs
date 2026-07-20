@@ -53,6 +53,30 @@ fn hop_count_honesty_invariant() {
 }
 
 #[test]
+fn preferred_non_transfer_is_error() {
+    let ibc = json!({
+        "a-b": {
+            "chain_1": { "chain_name": "a", "chain_id": "a", "client_id": "c", "connection_id": "n" },
+            "chain_2": { "chain_name": "b", "chain_id": "b", "client_id": "c", "connection_id": "n" },
+            "channels": [{
+                "chain_1": { "channel_id": "channel-0", "port_id": "wasm.x" },
+                "chain_2": { "channel_id": "channel-0", "port_id": "wasm.x" },
+                "ordering": "unordered",
+                "version": "ics27-1",
+                "tags": { "preferred": true, "status": "ACTIVE" }
+            }]
+        }
+    });
+    let world = PredictedWorld::from_inputs(ibc, &HashMap::new(), 1);
+    let report = check_invariants(&world);
+    assert!(
+        report.errors().any(|e| e.code == "preferred_port"),
+        "expected preferred_port: {:?}",
+        report.items
+    );
+}
+
+#[test]
 fn prefer_direct_triangle() {
     let mut graph = IBCChannelGraph::new();
     graph.add_channel("a", "channel-ab", "b", "channel-ba", true, "ACTIVE".into());

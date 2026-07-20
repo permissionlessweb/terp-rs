@@ -15,7 +15,9 @@ pub mod schema;
 
 pub use diff::{DiffItem, DiffReport, DiffSeverity};
 pub use fixtures::{
-    golden_chain_assets, golden_root, load_golden_ibc_data, load_json, load_known_hashes,
+    golden_chain_assets, golden_root, load_audited_known_hashes, load_expected_lookup,
+    load_golden_ibc_data, load_json, load_known_hashes, load_synthetic_known_hashes,
+    parse_known_hashes_value,
 };
 pub use graph::{ChannelEdge, ChannelHop, IBCChannelGraph};
 pub use hash::{compute_ibc_denom_hash, hop_count_from_trace_path};
@@ -23,10 +25,13 @@ pub use normalize::{
     build_channel_to_chain_map, finalize_channels_for_ibc_entry, ordering_to_str,
 };
 pub use observe::{
-    compare_predict_observe, FixtureBackend, ObserveBackend, ObservedChannel, ObservedDenomTrace,
+    compare_balance, compare_predict_observe, compare_predict_observe_with, CompareOptions,
+    FixtureBackend, ObserveBackend, ObservedBalance, ObservedChannel, ObservedDenomTrace,
+    SnapshotBackend,
 };
 pub use predict::{check_invariants, PredictedWorld};
 pub use routes::{
-    derive_terp_ibc_denom, IBCAssetRoute, IBCAssetRoutingTable, RoutingTableMetadata, TerpChannelInfo,
+    derive_terp_ibc_denom, IBCAssetRoute, IBCAssetRoutingTable, RoutingTableMetadata,
+    TerpChannelInfo,
 };
 pub use schema::{validate_asset_entry, validate_ibc_data_entry};

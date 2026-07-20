@@ -23,7 +23,11 @@ use ict_rs::modules::tokenfactory::TokenfactoryMsgExt;
 use ict_rs::relayer::{build_relayer, RelayerType};
 use ict_rs::runtime::{DockerConfig, DockerImage, IctRuntime};
 use ict_rs::tx::{TransferOptions, WalletAmount};
-use scripts::ibc_core::compute_ibc_denom_hash;
+use scripts::ibc::{
+    check_invariants, compute_ibc_denom_hash, hop_count_from_trace_path, ChannelHop,
+    IBCChannelGraph, PredictedWorld,
+};
+use serde_json::json;
 
 // ---------------------------------------------------------------------------
 // Topology constants
@@ -73,7 +77,30 @@ fn predict_after_hops(receive_channels_origin_to_dest: &[&str], base_denom: &str
     let looking_back: Vec<&str> = receive_channels_origin_to_dest.iter().rev().copied().collect();
     let path = predict_trace_path(&looking_back, base_denom);
     let denom = predict_ibc_denom(&path);
+    // Cross-check hop_count honesty + graph helper agreement
+    assert_eq!(
+        hop_count_from_trace_path(&path),
+        receive_channels_origin_to_dest.len()
+    );
     (path, denom)
+}
+
+/// Same geometry via lib `IBCChannelGraph::compute_ibc_denom_for_route` (must match helpers).
+fn predict_via_graph(
+    hops_origin_to_dest: &[(/*from*/ &str, /*from_ch*/ &str, /*to*/ &str, /*to_ch*/ &str)],
+    base: &str,
+) -> (String, String) {
+    let graph = IBCChannelGraph::new();
+    let route: Vec<ChannelHop> = hops_origin_to_dest
+        .iter()
+        .map(|(f, fc, t, tc)| ChannelHop {
+            from_chain: f.to_string(),
+            from_channel: fc.to_string(),
+            to_chain: t.to_string(),
+            to_channel: tc.to_string(),
+        })
+        .collect();
+    graph.compute_ibc_denom_for_route(base, &route)
 }
 
 // ---------------------------------------------------------------------------
@@ -713,9 +740,43 @@ async fn run_harness_body(ic: &Interchain) -> Result<(), String> {
     println!("  link C-D: {cd:?}");
 
     let mut links = HashMap::new();
-    links.insert(link_key(CHAIN_A, CHAIN_B), ab);
-    links.insert(link_key(CHAIN_B, CHAIN_C), bc);
-    links.insert(link_key(CHAIN_C, CHAIN_D), cd);
+    links.insert(link_key(CHAIN_A, CHAIN_B), ab.clone());
+    links.insert(link_key(CHAIN_B, CHAIN_C), bc.clone());
+    links.insert(link_key(CHAIN_C, CHAIN_D), cd.clone());
+
+    // --- Lib PredictedWorld: same authenticity path as generate/validate ---
+    let ibc_data = harness_ibc_data(&ab, &bc, &cd);
+    let mut chain_assets: HashMap<String, Vec<serde_json::Value>> = HashMap::new();
+    for (chain_id, subdenoms) in &matrix {
+        let creator = users.addrs.get(*chain_id).unwrap();
+        let assets: Vec<_> = subdenoms
+            .iter()
+            .map(|sub| {
+                let denom = factory_denom(creator, sub);
+                json!({
+                    "symbol": format!("{chain_id}_{sub}"),
+                    "base": denom,
+                })
+            })
+            .collect();
+        chain_assets.insert(chain_id.to_string(), assets);
+    }
+    let world = PredictedWorld::from_inputs(ibc_data, &chain_assets, 3);
+    let inv = check_invariants(&world);
+    for item in &inv.items {
+        println!(
+            "  [PredictedWorld {:?}] {} — {}",
+            item.severity, item.code, item.message
+        );
+    }
+    assert!(
+        !inv.has_errors(),
+        "harness PredictedWorld must pass check_invariants before transfers"
+    );
+    println!(
+        "  ✓ PredictedWorld clean: {} routes",
+        world.routes.metadata.total_routes
+    );
 
     // --- Scenarios 1–6 ---
     let ta0 = factory_denoms
@@ -777,6 +838,70 @@ async fn run_harness_body(ic: &Interchain) -> Result<(), String> {
     println!("\n--- Scenario 6: C TF → A ---");
     run_scenario(6, &[CHAIN_C, CHAIN_B, CHAIN_A], &tc0, ic, &links, &users).await;
 
+    // Re-check preferred-route invariants after successful scenarios (topology unchanged)
+    let inv2 = check_invariants(&world);
+    assert!(!inv2.has_errors(), "post-scenario invariants still clean");
+
     println!("\n=== All scenarios 1–6 authenticity checks passed ===");
     Ok(())
+}
+
+/// Build registry-shaped ibc_data for the A–B–C–D line from resolved link sides.
+fn harness_ibc_data(ab: &LinkChannels, bc: &LinkChannels, cd: &LinkChannels) -> serde_json::Value {
+    fn pair_entry(a: &str, b: &str, ch_a: &str, ch_b: &str) -> (String, serde_json::Value) {
+        let (c1, c2, ch1, ch2) = if a < b {
+            (a, b, ch_a, ch_b)
+        } else {
+            (b, a, ch_b, ch_a)
+        };
+        let key = format!("{c1}-{c2}");
+        let entry = json!({
+            "$schema": "../ibc_data.schema.json",
+            "chain_1": {
+                "chain_name": c1,
+                "chain_id": c1,
+                "client_id": "07-tendermint-0",
+                "connection_id": "connection-0"
+            },
+            "chain_2": {
+                "chain_name": c2,
+                "chain_id": c2,
+                "client_id": "07-tendermint-0",
+                "connection_id": "connection-0"
+            },
+            "channels": [{
+                "chain_1": { "channel_id": ch1, "port_id": "transfer" },
+                "chain_2": { "channel_id": ch2, "port_id": "transfer" },
+                "ordering": "unordered",
+                "version": "ics20-1",
+                "tags": { "preferred": true, "status": "ACTIVE" }
+            }]
+        });
+        (key, entry)
+    }
+
+    let mut map = serde_json::Map::new();
+    for (k, v) in [
+        pair_entry(
+            &ab.chain1,
+            &ab.chain2,
+            &ab.channel_on_1,
+            &ab.channel_on_2,
+        ),
+        pair_entry(
+            &bc.chain1,
+            &bc.chain2,
+            &bc.channel_on_1,
+            &bc.channel_on_2,
+        ),
+        pair_entry(
+            &cd.chain1,
+            &cd.chain2,
+            &cd.channel_on_1,
+            &cd.channel_on_2,
+        ),
+    ] {
+        map.insert(k, v);
+    }
+    serde_json::Value::Object(map)
 }

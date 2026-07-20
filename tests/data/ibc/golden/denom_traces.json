@@ -1,0 +1,10 @@
+{
+  "_doc": "Explicit observations for FixtureBackend — not inverted from known_hashes. Populate from live denom-trace queries or harness dumps.",
+  "osmosis": {
+    "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4": {
+      "path": "transfer/channel-1/uakt",
+      "base": "uakt",
+      "source": "audited_mainnet pin mirrored as observation for offline compare"
+    }
+  }
+}

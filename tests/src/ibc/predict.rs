@@ -39,23 +39,77 @@ impl PredictedWorld {
 pub fn check_invariants(world: &PredictedWorld) -> DiffReport {
     let mut report = DiffReport::new();
 
-    // Schema on each ibc_data entry
+    // Schema + channel-side / preferred policy on each ibc_data entry
     if let Some(obj) = world.ibc_data.as_object() {
         for (key, entry) in obj {
             for e in validate_ibc_data_entry(entry, key) {
                 report.push_at(DiffSeverity::Error, "schema", e, format!("ibc_data.{key}"));
             }
 
-            // Channel side: chain_1/chain_2 names present and alpha order recommended as info
             let c1 = entry["chain_1"]["chain_name"].as_str().unwrap_or("");
             let c2 = entry["chain_2"]["chain_name"].as_str().unwrap_or("");
+            // Hard: registry alpha-order of chain_1 / chain_2 names
             if !c1.is_empty() && !c2.is_empty() && c1 > c2 {
                 report.push_at(
-                    DiffSeverity::Warn,
+                    DiffSeverity::Error,
                     "alpha_order",
-                    format!("chain_1 '{c1}' > chain_2 '{c2}' (registry usually alpha-orders)"),
+                    format!("chain_1 '{c1}' > chain_2 '{c2}' (must be alphabetical)"),
                     format!("ibc_data.{key}"),
                 );
+            }
+
+            if let Some(channels) = entry["channels"].as_array() {
+                let mut preferred_transfer = 0usize;
+                for (i, ch) in channels.iter().enumerate() {
+                    let p1 = ch["chain_1"]["port_id"].as_str().unwrap_or("");
+                    let p2 = ch["chain_2"]["port_id"].as_str().unwrap_or("");
+                    let is_transfer = p1 == "transfer" && p2 == "transfer";
+                    let preferred = ch["tags"]["preferred"].as_bool().unwrap_or(false);
+                    if preferred && is_transfer {
+                        preferred_transfer += 1;
+                    }
+                    // Preferred non-transfer is an error (cannot be default transfer path)
+                    if preferred && !is_transfer {
+                        report.push_at(
+                            DiffSeverity::Error,
+                            "preferred_port",
+                            format!(
+                                "preferred channel at index {i} is not transfer/transfer ({p1}/{p2})"
+                            ),
+                            format!("ibc_data.{key}.channels[{i}]"),
+                        );
+                    }
+                    // Channel side: both sides must have non-empty channel_id when transfer
+                    if is_transfer {
+                        let id1 = ch["chain_1"]["channel_id"].as_str().unwrap_or("");
+                        let id2 = ch["chain_2"]["channel_id"].as_str().unwrap_or("");
+                        if id1.is_empty() || id2.is_empty() {
+                            report.push_at(
+                                DiffSeverity::Error,
+                                "channel_side",
+                                "transfer channel missing channel_id on one side",
+                                format!("ibc_data.{key}.channels[{i}]"),
+                            );
+                        }
+                        // Detect obvious side swap: both sides claim the same channel id
+                        if !id1.is_empty() && id1 == id2 {
+                            report.push_at(
+                                DiffSeverity::Error,
+                                "channel_side",
+                                format!("identical channel_id '{id1}' on both sides"),
+                                format!("ibc_data.{key}.channels[{i}]"),
+                            );
+                        }
+                    }
+                }
+                if preferred_transfer > 1 {
+                    report.push_at(
+                        DiffSeverity::Error,
+                        "preferred_contention",
+                        format!("{preferred_transfer} preferred transfer channels (need exactly one)"),
+                        format!("ibc_data.{key}"),
+                    );
+                }
             }
         }
     } else {
@@ -99,30 +153,43 @@ pub fn check_invariants(world: &PredictedWorld) -> DiffReport {
                 );
             }
 
-            // Prefer direct: multi-hop preferred is illegal if direct ACTIVE preferred exists
-            if r.preferred
-                && r.hop_count > 1
-                && world
-                    .graph
-                    .has_direct_preferred_active(&r.origin_chain, dest)
-            {
-                // Note: origin_chain for native is correct; for re-exported IBC assets origin may differ
-                // from physical source of the multi-hop leg. Check also route endpoints if available.
+            // Prefer direct: multi-hop preferred illegal if any direct ACTIVE edge exists
+            if r.preferred && r.hop_count > 1 {
                 let physical_origin = r
                     .route
                     .first()
                     .map(|h| h.from_chain.as_str())
                     .unwrap_or(r.origin_chain.as_str());
-                if world
-                    .graph
-                    .has_direct_preferred_active(physical_origin, dest)
+                if world.graph.has_direct_active(physical_origin, dest)
+                    || world.graph.has_direct_active(&r.origin_chain, dest)
                 {
                     report.push_at(
                         DiffSeverity::Error,
                         "prefer_direct",
                         format!(
-                            "preferred multi-hop (hops={}) while direct ACTIVE preferred exists {}→{}",
+                            "preferred multi-hop (hops={}) while direct ACTIVE edge exists {}→{}",
                             r.hop_count, physical_origin, dest
+                        ),
+                        &path_key,
+                    );
+                }
+            }
+
+            // Path must only use receive channels that appear on hops (side consistency)
+            if !r.route.is_empty() {
+                let mut expected_prefix = String::new();
+                for hop in r.route.iter().rev() {
+                    expected_prefix.push_str("transfer/");
+                    expected_prefix.push_str(&hop.to_channel);
+                    expected_prefix.push('/');
+                }
+                if !r.trace_path.starts_with(&expected_prefix) {
+                    report.push_at(
+                        DiffSeverity::Error,
+                        "channel_side",
+                        format!(
+                            "trace_path {} does not start with hop receive-channel nest {}",
+                            r.trace_path, expected_prefix
                         ),
                         &path_key,
                     );

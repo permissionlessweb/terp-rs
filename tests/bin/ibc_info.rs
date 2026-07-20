@@ -9,81 +9,182 @@ use cw_orch::{
 };
 use cw_orch_interchain::prelude::*;
 use log::info;
-use scripts::ibc_core::TerpChannelInfo;
-use serde::{Deserialize, Serialize};
+use clap::{Parser, Subcommand};
+use scripts::ibc::{
+    build_channel_to_chain_map as lib_build_channel_to_chain_map, check_invariants,
+    compute_ibc_denom_hash, derive_terp_ibc_denom, finalize_channels_for_ibc_entry,
+    FixtureBackend, PredictedWorld, TerpChannelInfo,
+};
 use serde_json::{Value, json};
-use std::collections::{HashMap, HashSet};
-use terp_rs::ibc::core::client::v1::{QueryClientStatusRequest, QueryClientStatusResponse};
+use std::collections::HashMap;
+use std::path::PathBuf;
 use terp_rs::{Message, ibc::lightclients::tendermint::v1::ClientState};
 use tracing::warn;
+
+#[derive(Parser, Debug)]
+#[command(name = "ibc", about = "Terp IBC data generate / validate / compare (lib-backed)")]
+struct Cli {
+    #[command(subcommand)]
+    cmd: Option<Commands>,
+}
+
+#[derive(Subcommand, Debug)]
+enum Commands {
+    /// Query live chains and write public/ artifacts (default)
+    Generate,
+    /// Validate existing public/ibc-data + routing against hard invariants
+    Validate {
+        #[arg(long, default_value = "../public")]
+        public_dir: PathBuf,
+    },
+    /// Compare predicted routes to fixture/snapshot observations
+    Compare {
+        #[arg(long, default_value = "../public")]
+        public_dir: PathBuf,
+        #[arg(long)]
+        snapshot: Option<PathBuf>,
+        #[arg(long)]
+        strict: bool,
+    },
+}
 
 fn main() -> anyhow::Result<()> {
     rustls::crypto::aws_lc_rs::default_provider()
         .install_default()
         .unwrap();
-    // dotenv::dotenv().ok();
     env_logger::init();
-
-    derive_full_ibc_state()
-}
-
-/// Convert IBC ordering int to schema-compliant string.
-/// Cosmos SDK gRPC returns: ORDER_NONE_UNSPECIFIED=0, ORDER_UNORDERED=1, ORDER_ORDERED=2
-fn ordering_to_str(ord_val: &serde_json::Value) -> String {
-    match ord_val.as_str() {
-        Some(s) if s == "ordered" || s == "unordered" => s.to_string(),
-        _ => match ord_val.as_i64().unwrap_or(1) {
-            1 => "unordered".to_string(),
-            2 => "ordered".to_string(),
-            _ => "unordered".to_string(),
-        },
+    let cli = Cli::parse();
+    match cli.cmd.unwrap_or(Commands::Generate) {
+        Commands::Generate => derive_full_ibc_state(),
+        Commands::Validate { public_dir } => cmd_validate(&public_dir),
+        Commands::Compare {
+            public_dir,
+            snapshot,
+            strict,
+        } => cmd_compare(&public_dir, snapshot.as_deref(), strict),
     }
 }
 
-/// Pure helper extracted for testability: given the internal channel entries (with chain_1=terp side from query)
-/// and the alpha decision, produce schema compliant final channels with correct side mapping + preferred tags.
-fn finalize_channels_for_ibc_entry(
-    raw_channels: &[Value],
-    chain_1_name: &str,
-    counterpartyname: &str,
-    client_status: &str,
-) -> Vec<Value> {
-    let mut has_preferred_transfer = false;
-    let mut final_channels: Vec<Value> = Vec::new();
-    for ch in raw_channels {
-        let stored_terp = &ch["chain_1"];
-        let stored_cp = &ch["chain_2"];
-        let (out_c1, out_c2) = if chain_1_name == "terp" {
-            (stored_terp.clone(), stored_cp.clone())
-        } else {
-            (stored_cp.clone(), stored_terp.clone())
-        };
-        let port_1 = out_c1["port_id"].as_str().unwrap_or("");
-        let port_2 = out_c2["port_id"].as_str().unwrap_or("");
-        let is_transfer = port_1 == "transfer" && port_2 == "transfer";
-        let mut tags = ch["tags"].clone();
-        if is_transfer && !has_preferred_transfer {
-            if client_status == "Active" {
-                tags["preferred"] = json!(true);
-                has_preferred_transfer = true;
-            } else {
-                tags["preferred"] = json!(false);
+fn load_public_ibc_data(public_dir: &std::path::Path) -> anyhow::Result<serde_json::Value> {
+    let dir = public_dir.join("ibc-data");
+    let mut map = serde_json::Map::new();
+    if dir.is_dir() {
+        for ent in std::fs::read_dir(&dir)? {
+            let ent = ent?;
+            let path = ent.path();
+            if path.extension().and_then(|e| e.to_str()) != Some("json") {
+                continue;
             }
-        } else if is_transfer {
-            tags["preferred"] = json!(false);
-        } else {
-            tags["preferred"] = json!(true);
+            let stem = path.file_stem().unwrap().to_string_lossy().to_string();
+            let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&path)?)?;
+            map.insert(stem, v);
         }
-        final_channels.push(json!({
-            "chain_1": { "channel_id": out_c1["channel_id"], "port_id": out_c1["port_id"] },
-            "chain_2": { "channel_id": out_c2["channel_id"], "port_id": out_c2["port_id"] },
-            "ordering": ordering_to_str(&ch["ordering"]),
-            "version": ch["version"],
-            "tags": tags,
-        }));
     }
-    final_channels
+    Ok(serde_json::Value::Object(map))
 }
+
+fn minimal_assets_from_public(public_dir: &std::path::Path) -> HashMap<String, Vec<serde_json::Value>> {
+    let mut chain_assets = HashMap::new();
+    chain_assets.insert(
+        "terp".into(),
+        vec![
+            json!({"symbol": "TERP", "base": "uterp"}),
+            json!({"symbol": "THIOL", "base": "uthiol"}),
+        ],
+    );
+    let al = public_dir.join("assetlist.json");
+    if al.exists() {
+        if let Ok(text) = std::fs::read_to_string(&al) {
+            if let Ok(v) = serde_json::from_str::<serde_json::Value>(&text) {
+                if let Some(assets) = v["assets"].as_array() {
+                    let mut natives = Vec::new();
+                    for a in assets {
+                        let base = a["base"].as_str().unwrap_or("");
+                        if !base.starts_with("ibc/") {
+                            natives.push(a.clone());
+                        }
+                    }
+                    if !natives.is_empty() {
+                        chain_assets.insert("terp".into(), natives);
+                    }
+                }
+            }
+        }
+    }
+    // Counterparties from ibc-data stems
+    if let Ok(ibc) = load_public_ibc_data(public_dir) {
+        if let Some(obj) = ibc.as_object() {
+            for (_k, entry) in obj {
+                for side in ["chain_1", "chain_2"] {
+                    if let Some(name) = entry[side]["chain_name"].as_str() {
+                        chain_assets.entry(name.to_string()).or_insert_with(Vec::new);
+                    }
+                }
+            }
+        }
+    }
+    chain_assets
+}
+
+fn cmd_validate(public_dir: &std::path::Path) -> anyhow::Result<()> {
+    let ibc_data = load_public_ibc_data(public_dir)?;
+    let assets = minimal_assets_from_public(public_dir);
+    let world = PredictedWorld::from_inputs(ibc_data, &assets, 3);
+    let report = check_invariants(&world);
+    for item in &report.items {
+        println!(
+            "[{:?}] {} {} {:?}",
+            item.severity, item.code, item.message, item.path
+        );
+    }
+    if report.has_errors() {
+        anyhow::bail!("validate failed with {} errors", report.errors().count());
+    }
+    println!("✓ validate clean ({} findings)", report.items.len());
+    Ok(())
+}
+
+fn cmd_compare(
+    public_dir: &std::path::Path,
+    snapshot: Option<&std::path::Path>,
+    strict: bool,
+) -> anyhow::Result<()> {
+    use scripts::ibc::{compare_predict_observe_with, CompareOptions, SnapshotBackend};
+    let ibc_data = load_public_ibc_data(public_dir)?;
+    let assets = minimal_assets_from_public(public_dir);
+    let world = PredictedWorld::from_inputs(ibc_data, &assets, 3);
+    let inv = check_invariants(&world);
+    if inv.has_errors() {
+        for e in inv.errors() {
+            eprintln!("invariant ERROR {} {}", e.code, e.message);
+        }
+        anyhow::bail!("invariants failed before compare");
+    }
+    let opts = CompareOptions {
+        unobserved_as_error: strict,
+        preferred_only: true,
+    };
+    let report = if let Some(snap) = snapshot {
+        let backend = SnapshotBackend::load(snap).map_err(|e| anyhow::anyhow!(e))?;
+        compare_predict_observe_with(&world, &backend, &opts)
+    } else {
+        let golden = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("data/ibc/golden");
+        let backend = FixtureBackend::load_from_golden_dir(&golden).map_err(|e| anyhow::anyhow!(e))?;
+        compare_predict_observe_with(&world, &backend, &opts)
+    };
+    for item in &report.items {
+        println!(
+            "[{:?}] {} {} {:?}",
+            item.severity, item.code, item.message, item.path
+        );
+    }
+    if report.has_errors() {
+        anyhow::bail!("compare failed");
+    }
+    println!("✓ compare clean");
+    Ok(())
+}
+
 
 fn derive_full_ibc_state() -> anyhow::Result<()> {
     let interchain = DaemonInterchain::new(
@@ -106,12 +207,21 @@ fn derive_full_ibc_state() -> anyhow::Result<()> {
     let state_atone = atone.state();
     // let state_akash = akash.state();
 
-    // TODO: omit known dead chains and clients
-    let dead_chains = &["omniflixhub-1", "evmos-1", "stargaze-1"];
-    let dead_clients = &[
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-        25, 26, 27, 28, 29, 30, 31,
-    ];
+    // Capability-based filtering: exclude only via env / known dead chain IDs.
+    // Prefer skipping clients without open transfer channels (handled below).
+    let dead_chains: Vec<String> = std::env::var("IBC_EXCLUDE_CHAIN_IDS")
+        .unwrap_or_else(|_| "omniflixhub-1,evmos-1,stargaze-1".into())
+        .split(',')
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .collect();
+    let exclude_clients: Vec<String> = std::env::var("IBC_EXCLUDE_CLIENT_IDS")
+        .unwrap_or_default()
+        .split(',')
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .collect();
+    let mut skip_reasons: Vec<serde_json::Value> = Vec::new();
 
     let clients = terp.rt_handle.block_on(async {
         ibc._clients()
@@ -123,19 +233,10 @@ fn derive_full_ibc_state() -> anyhow::Result<()> {
     let mut ibc_by_chain: HashMap<String, serde_json::Value> = HashMap::new();
 
     for c in &clients {
-        if dead_clients
-            .iter()
-            .find(|dc| {
-                let key = format!("07-tendermint-{}", dc);
-                println!("key: {}", key);
-                key == c.client_id
-            })
-            .is_some()
-        {
-            println!("dead client: {}", c.client_id);
+        if exclude_clients.iter().any(|id| id == &c.client_id) {
+            skip_reasons.push(json!({"client_id": c.client_id, "reason": "exclude_list"}));
+            println!("excluded client: {}", c.client_id);
             continue;
-        } else {
-            println!("not dead client: {}", c.client_id);
         }
         let (clientid, counterpartychainid, counterpartyname) = if let Some(raw) = &c.client_state {
             match ClientState::decode(raw.value.as_slice()) {
@@ -154,7 +255,8 @@ fn derive_full_ibc_state() -> anyhow::Result<()> {
             continue;
         };
 
-        if dead_chains.contains(&counterpartychainid.as_str()) {
+        if dead_chains.iter().any(|d| d == &counterpartychainid) {
+            skip_reasons.push(json!({"client_id": clientid, "chain_id": counterpartychainid, "reason": "dead_chain"}));
             continue;
         }
         // === Usability filter for canonical ibcinfo ===
@@ -751,55 +853,63 @@ fn derive_full_ibc_state() -> anyhow::Result<()> {
         );
     }
 
-    let graph = IBCChannelGraph::build_from_state(&state_mut);
+    // Lib-backed predict + fail-closed invariants (Agent C remediation #1)
+    let ibc_data_for_predict = state_mut.get("ibc_data").unwrap_or(json!({}));
+    let world = PredictedWorld::from_inputs(ibc_data_for_predict.clone(), &chain_assets, 3);
 
-    println!("\n=== IBC Channel Graph ===");
-    for (chain, edges) in &graph.edges {
+    println!("\n=== IBC Channel Graph (lib) ===");
+    for (chain, edges) in &world.graph.edges {
         println!("  {} -> {} connections", chain, edges.len());
         for edge in edges {
             println!(
-                "    -> {}/channel-{} (preferred: {})",
-                edge.counterparty_chain, edge.this_channel_id, edge.preferred
+                "    -> {}/{} (preferred: {}, status: {})",
+                edge.counterparty_chain, edge.this_channel_id, edge.preferred, edge.status
             );
         }
     }
 
-    // Premine the routing table
-    println!("\n=== Premining IBC Asset Routes ===");
-    let routing_table = IBCAssetRoutingTable::premine(&graph, &chain_assets, 3);
+    println!("\n=== Premining IBC Asset Routes (lib) ===");
+    println!("Total routes: {}", world.routes.metadata.total_routes);
+    println!("Chains covered: {:?}", world.routes.metadata.chains);
 
-    println!("\n=== Routing Table Summary ===");
-    println!("Total routes: {}", routing_table.metadata.total_routes);
-    println!("Chains covered: {:?}", routing_table.metadata.chains);
-
-    for (dest_chain, routes) in &routing_table.routes {
-        println!("\n  {} - {} IBC assets:", dest_chain, routes.len());
-        for route in routes.iter().take(10) {
-            println!(
-                "    {} ({}) -> {} [{} hops, preferred: {}]",
-                route.symbol,
-                route.origin_chain,
-                route.dest_denom,
-                route.hop_count,
-                route.preferred
-            );
-        }
-        if routes.len() > 10 {
-            println!("    ... and {} more", routes.len() - 10);
-        }
+    let report = check_invariants(&world);
+    for item in &report.items {
+        println!(
+            "  [{:?}] {} — {} ({:?})",
+            item.severity, item.code, item.message, item.path
+        );
+    }
+    if report.has_errors() {
+        anyhow::bail!(
+            "IBC generation failed hard invariants ({} errors). Not writing success.",
+            report.errors().count()
+        );
     }
 
-    // Export the simplified lookup table
-    let simplified = routing_table.to_simplified_lookup();
+    let simplified = world.lookup.clone();
     let lookup_path = std::path::PathBuf::from("../public/ibc_lookup_table.json");
     std::fs::write(&lookup_path, serde_json::to_string_pretty(&simplified)?)?;
     println!("\n✓ IBC lookup table written to ibc_lookup_table.json");
 
-    // Export the full routing table
-    let full_table = routing_table.to_json();
+    let full_table = world.routes.to_json();
     let full_path = std::path::PathBuf::from("../public/ibc_routing_table.json");
     std::fs::write(&full_path, serde_json::to_string_pretty(&full_table)?)?;
     println!("✓ Full routing table written to ibc_routing_table.json");
+
+    let meta = json!({
+        "generated_at": now_timestamp(),
+        "generator": "scripts/bin/ibc (lib-backed)",
+        "max_hops": 3,
+        "total_routes": world.routes.metadata.total_routes,
+        "chains": world.routes.metadata.chains,
+        "skip_reasons": skip_reasons,
+        "invariant_findings": report.items.len(),
+        "exclude_chain_ids": dead_chains,
+        "exclude_client_ids": exclude_clients,
+    });
+    let meta_path = std::path::PathBuf::from("../public/ibc_generation_meta.json");
+    std::fs::write(&meta_path, serde_json::to_string_pretty(&meta)?)?;
+    println!("✓ Generation meta written to ibc_generation_meta.json");
 
     Ok(())
 }
@@ -1124,164 +1234,20 @@ struct IbcChannelInfo {
 }
 
 fn build_channel_to_chain_map(state: &DaemonState) -> HashMap<String, TerpChannelInfo> {
-    let mut map = HashMap::new();
-
-    // Try to get ibc_data from state
     let ibc_data = match state.get("ibc_data") {
         Ok(data) => data,
         Err(_) => {
             println!("  ⚠ No ibc_data found in state");
-            return map;
+            return HashMap::new();
         }
     };
-
-    let obj = match ibc_data.as_object() {
-        Some(o) => o,
-        None => {
-            println!("  ⚠ ibc_data is not an object");
-            return map;
-        }
-    };
-
-    println!("  Parsing {} ibc_data entries...", obj.len());
-
-    for (key, data) in obj {
-        // Handle both formats:
-        // Old format: key is "akash-terp", data has "akash" and "terp" keys
-        // New format: key is "akash" (already extracted), data has "chain_1" and "chain_2" keys
-
-        let (counterparty_name, terp_is_chain1) =
-            if data["chain_1"].is_object() && data["chain_2"].is_object() {
-                // New schema format: chain_1/chain_2
-                let chain_1_name = data["chain_1"]["chain_name"].as_str().unwrap_or("");
-                let chain_2_name = data["chain_2"]["chain_name"].as_str().unwrap_or("");
-
-                if chain_1_name == "terp" {
-                    (chain_2_name.to_string(), true)
-                } else if chain_2_name == "terp" {
-                    (chain_1_name.to_string(), false)
-                } else {
-                    println!("  ⚠ Entry '{}' has no terp chain", key);
-                    continue;
-                }
-            } else {
-                // Old format: chain names as keys
-                // Key might be "akash-terp" or just "akash"
-                let cp_name = key
-                    .strip_suffix("-terp")
-                    .or_else(|| key.strip_prefix("terp-"))
-                    .unwrap_or(key);
-
-                if data[cp_name].is_object() && data["terp"].is_object() {
-                    (cp_name.to_string(), false) // terp is NOT chain_1 in old format
-                } else {
-                    println!("  ⚠ Entry '{}' has unknown format", key);
-                    continue;
-                }
-            };
-
-        if counterparty_name.is_empty() {
-            println!("  ⚠ Empty counterparty name for key '{}'", key);
-            continue;
-        }
-
-        // Find the preferred transfer channel
-        let channels = match data["channels"].as_array() {
-            Some(c) => c,
-            None => {
-                println!("  ⚠ No channels array in entry '{}'", key);
-                continue;
-            }
-        };
-
-        let preferred_channel = channels
-            .iter()
-            .find(|c| {
-                let has_transfer_ports = if data["chain_1"].is_object() {
-                    c["chain_1"]["port_id"].as_str() == Some("transfer")
-                        && c["chain_2"]["port_id"].as_str() == Some("transfer")
-                } else {
-                    // Old format
-                    c[counterparty_name.as_str()]["port_id"].as_str() == Some("transfer")
-                        && c["terp"]["port_id"].as_str() == Some("transfer")
-                };
-                has_transfer_ports && c["tags"]["preferred"].as_bool() == Some(true)
-            })
-            .or_else(|| {
-                channels.iter().find(|c| {
-                    if data["chain_1"].is_object() {
-                        c["chain_1"]["port_id"].as_str() == Some("transfer")
-                            && c["chain_2"]["port_id"].as_str() == Some("transfer")
-                    } else {
-                        c[counterparty_name.as_str()]["port_id"].as_str() == Some("transfer")
-                            && c["terp"]["port_id"].as_str() == Some("transfer")
-                    }
-                })
-            });
-
-        let (terp_channel, cp_channel) = match preferred_channel {
-            Some(c) => {
-                if data["chain_1"].is_object() {
-                    // New format
-                    if terp_is_chain1 {
-                        (
-                            c["chain_1"]["channel_id"]
-                                .as_str()
-                                .unwrap_or("")
-                                .to_string(),
-                            c["chain_2"]["channel_id"]
-                                .as_str()
-                                .unwrap_or("")
-                                .to_string(),
-                        )
-                    } else {
-                        (
-                            c["chain_2"]["channel_id"]
-                                .as_str()
-                                .unwrap_or("")
-                                .to_string(),
-                            c["chain_1"]["channel_id"]
-                                .as_str()
-                                .unwrap_or("")
-                                .to_string(),
-                        )
-                    }
-                } else {
-                    // Old format
-                    (
-                        c["terp"]["channel_id"].as_str().unwrap_or("").to_string(),
-                        c[counterparty_name.as_str()]["channel_id"]
-                            .as_str()
-                            .unwrap_or("")
-                            .to_string(),
-                    )
-                }
-            }
-            None => {
-                println!(
-                    "  ⚠ No preferred transfer channel found for '{}'",
-                    counterparty_name
-                );
-                continue;
-            }
-        };
-
-        if !terp_channel.is_empty() {
-            map.insert(
-                counterparty_name.clone(),
-                TerpChannelInfo {
-                    terp_channel_id: terp_channel.clone(),
-                    counterparty_channel_id: cp_channel.clone(),
-                    counterparty_chain_name: counterparty_name.clone(),
-                },
-            );
-            println!(
-                "  ✓ Channel map: terp/channel-{} <-> {}/channel-{}",
-                terp_channel, counterparty_name, cp_channel
-            );
-        }
+    let map = lib_build_channel_to_chain_map(&ibc_data);
+    for (cp, info) in &map {
+        println!(
+            "  ✓ Channel map: terp/{} <-> {}/{}",
+            info.terp_channel_id, cp, info.counterparty_channel_id
+        );
     }
-
     map
 }
 /// Find a multi-hop path from Terp to a target chain via an intermediary
@@ -1329,2078 +1295,9 @@ fn load_assetlist_for_chain(chain_name: &str, state: &DaemonState) -> Vec<serde_
 ///    - Multi-hop on source: transfer/{terp_ch}/{source_trace_path}
 /// 3. If Terp has NO direct channel to counterparty but has channel to source chain:
 ///    - Route through source: transfer/{terp_ch_to_source}/{source_trace_path}
-fn derive_terp_ibc_denom(
-    asset: &serde_json::Value,
-    terp_channels: &HashMap<String, TerpChannelInfo>,
-) -> Option<(String, String, String)> {
-    // (ibc_denom_hash, full_trace_path, counterparty_chain)
 
-    let traces_opt = asset["traces"].as_array();
-    let source_chain = asset["_source_chain"].as_str().unwrap_or("");
-    let base_denom = asset["base"].as_str().unwrap_or("");
 
-    if traces_opt.is_none() || traces_opt.unwrap().is_empty() {
-        // Origin native case
-        if !source_chain.is_empty() && !base_denom.is_empty() {
-            if let Some(info) = terp_channels.get(source_chain) {
-                let full_path = format!("transfer/{}/{}", info.terp_channel_id, base_denom);
-                let hash = compute_ibc_denom_hash(&full_path);
-                return Some((hash, full_path, source_chain.to_string()));
-            }
-        }
-        return None;
-    }
-    let traces = traces_opt.unwrap();
-    let ibc_trace = traces.iter().find(|t| {
-        matches!(
-            t["type"].as_str().unwrap_or(""),
-            "ibc" | "ibc-cw20" | "ibc-bridge"
-        )
-    })?;
-
-    let counterparty_chain = ibc_trace["counterparty"]["chain_name"].as_str()?;
-    let counterparty_base = ibc_trace["counterparty"]["base_denom"].as_str()?;
-    let source_trace_path = ibc_trace["chain"]["path"].as_str().unwrap_or("");
-    // Try direct channel to counterparty first
-    if let Some(info) = terp_channels.get(counterparty_chain) {
-        let full_path = if source_trace_path.contains('/') {
-            // Asset is multi-hop on source chain (e.g., Osmosis wrapping ATOM from Hub)
-            // We route directly to counterparty, so just use counterparty base
-            format!("transfer/{}/{}", info.terp_channel_id, counterparty_base)
-        } else {
-            // Single hop: our channel + counterparty base denom
-            format!("transfer/{}/{}", info.terp_channel_id, counterparty_base)
-        };
-        let hash = compute_ibc_denom_hash(&full_path);
-        return Some((hash, full_path, counterparty_chain.to_string()));
-    }
-
-    // No direct channel — route through the source chain
-    if !source_chain.is_empty() {
-        if let Some(info) = terp_channels.get(source_chain) {
-            // Prepend our channel to source chain onto the existing trace path
-            let full_path = if source_trace_path.is_empty() {
-                format!("transfer/{}/{}", info.terp_channel_id, counterparty_base)
-            } else {
-                format!("transfer/{}/{}", info.terp_channel_id, source_trace_path)
-            };
-            let hash = compute_ibc_denom_hash(&full_path);
-            return Some((hash, full_path, counterparty_chain.to_string()));
-        }
-    }
-
-    None
-}
-fn compute_ibc_denom_hash(trace_path: &str) -> String {
-    use sha2::{Digest, Sha256};
-    let mut hasher = Sha256::new();
-    hasher.update(trace_path.as_bytes());
-    let result = hasher.finalize();
-    format!("ibc/{}", hex::encode(result).to_uppercase())
-}
-
-/// A single hop in an IBC route
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct ChannelHop {
-    from_chain: String,
-    from_channel: String,
-    to_chain: String,
-    to_channel: String,
-}
-
-/// A fully resolved IBC asset route
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct IBCAssetRoute {
-    /// Symbol of the asset (e.g., "ATOM")
-    symbol: String,
-    /// Chain where the asset originates (e.g., "cosmoshub")
-    origin_chain: String,
-    /// Denom on the origin chain (e.g., "uatom")
-    origin_denom: String,
-    /// Chain where we're computing the IBC denom (e.g., "terp")
-    dest_chain: String,
-    /// The IBC denom hash on the dest chain (e.g., "ibc/27394...")
-    dest_denom: String,
-    /// The full trace path (e.g., "transfer/channel-0/uatom")
-    trace_path: String,
-    /// The route taken (ordered list of hops)
-    route: Vec<ChannelHop>,
-    /// Number of hops
-    hop_count: usize,
-    /// Whether this uses a preferred channel
-    preferred: bool,
-}
-
-/// The IBC channel graph
-#[derive(Debug, Clone, Default)]
-struct IBCChannelGraph {
-    /// Adjacency list: chain -> [(counterparty_chain, channel_info)]
-    edges: HashMap<String, Vec<ChannelEdge>>,
-}
-
-#[derive(Debug, Clone)]
-struct ChannelEdge {
-    counterparty_chain: String,
-    this_channel_id: String,
-    counterparty_channel_id: String,
-    preferred: bool,
-    status: String,
-}
-
-impl IBCChannelGraph {
-    fn new() -> Self {
-        Self::default()
-    }
-
-    /// Add a channel connection between two chains
-    fn add_channel(
-        &mut self,
-        chain_a: &str,
-        chain_a_channel: &str,
-        chain_b: &str,
-        chain_b_channel: &str,
-        preferred: bool,
-        status: String,
-    ) {
-        self.edges
-            .entry(chain_a.to_string())
-            .or_default()
-            .push(ChannelEdge {
-                counterparty_chain: chain_b.to_string(),
-                counterparty_channel_id: chain_b_channel.to_string(),
-                this_channel_id: chain_a_channel.to_string(),
-                preferred,
-                status: status.clone(),
-            });
-
-        self.edges
-            .entry(chain_b.to_string())
-            .or_default()
-            .push(ChannelEdge {
-                counterparty_chain: chain_a.to_string(),
-                counterparty_channel_id: chain_a_channel.to_string(),
-                this_channel_id: chain_b_channel.to_string(),
-                preferred,
-                status,
-            });
-    }
-
-    /// Build the graph from state.json ibc_data
-    fn build_from_state(state: &DaemonState) -> Self {
-        let mut graph = Self::new();
-
-        if let Ok(ibc_data) = state.get("ibc_data") {
-            if let Some(obj) = ibc_data.as_object() {
-                for (_key, data) in obj {
-                    let chain_1_name = data["chain_1"]["chain_name"].as_str().unwrap_or("");
-                    let chain_2_name = data["chain_2"]["chain_name"].as_str().unwrap_or("");
-
-                    if let Some(channels) = data["channels"].as_array() {
-                        for chan in channels {
-                            let ch1_id = chan["chain_1"]["channel_id"].as_str().unwrap_or("");
-                            let ch2_id = chan["chain_2"]["channel_id"].as_str().unwrap_or("");
-                            let preferred = chan["tags"]["preferred"].as_bool().unwrap_or(false);
-                            let status = chan["tags"]["status"]
-                                .as_str()
-                                .unwrap_or("UNKNOWN")
-                                .to_string();
-
-                            if !ch1_id.is_empty() && !ch2_id.is_empty() {
-                                graph.add_channel(
-                                    chain_1_name,
-                                    ch1_id,
-                                    chain_2_name,
-                                    ch2_id,
-                                    preferred,
-                                    status,
-                                );
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        graph
-    }
-
-    /// Find all routes from source to dest (BFS, up to max_hops)
-    fn find_routes(&self, source: &str, dest: &str, max_hops: usize) -> Vec<Vec<ChannelHop>> {
-        let mut routes = Vec::new();
-        let mut queue = vec![(source.to_string(), Vec::new(), HashSet::new())];
-
-        while let Some((current_chain, path, visited)) = queue.pop() {
-            if current_chain == dest && !path.is_empty() {
-                routes.push(path);
-                continue;
-            }
-
-            if path.len() >= max_hops {
-                continue;
-            }
-
-            if let Some(neighbors) = self.edges.get(&current_chain) {
-                for edge in neighbors {
-                    if edge.status != "ACTIVE" {
-                        continue;
-                    }
-                    if visited.contains(&edge.counterparty_chain) {
-                        continue;
-                    }
-
-                    let mut new_visited = visited.clone();
-                    new_visited.insert(current_chain.clone());
-
-                    let mut new_path = path.clone();
-                    new_path.push(ChannelHop {
-                        from_chain: current_chain.clone(),
-                        from_channel: edge.this_channel_id.clone(),
-                        to_chain: edge.counterparty_chain.clone(),
-                        to_channel: edge.counterparty_channel_id.clone(),
-                    });
-
-                    queue.push((edge.counterparty_chain.clone(), new_path, new_visited));
-                }
-            }
-        }
-
-        // Sort by hop count (shortest first), then prefer routes with preferred channels
-        routes.sort_by(|a, b| {
-            a.len().cmp(&b.len()).then_with(|| {
-                let a_preferred = a
-                    .iter()
-                    .any(|h| self.is_preferred(&h.from_chain, &h.to_chain, &h.from_channel));
-                let b_preferred = b
-                    .iter()
-                    .any(|h| self.is_preferred(&h.from_chain, &h.to_chain, &h.from_channel));
-                b_preferred.cmp(&a_preferred) // preferred = true > false
-            })
-        });
-
-        routes
-    }
-
-    fn is_preferred(&self, from: &str, to: &str, channel: &str) -> bool {
-        self.edges
-            .get(from)
-            .and_then(|edges| {
-                edges
-                    .iter()
-                    .find(|e| e.counterparty_chain == to && e.this_channel_id == channel)
-            })
-            .map(|e| e.preferred)
-            .unwrap_or(false)
-    }
-
-    /// Compute the IBC denom for an asset on a destination chain via a specific route
-    fn compute_ibc_denom_for_route(
-        &self,
-        origin_denom: &str,
-        route: &[ChannelHop],
-    ) -> (String, String) {
-        // Build the trace path by walking the route in reverse
-        // (from dest back to origin)
-        let mut path_parts = Vec::new();
-        let mut current_denom = origin_denom.to_string();
-
-        // Walk the route forward (origin -> dest)
-        // Each hop adds a "transfer/channel-X/" prefix
-        for hop in route {
-            path_parts.push(format!("transfer/{}", hop.from_channel));
-            current_denom = format!("transfer/{}/{}", hop.from_channel, current_denom);
-        }
-
-        // Actually, the trace path is built from the perspective of the dest chain
-        // looking back to origin. So we need to reverse the hop order.
-        let mut trace_path = String::new();
-        for hop in route.iter().rev() {
-            // From dest's perspective, the channel that connects TO the next hop
-            // is the counterparty channel
-            trace_path = format!("transfer/{}/", hop.to_channel) + &trace_path;
-        }
-        trace_path.push_str(origin_denom);
-
-        // Compute the hash
-        let hash = compute_ibc_denom_hash(&trace_path);
-
-        (hash, trace_path)
-    }
-}
-
-/// The full IBC Asset Routing Table
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct IBCAssetRoutingTable {
-    /// All computed routes, keyed by (dest_chain, ibc_denom)
-    routes: HashMap<String, Vec<IBCAssetRoute>>,
-    /// Metadata about which chains and assets were processed
-    metadata: RoutingTableMetadata,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct RoutingTableMetadata {
-    /// Chains included in the routing table
-    chains: Vec<String>,
-    /// Total number of routes computed
-    total_routes: usize,
-    /// Timestamp of generation
-    generated_at: String,
-}
-
-impl IBCAssetRoutingTable {
-    /// Premine all possible IBC asset routes
-    fn premine(
-        graph: &IBCChannelGraph,
-        chain_assets: &HashMap<String, Vec<serde_json::Value>>,
-        max_hops: usize,
-    ) -> Self {
-        let mut routes: HashMap<String, Vec<IBCAssetRoute>> = HashMap::new();
-        let mut chains = HashSet::new();
-
-        // For each chain with assets
-        for (source_chain, assets) in chain_assets {
-            chains.insert(source_chain.clone());
-
-            for asset in assets {
-                let symbol = asset["symbol"].as_str().unwrap_or("UNKNOWN");
-                let base_denom = asset["base"].as_str().unwrap_or("");
-
-                // Skip assets that are already IBC on this chain (we want origin assets)
-                // unless we also want to trace multi-hop IBC assets
-                let is_native = !base_denom.starts_with("ibc/");
-
-                if is_native {
-                    // Find all chains this asset can reach
-                    for dest_chain in graph.edges.keys() {
-                        if dest_chain == source_chain {
-                            continue;
-                        }
-
-                        // Find routes from source to dest
-                        let found_routes = graph.find_routes(source_chain, dest_chain, max_hops);
-
-                        for route in found_routes {
-                            let (ibc_denom, trace_path) =
-                                graph.compute_ibc_denom_for_route(base_denom, &route);
-
-                            let preferred = route.iter().all(|h| {
-                                graph.is_preferred(&h.from_chain, &h.to_chain, &h.from_channel)
-                            });
-
-                            let entry = IBCAssetRoute {
-                                symbol: symbol.to_string(),
-                                origin_chain: source_chain.clone(),
-                                origin_denom: base_denom.to_string(),
-                                dest_chain: dest_chain.clone(),
-                                dest_denom: ibc_denom.clone(),
-                                trace_path: trace_path.clone(),
-                                route: route.clone(),
-                                hop_count: route.len(),
-                                preferred,
-                            };
-
-                            routes.entry(dest_chain.clone()).or_default().push(entry);
-                        }
-                    }
-                } else {
-                    // This is an IBC asset on the source chain
-                    // We can still trace it further to other chains
-                    if let Some(traces) = asset["traces"].as_array() {
-                        if let Some(ibc_trace) = traces.iter().find(|t| {
-                            matches!(
-                                t["type"].as_str().unwrap_or(""),
-                                "ibc" | "ibc-cw20" | "ibc-bridge"
-                            )
-                        }) {
-                            let cp_chain = ibc_trace["counterparty"]["chain_name"]
-                                .as_str()
-                                .unwrap_or("");
-                            let cp_denom = ibc_trace["counterparty"]["base_denom"]
-                                .as_str()
-                                .unwrap_or("");
-                            let source_trace = ibc_trace["chain"]["path"].as_str().unwrap_or("");
-
-                            // For each dest chain (not the source)
-                            for dest_chain in graph.edges.keys() {
-                                if dest_chain == source_chain {
-                                    continue;
-                                }
-
-                                let found_routes =
-                                    graph.find_routes(source_chain, dest_chain, max_hops);
-
-                                for route in found_routes {
-                                    // The trace path on dest chain is:
-                                    // transfer/{our_channel_to_source}/{source_trace_path}
-                                    let first_hop = &route[route.len() - 1]; // Last hop in reversed route
-                                    let full_trace = if source_trace.is_empty() {
-                                        format!("transfer/{}/{}", first_hop.to_channel, cp_denom)
-                                    } else {
-                                        format!(
-                                            "transfer/{}/{}",
-                                            first_hop.to_channel, source_trace
-                                        )
-                                    };
-
-                                    let ibc_denom = compute_ibc_denom_hash(&full_trace);
-
-                                    let preferred = route.iter().all(|h| {
-                                        graph.is_preferred(
-                                            &h.from_chain,
-                                            &h.to_chain,
-                                            &h.from_channel,
-                                        )
-                                    });
-
-                                    let entry = IBCAssetRoute {
-                                        symbol: symbol.to_string(),
-                                        origin_chain: cp_chain.to_string(),
-                                        origin_denom: cp_denom.to_string(),
-                                        dest_chain: dest_chain.clone(),
-                                        dest_denom: ibc_denom.clone(),
-                                        trace_path: full_trace,
-                                        route: route.clone(),
-                                        hop_count: route.len(),
-                                        preferred,
-                                    };
-
-                                    routes.entry(dest_chain.clone()).or_default().push(entry);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        let total_routes: usize = routes.values().map(|v| v.len()).sum();
-
-        Self {
-            routes,
-            metadata: RoutingTableMetadata {
-                chains: chains.into_iter().collect(),
-                total_routes,
-                generated_at: now_timestamp(),
-            },
-        }
-    }
-
-    /// Look up all IBC assets available on a specific chain
-    fn lookup_by_dest_chain(&self, chain: &str) -> Vec<&IBCAssetRoute> {
-        self.routes
-            .get(chain)
-            .map(|v| v.iter().collect())
-            .unwrap_or_default()
-    }
-
-    /// Look up the IBC denom for a specific asset on a specific chain
-    fn lookup_ibc_denom(&self, symbol: &str, dest_chain: &str) -> Option<&IBCAssetRoute> {
-        self.routes
-            .get(dest_chain)?
-            .iter()
-            .find(|r| r.symbol == symbol && r.preferred)
-            .or_else(|| {
-                self.routes
-                    .get(dest_chain)?
-                    .iter()
-                    .find(|r| r.symbol == symbol)
-            })
-    }
-
-    /// Look up the origin asset info from an IBC denom on a chain
-    fn reverse_lookup(&self, ibc_denom: &str, chain: &str) -> Option<&IBCAssetRoute> {
-        self.routes
-            .get(chain)?
-            .iter()
-            .find(|r| r.dest_denom == ibc_denom)
-    }
-
-    /// Export the routing table as a JSON lookup file
-    fn to_json(&self) -> serde_json::Value {
-        serde_json::to_value(self).unwrap_or(serde_json::Value::Null)
-    }
-
-    /// Export a simplified lookup table (dest_chain -> ibc_denom -> origin info)
-    fn to_simplified_lookup(&self) -> serde_json::Value {
-        let mut lookup = serde_json::Map::new();
-
-        for (dest_chain, routes) in &self.routes {
-            let mut chain_lookup = serde_json::Map::new();
-
-            for route in routes {
-                // Only include preferred routes in simplified lookup
-                if !route.preferred {
-                    continue;
-                }
-
-                chain_lookup.insert(
-                    route.dest_denom.clone(),
-                    serde_json::json!({
-                        "symbol": route.symbol,
-                        "origin_chain": route.origin_chain,
-                        "origin_denom": route.origin_denom,
-                        "trace_path": route.trace_path,
-                        "hop_count": route.hop_count,
-                    }),
-                );
-            }
-
-            lookup.insert(dest_chain.clone(), serde_json::Value::Object(chain_lookup));
-        }
-
-        serde_json::Value::Object(lookup)
-    }
-}
-
-mod test {
-
-    use super::*;
-    use serde_json::json;
-
-    use scripts::ibc_core::{
-        IBCAssetRoutingTable, IBCChannelGraph, TerpChannelInfo, build_channel_to_chain_map,
-        compute_ibc_denom_hash,
-    };
-    use serde_json::Value;
-    use std::collections::HashMap;
-    use std::path::Path;
-
-    // ---------------------------------------------------------------------------
-    // Helpers: load schema + data files
-    // ---------------------------------------------------------------------------
-
-    /// Read a JSON file from the public/ directory.
-    fn load_json(name: &str) -> serde_json::Value {
-        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .parent()
-            .unwrap()
-            .join("public")
-            .join(name);
-        let data = std::fs::read_to_string(&path)
-            .unwrap_or_else(|e| panic!("Failed to read {}: {e}", path.display()));
-        serde_json::from_str(&data)
-            .unwrap_or_else(|e| panic!("Failed to parse {}: {e}", path.display()))
-    }
-
-    // ---------------------------------------------------------------------------
-    // Schema validation helpers (structural — no jsonschema crate dependency)
-    // ---------------------------------------------------------------------------
-
-    /// Validate an asset entry against asset_list.schema.json `$defs/asset`.
-    fn validate_asset_entry(asset: &Value, path: &str) -> Vec<String> {
-        let mut errs = Vec::new();
-
-        // Required fields
-        for field in &[
-            "denom_units",
-            "type_asset",
-            "base",
-            "display",
-            "name",
-            "symbol",
-        ] {
-            if !asset.get(*field).is_some() {
-                errs.push(format!("{path}: missing required field '{field}'"));
-            }
-        }
-
-        // type_asset must be from enum
-        if let Some(ta) = asset["type_asset"].as_str() {
-            let valid = [
-                "sdk.coin",
-                "cw20",
-                "erc20",
-                "ics20",
-                "snip20",
-                "snip25",
-                "bitcoin-like",
-                "evm-base",
-                "svm-base",
-                "substrate",
-                "unknown",
-            ];
-            if !valid.contains(&ta) {
-                errs.push(format!("{path}: invalid type_asset '{ta}'"));
-            }
-        }
-
-        // denom_units: each must have denom + exponent
-        if let Some(units) = asset["denom_units"].as_array() {
-            for (i, u) in units.iter().enumerate() {
-                if !u.get("denom").and_then(|d| d.as_str()).is_some() {
-                    errs.push(format!("{path}.denom_units[{i}]: missing 'denom'"));
-                }
-                if !u.get("exponent").and_then(|e| e.as_i64()).is_some() {
-                    errs.push(format!("{path}.denom_units[{i}]: missing 'exponent'"));
-                }
-            }
-        }
-
-        // traces[].type must be from enum
-        if let Some(traces) = asset["traces"].as_array() {
-            let valid_types = [
-                "ibc",
-                "ibc-cw20",
-                "ibc-bridge",
-                "bridge",
-                "liquid-stake",
-                "synthetic",
-                "wrapped",
-                "additional-mintage",
-                "test-mintage",
-                "legacy-mintage",
-            ];
-            for (i, t) in traces.iter().enumerate() {
-                if let Some(tt) = t["type"].as_str() {
-                    if !valid_types.contains(&tt) {
-                        errs.push(format!("{path}.traces[{i}]: invalid type '{tt}'"));
-                    }
-                    // For ibc type, validate counterparty + chain sub-fields
-                    if tt == "ibc" || tt == "ibc-cw20" {
-                        let cp = &t["counterparty"];
-                        for f in &["chain_name", "base_denom", "channel_id"] {
-                            if !cp.get(*f).and_then(|v| v.as_str()).is_some() {
-                                errs.push(format!(
-                                    "{path}.traces[{i}].counterparty: missing '{f}'"
-                                ));
-                            }
-                        }
-                        if let Some(ch) = cp["channel_id"].as_str() {
-                            if !ch.starts_with("channel-") {
-                                errs.push(format!("{path}.traces[{i}].counterparty.channel_id: invalid pattern '{ch}'"));
-                            }
-                        }
-                        let ch = &t["chain"];
-                        for f in &["channel_id", "path"] {
-                            if !ch.get(*f).and_then(|v| v.as_str()).is_some() {
-                                errs.push(format!("{path}.traces[{i}].chain: missing '{f}'"));
-                            }
-                        }
-                        if let Some(ch_id) = ch["channel_id"].as_str() {
-                            if !ch_id.starts_with("channel-") {
-                                errs.push(format!(
-                                    "{path}.traces[{i}].chain.channel_id: invalid pattern '{ch_id}'"
-                                ));
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        errs
-    }
-
-    /// Validate ibc_data entry against ibc_data.schema.json.
-    fn validate_ibc_data_entry(entry: &Value, key: &str) -> Vec<String> {
-        let mut errs = Vec::new();
-
-        // Required: $schema
-        if entry.get("$schema").and_then(|s| s.as_str()).is_none() {
-            errs.push(format!("ibc_data.{key}: missing '$schema'"));
-        }
-
-        // Required: chain_1, chain_2
-        for side in &["chain_1", "chain_2"] {
-            let c = match entry.get(*side) {
-                Some(v) => v,
-                None => {
-                    errs.push(format!("ibc_data.{key}: missing '{side}'"));
-                    continue;
-                }
-            };
-            for f in &["chain_name", "chain_id", "client_id", "connection_id"] {
-                if !c.get(*f).and_then(|v| v.as_str()).is_some() {
-                    errs.push(format!("ibc_data.{key}.{side}: missing '{f}'"));
-                }
-            }
-        }
-
-        // Required: channels array
-        let channels = match entry["channels"].as_array() {
-            Some(a) => a,
-            None => {
-                errs.push(format!("ibc_data.{key}: missing or non-array 'channels'"));
-                return errs;
-            }
-        };
-
-        for (i, ch) in channels.iter().enumerate() {
-            let cp = format!("ibc_data.{key}.channels[{i}]");
-
-            // Required: chain_1, chain_2, ordering, version
-            for f in &["chain_1", "chain_2", "ordering", "version"] {
-                if !ch.get(*f).is_some() {
-                    errs.push(format!("{cp}: missing '{f}'"));
-                }
-            }
-
-            // ordering must be "ordered" or "unordered"
-            match ch["ordering"].as_str() {
-                Some("ordered") | Some("unordered") => {}
-                Some(s) => errs.push(format!(
-                    "{cp}.ordering: must be 'ordered' or 'unordered', got '{s}'"
-                )),
-                None => errs.push(format!(
-                    "{cp}.ordering: missing or invalid type (must be string)"
-                )),
-            }
-
-            // chain_1 and chain_2 must have channel_id + port_id
-            for side in &["chain_1", "chain_2"] {
-                let s = &ch[side];
-                if s.get("channel_id").and_then(|v| v.as_str()).is_none() {
-                    errs.push(format!("{cp}.{side}: missing 'channel_id'"));
-                }
-                if s.get("port_id").and_then(|v| v.as_str()).is_none() {
-                    errs.push(format!("{cp}.{side}: missing 'port_id'"));
-                }
-            }
-
-            // channel_id must match ^(channel-\d+|\*)$
-            for side in &["chain_1", "chain_2"] {
-                if let Some(cid) = ch[side]["channel_id"].as_str() {
-                    if cid != "*" && !cid.starts_with("channel-") {
-                        errs.push(format!("{cp}.{side}.channel_id: invalid pattern '{cid}'"));
-                    }
-                }
-            }
-
-            // tags (optional) must have preferred: bool, status: enum
-            if let Some(tags) = ch.get("tags") {
-                if tags.get("preferred").and_then(|p| p.as_bool()).is_none() {
-                    errs.push(format!("{cp}.tags: missing or non-bool 'preferred'"));
-                }
-                if let Some(status) = tags.get("status").and_then(|s| s.as_str()) {
-                    let valid = ["ACTIVE", "INACTIVE", "CLOSED", "PENDING"];
-                    if !valid.contains(&status) {
-                        errs.push(format!("{cp}.tags.status: invalid '{status}'"));
-                    }
-                }
-            }
-        }
-
-        errs
-    }
-
-    // ---------------------------------------------------------------------------
-    // Tests
-    // ---------------------------------------------------------------------------
-
-    #[test]
-    fn test_assetlist_schema_compliance() {
-        let assetlist = load_json("assetlist.json");
-
-        // Root must have $schema, chain_name, assets
-        assert!(
-            assetlist["$schema"].as_str().is_some(),
-            "assetlist.json: missing '$schema'"
-        );
-        assert!(
-            assetlist["chain_name"].as_str().is_some(),
-            "assetlist.json: missing 'chain_name'"
-        );
-        let assets = assetlist["assets"]
-            .as_array()
-            .expect("assetlist.json: 'assets' must be a non-empty array");
-        assert!(!assets.is_empty(), "assetlist.json: 'assets' is empty");
-
-        let mut total_errs = 0;
-        for (i, asset) in assets.iter().enumerate() {
-            let errs = validate_asset_entry(asset, &format!("assets[{i}]"));
-            for e in &errs {
-                eprintln!("  SCHEMA VIOLATION: {e}");
-            }
-            total_errs += errs.len();
-        }
-
-        println!(
-            "assetlist.json: {} assets validated, {} schema violations",
-            assets.len(),
-            total_errs
-        );
-        assert_eq!(total_errs, 0, "assetlist.json has schema violations");
-    }
-
-    #[test]
-    fn test_ibc_data_schema_via_constructed_entry() {
-        // Construct a schema-compliant ibc_data entry (the format the bin/ibc_info.rs now generates)
-        let entry = serde_json::json!({
-            "$schema": "../ibc_data.schema.json",
-            "chain_1": {
-                "chain_name": "terp",
-                "chain_id": "morocco-1",
-                "client_id": "07-tendermint-32",
-                "connection_id": "connection-11",
-            },
-            "chain_2": {
-                "chain_name": "akash",
-                "chain_id": "akashnet-2",
-                "client_id": "07-tendermint-210",
-                "connection_id": "connection-207",
-            },
-            "channels": [{
-                "chain_1": {
-                    "channel_id": "channel-115",
-                    "port_id": "transfer",
-                },
-                "chain_2": {
-                    "channel_id": "channel-6",
-                    "port_id": "transfer",
-                },
-                "ordering": "unordered",
-                "version": "ics20-1",
-                "tags": {
-                    "preferred": true,
-                    "status": "ACTIVE",
-                },
-            }],
-        });
-
-        let errs = validate_ibc_data_entry(&entry, "terp-akash");
-        for e in &errs {
-            eprintln!("  VIOLATION: {e}");
-        }
-        assert_eq!(
-            errs.len(),
-            0,
-            "Constructed ibc_data entry should be schema-compliant"
-        );
-    }
-
-    #[test]
-    fn test_ibc_data_rejects_int_ordering() {
-        // The old format with int ordering should be rejected
-        let entry = serde_json::json!({
-            "$schema": "../ibc_data.schema.json",
-            "chain_1": { "chain_name": "terp", "chain_id": "x", "client_id": "y", "connection_id": "z" },
-            "chain_2": { "chain_name": "osmo", "chain_id": "x", "client_id": "y", "connection_id": "z" },
-            "channels": [{
-                "chain_1": { "channel_id": "channel-0", "port_id": "transfer" },
-                "chain_2": { "channel_id": "channel-1", "port_id": "transfer" },
-                "ordering": 1,  // schema requires string "unordered" or "ordered"
-                "version": "ics20-1",
-            }],
-        });
-
-        let errs = validate_ibc_data_entry(&entry, "terp-osmo");
-        let ordering_errs: Vec<_> = errs.iter().filter(|e| e.contains("ordering")).collect();
-        assert!(
-            !ordering_errs.is_empty(),
-            "Should flag int ordering as violation, got errs: {errs:?}"
-        );
-        println!("  ✓ Correctly rejected int ordering: {}", ordering_errs[0]);
-    }
-
-    #[test]
-    fn test_ibc_data_rejects_missing_tags() {
-        let entry = serde_json::json!({
-            "$schema": "../ibc_data.schema.json",
-            "chain_1": { "chain_name": "terp", "chain_id": "x", "client_id": "y", "connection_id": "z" },
-            "chain_2": { "chain_name": "osmo", "chain_id": "x", "client_id": "y", "connection_id": "z" },
-            "channels": [{
-                "chain_1": { "channel_id": "channel-0", "port_id": "transfer" },
-                "chain_2": { "channel_id": "channel-1", "port_id": "transfer" },
-                "ordering": "unordered",
-                "version": "ics20-1",
-                "tags": { "status": "ACTIVE" }  // missing preferred field
-            }],
-        });
-
-        let errs = validate_ibc_data_entry(&entry, "terp-osmo");
-        let preferred_errs: Vec<_> = errs.iter().filter(|e| e.contains("preferred")).collect();
-        assert!(
-            !preferred_errs.is_empty(),
-            "Should flag missing preferred: {errs:?}"
-        );
-    }
-
-    #[test]
-    fn test_ibc_denom_computation_known_hashes() {
-        // Verify known IBC denom hashes from chain-registry data
-        // AKT on Osmosis (direct from Akash): path = "transfer/channel-1/uakt"
-        let hash_osmo = compute_ibc_denom_hash("transfer/channel-1/uakt");
-        assert_eq!(
-            hash_osmo, "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4",
-            "AKT IBC denom hash on Osmosis mismatch"
-        );
-
-        // AKT on Terp: path = "transfer/channel-6/uakt" (from state.json channel map)
-        let hash_akt_terp = compute_ibc_denom_hash("transfer/channel-6/uakt");
-        println!("  AKT on Terp: {hash_akt_terp}");
-
-        // ATONE on Terp via atomone channel-13
-        let hash_atone_terp = compute_ibc_denom_hash("transfer/channel-13/uatone");
-        println!("  ATONE on Terp: {hash_atone_terp}");
-
-        // Verify hash consistency — same input always produces same hash
-        let h1 = compute_ibc_denom_hash("transfer/channel-0/uatom");
-        let h2 = compute_ibc_denom_hash("transfer/channel-0/uatom");
-        assert_eq!(h1, h2, "Hash must be deterministic");
-        println!("  ✓ Hash determinism: {h1}");
-
-        // Verify hash format (ibc/ + 64 hex chars)
-        assert!(hash_osmo.starts_with("ibc/"), "Hash must start with ibc/");
-        assert_eq!(hash_osmo.len(), 68, "Hash must be ibc/ + 64 hex chars");
-        println!("  ✓ Hash format: {} ({} chars)", hash_osmo, hash_osmo.len());
-    }
-
-    #[test]
-    fn test_channel_graph_and_routing_with_real_ibc_data() {
-        // Build ibc_data from known channel pairs (terp <-> osmosis, akash, atomone)
-        // Uses the format now generated by bin/ibc_info.rs
-        let ibc_data = serde_json::json!({
-            "akash-terp": {
-                "$schema": "../ibc_data.schema.json",
-                "chain_1": { "chain_name": "akash", "chain_id": "akashnet-2", "client_id": "07-tendermint-210", "connection_id": "connection-207" },
-                "chain_2": { "chain_name": "terp", "chain_id": "morocco-1", "client_id": "07-tendermint-32", "connection_id": "connection-11" },
-                "channels": [{
-                    "chain_1": { "channel_id": "channel-6", "port_id": "transfer" },
-                    "chain_2": { "channel_id": "channel-115", "port_id": "transfer" },
-                    "ordering": "unordered",
-                    "version": "ics20-1",
-                    "tags": { "preferred": true, "status": "ACTIVE" }
-                }]
-            },
-            "osmosis-terp": {
-                "$schema": "../ibc_data.schema.json",
-                "chain_1": { "chain_name": "osmosis", "chain_id": "osmosis-1", "client_id": "07-tendermint-3708", "connection_id": "connection-11060" },
-                "chain_2": { "chain_name": "terp", "chain_id": "morocco-1", "client_id": "07-tendermint-33", "connection_id": "connection-13" },
-                "channels": [{
-                    "chain_1": { "channel_id": "channel-1", "port_id": "transfer" },
-                    "chain_2": { "channel_id": "channel-6738", "port_id": "transfer" },
-                    "ordering": "unordered",
-                    "version": "ics20-1",
-                    "tags": { "preferred": true, "status": "ACTIVE" }
-                }]
-            },
-            "atomone-terp": {
-                "$schema": "../ibc_data.schema.json",
-                "chain_1": { "chain_name": "atomone", "chain_id": "atomone-1", "client_id": "07-tendermint-46", "connection_id": "connection-42" },
-                "chain_2": { "chain_name": "terp", "chain_id": "morocco-1", "client_id": "07-tendermint-34", "connection_id": "connection-12" },
-                "channels": [{
-                    "chain_1": { "channel_id": "channel-10", "port_id": "transfer" },
-                    "chain_2": { "channel_id": "channel-13", "port_id": "transfer" },
-                    "ordering": "unordered",
-                    "version": "ics20-1",
-                    "tags": { "preferred": true, "status": "ACTIVE" }
-                }]
-            },
-        });
-
-        // Validate all entries
-        if let Some(obj) = ibc_data.as_object() {
-            for (key, entry) in obj {
-                let errs = validate_ibc_data_entry(entry, key);
-                assert!(errs.is_empty(), "ibc_data.{key}: {errs:?}");
-            }
-        }
-
-        // 1. Build channel map
-        let channel_map = build_channel_to_chain_map(&ibc_data);
-        assert_eq!(channel_map.len(), 3, "Should have 3 channel entries");
-        // Check terp's channel to osmosis
-        let osmo_info = channel_map
-            .get("osmosis")
-            .expect("Missing osmosis channel info");
-        assert_eq!(osmo_info.terp_channel_id, "channel-6738");
-        println!("  ✓ Channel map: terp/channel-6738 <-> osmosis/channel-1");
-
-        // 2. Build channel graph
-        let graph = IBCChannelGraph::build_from_state(&ibc_data);
-        assert_eq!(
-            graph.edges.len(),
-            4,
-            "Graph should cover 4 chains (terp + 3 counterparties)"
-        );
-        println!("  ✓ Channel graph: {} chains connected", graph.edges.len());
-
-        // 3. Find routes
-        let routes = graph.find_routes("terp", "akash", 3);
-        assert!(!routes.is_empty(), "Should find terp->akash route");
-        println!(
-            "  ✓ Route terp→akash: {} hops, {} paths",
-            routes[0].len(),
-            routes.len()
-        );
-
-        // 4. Compute IBC denom via route
-        let (denom, trace) = graph.compute_ibc_denom_for_route("uakt", &routes[0]);
-        assert_eq!(
-            trace, "transfer/channel-6/uakt",
-            "Trace path mismatch (akash-side channel)"
-        );
-        println!("  ✓ IBC denom for AKT on terp: {denom} (trace: {trace})");
-
-        // Load native Terp assets and run routing table
-        let mut chain_assets: HashMap<String, Vec<serde_json::Value>> = HashMap::new();
-        // Use terp-native assets from state.json
-        let state = load_json("state.json");
-        let terp_assets: Vec<serde_json::Value> = state["morocco-1"]["assets"]
-            .as_array()
-            .cloned()
-            .unwrap_or_default()
-            .into_iter()
-            .filter(|a| a["traces"].as_array().map_or(true, |t| t.is_empty()))
-            .collect();
-        chain_assets.insert("terp".to_string(), terp_assets.clone());
-
-        // Add osmosis assets
-        let osmo_assets: Vec<serde_json::Value> = state["osmosis-1"]["assets"]
-            .as_array()
-            .cloned()
-            .unwrap_or_default()
-            .into_iter()
-            .map(|mut a| {
-                a["_source_chain"] = serde_json::json!("osmosis");
-                a
-            })
-            .collect();
-        chain_assets.insert("osmosis".to_string(), osmo_assets.clone());
-
-        // Also load akash assets from osmosis (these are IBC assets on osmosis)
-        let akash_assets_on_osmo: Vec<_> = osmo_assets
-            .iter()
-            .filter(|a| a["symbol"].as_str() == Some("AKT"))
-            .cloned()
-            .collect();
-        if !akash_assets_on_osmo.is_empty() {
-            // They need _source_chain = "akash" for routing
-            let mut routed: Vec<_> = akash_assets_on_osmo
-                .iter()
-                .map(|a| {
-                    let mut v = a.clone();
-                    v["_source_chain"] = serde_json::json!("akash");
-                    v
-                })
-                .collect();
-            chain_assets
-                .entry("akash".to_string())
-                .or_default()
-                .append(&mut routed);
-        }
-
-        println!(
-            "  Assets: terp={} native, osmosis={}",
-            terp_assets.len(),
-            osmo_assets.len()
-        );
-
-        // 5. Premine routing table
-        let rt = IBCAssetRoutingTable::premine(&graph, &chain_assets, 3);
-        assert!(
-            rt.metadata.total_routes > 0,
-            "Should have at least some routes"
-        );
-        println!(
-            "  ✓ Routing table: {} routes across {} chains",
-            rt.metadata.total_routes,
-            rt.metadata.chains.len()
-        );
-
-        // Verify specific known route
-        let routes_on_akash = rt.lookup_by_dest_chain("akash");
-        println!("  Routes to akash: {}", routes_on_akash.len());
-    }
-
-    #[test]
-    fn test_asset_entry_validation_rejects_bad_data() {
-        // Test that our validator catches schema violations
-        let bad_asset = serde_json::json!({
-            "base": "uterp",
-            // missing: denom_units, type_asset, display, name, symbol
-            "traces": [{
-                "type": "ibc",
-                "counterparty": {
-                    "chain_name": "osmosis",
-                    "base_denom": "uosmo",
-                    "channel_id": "bad-channel"  // should start with "channel-"
-                },
-                "chain": {
-                    "channel_id": "not-a-channel",  // should start with "channel-"
-                    "path": "transfer/channel-0/uosmo"
-                }
-            }]
-        });
-
-        let errs = validate_asset_entry(&bad_asset, "test_asset");
-        assert!(!errs.is_empty(), "Should catch missing required fields");
-        let missing: Vec<_> = errs
-            .iter()
-            .filter(|e| e.contains("missing required"))
-            .collect();
-        assert_eq!(
-            missing.len(),
-            5,
-            "Should flag 5 missing required fields: {missing:?}"
-        );
-
-        let channel_pattern: Vec<_> = errs
-            .iter()
-            .filter(|e| e.contains("invalid pattern"))
-            .collect();
-        assert_eq!(
-            channel_pattern.len(),
-            2,
-            "Should flag 2 channel_id pattern violations"
-        );
-        println!("  ✓ Validator correctly rejected {} violations", errs.len());
-        for e in &errs {
-            println!("    → {e}");
-        }
-    }
-
-    #[test]
-    fn test_state_json_asset_structure() {
-        // Verify the real state.json assets have the required structure
-        let state = load_json("state.json");
-
-        let osmo_assets = state["osmosis-1"]["assets"]
-            .as_array()
-            .expect("state.json should have osmosis-1.assets");
-        assert!(!osmo_assets.is_empty(), "osmosis should have assets");
-        println!("osmosis-1.assets: {} entries", osmo_assets.len());
-
-        // Validate each asset entry
-        let mut total_errs = 0;
-        for (i, a) in osmo_assets.iter().enumerate() {
-            let errs = validate_asset_entry(a, &format!("state.osmosis-1.assets[{i}]"));
-            total_errs += errs.len();
-        }
-        println!("  State asset validation: {total_errs} violations");
-        // The state.json may have non-compliant entries (no schema enforcement when written)
-        // We just report, don't assert — it's informational
-    }
-
-    #[test]
-    fn test_routing_table_integrity() {
-        // Build routing table from state.json assets + hardcoded ibc_data.
-        // Uses the same inline ibc_data as test_channel_graph_and_routing_with_real_ibc_data
-        // to avoid depending on persisted ibc-data files with potentially stale channels.
-        let state = load_json("state.json");
-
-        let ibc_data = serde_json::json!({
-            "akash-terp": {
-                "$schema": "../ibc_data.schema.json",
-                "chain_1": { "chain_name": "akash", "chain_id": "akashnet-2", "client_id": "07-tendermint-210", "connection_id": "connection-207" },
-                "chain_2": { "chain_name": "terp", "chain_id": "morocco-1", "client_id": "07-tendermint-32", "connection_id": "connection-11" },
-                "channels": [{
-                    "chain_1": { "channel_id": "channel-6", "port_id": "transfer" },
-                    "chain_2": { "channel_id": "channel-115", "port_id": "transfer" },
-                    "ordering": "unordered", "version": "ics20-1",
-                    "tags": { "preferred": true, "status": "ACTIVE" }
-                }]
-            },
-            "osmosis-terp": {
-                "$schema": "../ibc_data.schema.json",
-                "chain_1": { "chain_name": "osmosis", "chain_id": "osmosis-1", "client_id": "07-tendermint-3708", "connection_id": "connection-11060" },
-                "chain_2": { "chain_name": "terp", "chain_id": "morocco-1", "client_id": "07-tendermint-33", "connection_id": "connection-13" },
-                "channels": [{
-                    "chain_1": { "channel_id": "channel-1", "port_id": "transfer" },
-                    "chain_2": { "channel_id": "channel-6738", "port_id": "transfer" },
-                    "ordering": "unordered", "version": "ics20-1",
-                    "tags": { "preferred": true, "status": "ACTIVE" }
-                }]
-            },
-            "atomone-terp": {
-                "$schema": "../ibc_data.schema.json",
-                "chain_1": { "chain_name": "atomone", "chain_id": "atomone-1", "client_id": "07-tendermint-46", "connection_id": "connection-42" },
-                "chain_2": { "chain_name": "terp", "chain_id": "morocco-1", "client_id": "07-tendermint-34", "connection_id": "connection-12" },
-                "channels": [{
-                    "chain_1": { "channel_id": "channel-10", "port_id": "transfer" },
-                    "chain_2": { "channel_id": "channel-13", "port_id": "transfer" },
-                    "ordering": "unordered", "version": "ics20-1",
-                    "tags": { "preferred": true, "status": "ACTIVE" }
-                }]
-            }
-        });
-        let ibc_data_map = ibc_data.as_object().expect("ibc_data must be object");
-
-        // Build channel graph
-        let mut graph = IBCChannelGraph::new();
-        for (_key, entry) in ibc_data_map {
-            if entry["chain_1"].is_null() || entry["chain_2"].is_null() {
-                continue;
-            }
-            let c1_name = entry["chain_1"]["chain_name"].as_str().unwrap_or("");
-            let c2_name = entry["chain_2"]["chain_name"].as_str().unwrap_or("");
-            if c1_name.is_empty() || c2_name.is_empty() {
-                continue;
-            }
-            if let Some(channels) = entry["channels"].as_array() {
-                for ch in channels {
-                    let ch1_id = ch["chain_1"]["channel_id"].as_str().unwrap_or("");
-                    let ch2_id = ch["chain_2"]["channel_id"].as_str().unwrap_or("");
-                    let preferred = ch["tags"]["preferred"].as_bool().unwrap_or(false);
-                    let status = ch["tags"]["status"].as_str().unwrap_or("UNKNOWN");
-                    if !ch1_id.is_empty() && !ch2_id.is_empty() {
-                        graph.add_channel(
-                            c1_name,
-                            ch1_id,
-                            c2_name,
-                            ch2_id,
-                            preferred,
-                            status.to_string(),
-                        );
-                    }
-                }
-            }
-        }
-
-        // Load assets
-        let mut chain_assets: HashMap<String, Vec<serde_json::Value>> = HashMap::new();
-        for (chain_key, section) in [("morocco-1", "terp"), ("osmosis-1", "osmosis")] {
-            let assets = state[chain_key]["assets"]
-                .as_array()
-                .cloned()
-                .unwrap_or_default()
-                .into_iter()
-                .map(|mut a| {
-                    a["_source_chain"] = serde_json::json!(section);
-                    a
-                })
-                .collect();
-            chain_assets.insert(section.to_string(), assets);
-        }
-
-        // Premine routing table
-        let rt = IBCAssetRoutingTable::premine(&graph, &chain_assets, 3);
-        assert!(
-            rt.metadata.total_routes > 0,
-            "Should have routes (got {})",
-            rt.metadata.total_routes
-        );
-
-        // Validate each route's internal consistency
-        for (dest_chain, entries) in &rt.routes {
-            for (i, entry) in entries.iter().enumerate() {
-                let prefix = format!("routing_table.{dest_chain}[{i}]");
-                assert_eq!(
-                    entry.dest_chain, *dest_chain,
-                    "{prefix}: dest_chain mismatch"
-                );
-                if entry.hop_count > 0 {
-                    assert_eq!(
-                        entry.hop_count,
-                        entry.route.len(),
-                        "{prefix}: hop_count {} != route len {}",
-                        entry.hop_count,
-                        entry.route.len()
-                    );
-                }
-            }
-        }
-
-        println!(
-            "✓ Routing table integrity: {} chains, {} routes validated",
-            rt.routes.len(),
-            rt.metadata.total_routes
-        );
-    }
-
-    #[test]
-    fn test_ibc_lookup_table_integrity() {
-        let lt = load_json("ibc_lookup_table.json");
-        let obj = lt.as_object().expect("lookup table must be an object");
-
-        for (chain, entries) in obj {
-            let eobj = entries.as_object().expect("entries must be object");
-            for (ibc_hash, info) in eobj {
-                // Each entry must have symbol, origin_chain, origin_denom, trace_path, hop_count
-                for f in &[
-                    "symbol",
-                    "origin_chain",
-                    "origin_denom",
-                    "trace_path",
-                    "hop_count",
-                ] {
-                    assert!(
-                        info.get(*f).is_some(),
-                        "lookup.{chain}.{ibc_hash}: missing '{f}'"
-                    );
-                }
-                // ibc_hash should start with "ibc/"
-                assert!(
-                    ibc_hash.starts_with("ibc/"),
-                    "lookup.{chain}: key '{ibc_hash}' should start with 'ibc/'"
-                );
-            }
-        }
-
-        println!("✓ Lookup table integrity: {} chains", obj.len());
-    }
-
-    #[test]
-    fn test_construct_ibc_data_and_run_derivation_pipeline() {
-        // End-to-end: construct ibc_data from scratch, build assets, run full pipeline
-        let ibc_data = serde_json::json!({
-            "chain-a-terp": {
-                "$schema": "../ibc_data.schema.json",
-                "chain_1": { "chain_name": "terp", "chain_id": "terp-1", "client_id": "07-tendermint-0", "connection_id": "connection-0" },
-                "chain_2": { "chain_name": "chain-b", "chain_id": "chain-b", "client_id": "07-tendermint-0", "connection_id": "connection-0" },
-                "channels": [{
-                    "chain_1": { "channel_id": "channel-0", "port_id": "transfer" },
-                    "chain_2": { "channel_id": "channel-0", "port_id": "transfer" },
-                    "ordering": "unordered", "version": "ics20-1",
-                    "tags": { "preferred": true, "status": "ACTIVE" }
-                }]
-            },
-            "chain-b-chain-c": {
-                "$schema": "../ibc_data.schema.json",
-                "chain_1": { "chain_name": "chain-b", "chain_id": "chain-b", "client_id": "07-tendermint-0", "connection_id": "connection-0" },
-                "chain_2": { "chain_name": "chain-c", "chain_id": "chain-c", "client_id": "07-tendermint-0", "connection_id": "connection-0" },
-                "channels": [{
-                    "chain_1": { "channel_id": "channel-0", "port_id": "transfer" },
-                    "chain_2": { "channel_id": "channel-0", "port_id": "transfer" },
-                    "ordering": "unordered", "version": "ics20-1",
-                    "tags": { "preferred": true, "status": "ACTIVE" }
-                }]
-            },
-        });
-
-        let graph = IBCChannelGraph::build_from_state(&ibc_data);
-        assert_eq!(graph.edges.len(), 3, "3 chains in graph");
-
-        // Find chain-a → chain-c route (should go via chain-b)
-        let routes = graph.find_routes("terp", "chain-c", 3);
-        assert_eq!(
-            routes.len(),
-            1,
-            "Should find exactly 1 route chain-a→chain-c"
-        );
-        assert_eq!(routes[0].len(), 2, "Should be 2 hops (a→b→c)");
-        println!(
-            "  ✓ Route chain-a→chain-c: {} hops via chain-b",
-            routes[0].len()
-        );
-
-        // IBC denom for a double-hop transfer
-        let (denom, trace) = graph.compute_ibc_denom_for_route("utoken", &routes[0]);
-        assert_eq!(trace, "transfer/channel-0/transfer/channel-0/utoken");
-        assert!(denom.starts_with("ibc/"));
-        println!("  ✓ Double-hop IBC denom: {denom}");
-
-        // Channel map
-        let cm = build_channel_to_chain_map(&ibc_data);
-        assert_eq!(
-            cm.len(),
-            1,
-            "Only chain-b has terp as counterparty in this data"
-        );
-
-        println!("  ✓ Full derivation pipeline: graph → routes → denoms → map");
-    }
-
-    fn make_terp_channels() -> HashMap<String, TerpChannelInfo> {
-        let mut map = HashMap::new();
-        map.insert(
-            "osmosis".to_string(),
-            TerpChannelInfo {
-                terp_channel_id: "channel-5".to_string(),
-                counterparty_channel_id: "channel-42".to_string(),
-                counterparty_chain_name: "osmosis".to_string(),
-            },
-        );
-        map.insert(
-            "cosmoshub".to_string(),
-            TerpChannelInfo {
-                terp_channel_id: "channel-0".to_string(),
-                counterparty_channel_id: "channel-99".to_string(),
-                counterparty_chain_name: "cosmoshub".to_string(),
-            },
-        );
-        map.insert(
-            "akash".to_string(),
-            TerpChannelInfo {
-                terp_channel_id: "channel-3".to_string(),
-                counterparty_channel_id: "channel-9".to_string(),
-                counterparty_chain_name: "akash".to_string(),
-            },
-        );
-        map
-    }
-
-    #[test]
-    fn test_compute_ibc_denom_hash_single_hop() {
-        // ATOM single hop from Cosmos Hub
-        let path = "transfer/channel-0/uatom";
-        let hash = compute_ibc_denom_hash(path);
-        // Verify it starts with ibc/ and is 64 chars after prefix
-        assert!(hash.starts_with("ibc/"));
-        assert_eq!(hash.len(), 68); // "ibc/" (4) + 64 hex chars
-    }
-
-    #[test]
-    fn test_compute_ibc_denom_hash_multi_hop() {
-        // ATOM via Osmosis: terp -> osmosis -> cosmoshub
-        let path = "transfer/channel-5/transfer/channel-0/uatom";
-        let hash = compute_ibc_denom_hash(path);
-        assert!(hash.starts_with("ibc/"));
-        // Multi-hop should produce DIFFERENT hash than single hop
-        let single_hop = compute_ibc_denom_hash("transfer/channel-0/uatom");
-        assert_ne!(hash, single_hop);
-    }
-
-    #[test]
-    fn test_derive_direct_channel_single_hop() {
-        // AKT on Osmosis, traces back to Akash
-        // Terp has direct channel to Akash -> single hop
-        let channels = make_terp_channels();
-        let asset = json!({
-            "base": "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4",
-            "symbol": "AKT",
-            "traces": [{
-                "type": "ibc",
-                "counterparty": {
-                    "chain_name": "akash",
-                    "base_denom": "uakt",
-                    "channel_id": "channel-9"
-                },
-                "chain": {
-                    "channel_id": "channel-1",
-                    "path": "transfer/channel-1/uakt"
-                }
-            }],
-            "_source_chain": "osmosis"
-        });
-
-        let result = derive_terp_ibc_denom(&asset, &channels);
-        assert!(result.is_some());
-
-        let (hash, path, cp_chain) = result.unwrap();
-        // Direct channel to Akash -> single hop
-        assert_eq!(path, "transfer/channel-3/uakt");
-        assert_eq!(cp_chain, "akash");
-        // Hash should match SHA256 of "transfer/channel-3/uakt"
-        let expected_hash = compute_ibc_denom_hash("transfer/channel-3/uakt");
-        assert_eq!(hash, expected_hash);
-    }
-
-    #[test]
-    fn test_derive_no_direct_channel_route_via_source() {
-        // ATONE on Osmosis, traces back to AtomOne
-        // Terp has NO direct channel to AtomOne, but has channel to Osmosis
-        let channels = make_terp_channels();
-        let asset = json!({
-            "base": "ibc/BC26A7A805ECD6822719472BCB7842A48EF09DF206182F8F259B2593EB5D23FB",
-            "symbol": "ATONE",
-            "traces": [{
-                "type": "ibc",
-                "counterparty": {
-                    "chain_name": "atomone",
-                    "base_denom": "uatone",
-                    "channel_id": "channel-2"
-                },
-                "chain": {
-                    "channel_id": "channel-94814",
-                    "path": "transfer/channel-94814/uatone"
-                }
-            }],
-            "_source_chain": "osmosis"
-        });
-
-        let result = derive_terp_ibc_denom(&asset, &channels);
-        assert!(result.is_some());
-
-        let (hash, path, cp_chain) = result.unwrap();
-        // No direct channel to atomone, route through osmosis
-        // Path: transfer/{terp_ch_to_osmo}/{osmo_trace_path}
-        assert_eq!(path, "transfer/channel-5/transfer/channel-94814/uatone");
-        assert_eq!(cp_chain, "atomone");
-    }
-
-    #[test]
-    fn test_derive_multi_hop_on_source() {
-        // ETH on Osmosis, traces through Cosmos Hub (multi-hop on Osmosis)
-        // Terp has NO direct channel to ethereum, routes through osmosis
-        let channels = make_terp_channels();
-        let asset = json!({
-            "base": "ibc/20850C646CDDDC2270E9BBDB08558B5FEE57B647EC6827F41096AABFD8A0471B",
-            "symbol": "ETH",
-            "traces": [{
-                "type": "ibc",
-                "counterparty": {
-                    "chain_name": "cosmoshub",
-                    "base_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
-                    "channel_id": "channel-141"
-                },
-                "chain": {
-                    "channel_id": "channel-0",
-                    "path": "transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
-                }
-            }],
-            "_source_chain": "osmosis"
-        });
-
-        let result = derive_terp_ibc_denom(&asset, &channels);
-        assert!(result.is_some());
-
-        let (hash, path, cp_chain) = result.unwrap();
-        // Terp has direct channel to cosmoshub, but the asset is multi-hop on Osmosis
-        // Since we have direct channel to cosmoshub, we use the cosmoshub base denom
-        assert_eq!(cp_chain, "cosmoshub");
-        // Direct to cosmoshub -> use cosmoshub base denom
-        assert_eq!(
-            path,
-            "transfer/channel-0/ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF"
-        );
-    }
-
-    #[test]
-    fn test_compute_ibc_denom_hash_format() {
-        let path = "transfer/channel-0/uatom";
-        let hash = compute_ibc_denom_hash(path);
-        assert!(hash.starts_with("ibc/"));
-        assert_eq!(hash.len(), 68);
-    }
-
-    #[test]
-    fn test_direct_channel_single_hop() {
-        let channels = make_terp_channels();
-        let asset = json!({
-            "base": "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4",
-            "symbol": "AKT",
-            "traces": [{
-                "type": "ibc",
-                "counterparty": {
-                    "chain_name": "akash",
-                    "base_denom": "uakt",
-                    "channel_id": "channel-9"
-                },
-                "chain": {
-                    "channel_id": "channel-1",
-                    "path": "transfer/channel-1/uakt"
-                }
-            }],
-            "_source_chain": "osmosis"
-        });
-
-        let (hash, path, cp_chain) = derive_terp_ibc_denom(&asset, &channels).unwrap();
-        assert_eq!(path, "transfer/channel-3/uakt");
-        assert_eq!(cp_chain, "akash");
-        assert_eq!(hash, compute_ibc_denom_hash("transfer/channel-3/uakt"));
-    }
-
-    #[test]
-    fn test_no_direct_channel_route_via_source() {
-        let channels = make_terp_channels();
-        let asset = json!({
-            "base": "ibc/BC26A7A805ECD6822719472BCB7842A48EF09DF206182F8F259B2593EB5D23FB",
-            "symbol": "ATONE",
-            "traces": [{
-                "type": "ibc",
-                "counterparty": {
-                    "chain_name": "atomone",
-                    "base_denom": "uatone",
-                    "channel_id": "channel-2"
-                },
-                "chain": {
-                    "channel_id": "channel-94814",
-                    "path": "transfer/channel-94814/uatone"
-                }
-            }],
-            "_source_chain": "osmosis"
-        });
-
-        let (hash, path, cp_chain) = derive_terp_ibc_denom(&asset, &channels).unwrap();
-        assert_eq!(path, "transfer/channel-5/transfer/channel-94814/uatone");
-        assert_eq!(cp_chain, "atomone");
-    }
-
-    #[test]
-    fn test_penumbra_via_osmosis() {
-        let channels = make_terp_channels();
-        let asset = json!({
-            "base": "ibc/0FA9232B262B89E77D1335D54FB1E1F506A92A7E4B51524B400DC69C68D28372",
-            "symbol": "UM",
-            "traces": [{
-                "type": "ibc",
-                "counterparty": {
-                    "chain_name": "penumbra",
-                    "base_denom": "upenumbra",
-                    "channel_id": "channel-4"
-                },
-                "chain": {
-                    "channel_id": "channel-79703",
-                    "path": "transfer/channel-79703/upenumbra"
-                }
-            }],
-            "_source_chain": "osmosis"
-        });
-
-        let (hash, path, cp_chain) = derive_terp_ibc_denom(&asset, &channels).unwrap();
-        assert_eq!(path, "transfer/channel-5/transfer/channel-79703/upenumbra");
-        assert_eq!(cp_chain, "penumbra");
-    }
-
-    #[test]
-    fn test_eth_multi_hop_via_cosmoshub() {
-        let channels = make_terp_channels();
-        let asset = json!({
-            "base": "ibc/20850C646CDDDC2270E9BBDB08558B5FEE57B647EC6827F41096AABFD8A0471B",
-            "symbol": "ETH",
-            "traces": [{
-                "type": "ibc",
-                "counterparty": {
-                    "chain_name": "cosmoshub",
-                    "base_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
-                    "channel_id": "channel-141"
-                },
-                "chain": {
-                    "channel_id": "channel-0",
-                    "path": "transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
-                }
-            }],
-            "_source_chain": "osmosis"
-        });
-
-        let (hash, path, cp_chain) = derive_terp_ibc_denom(&asset, &channels).unwrap();
-        // Direct channel to cosmoshub exists -> use cosmoshub base denom
-        assert_eq!(cp_chain, "cosmoshub");
-        assert_eq!(
-            path,
-            "transfer/channel-0/ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF"
-        );
-    }
-
-    #[test]
-    fn test_no_channel_returns_none() {
-        let channels = make_terp_channels();
-        let asset = json!({
-            "base": "ibc/FOO",
-            "symbol": "NOPE",
-            "traces": [{
-                "type": "ibc",
-                "counterparty": {
-                    "chain_name": "unknownchain",
-                    "base_denom": "unope",
-                    "channel_id": "channel-1"
-                },
-                "chain": {
-                    "channel_id": "channel-2",
-                    "path": "transfer/channel-2/unope"
-                }
-            }],
-            "_source_chain": "unknownchain"
-        });
-
-        assert!(derive_terp_ibc_denom(&asset, &channels).is_none());
-    }
-
-    #[test]
-    fn test_build_channel_to_chain_map_with_schema_format() {
-        let mock_state_data = json!({
-            "akash-terp": {
-                "chain_1": {
-                    "chain_name": "akash",
-                    "chain_id": "akashnet-2",
-                    "client_id": "07-tendermint-210",
-                    "connection_id": "connection-207"
-                },
-                "chain_2": {
-                    "chain_name": "terp",
-                    "chain_id": "morocco-1",
-                    "client_id": "07-tendermint-32",
-                    "connection_id": "connection-11"
-                },
-                "channels": [{
-                    "chain_1": {
-                        "channel_id": "channel-6",
-                        "port_id": "transfer"
-                    },
-                    "chain_2": {
-                        "channel_id": "channel-115",
-                        "port_id": "transfer"
-                    },
-                    "ordering": 1,
-                    "version": "ics20-1",
-                    "tags": {
-                        "preferred": true,
-                        "status": "ACTIVE"
-                    }
-                }]
-            },
-            "osmosis-terp": {
-                "chain_1": {
-                    "chain_name": "osmosis",
-                    "chain_id": "osmosis-1",
-                    "client_id": "07-tendermint-3708",
-                    "connection_id": "connection-11060"
-                },
-                "chain_2": {
-                    "chain_name": "terp",
-                    "chain_id": "morocco-1",
-                    "client_id": "07-tendermint-33",
-                    "connection_id": "connection-13"
-                },
-                "channels": [{
-                    "chain_1": {
-                        "channel_id": "channel-1",
-                        "port_id": "transfer"
-                    },
-                    "chain_2": {
-                        "channel_id": "channel-6738",
-                        "port_id": "transfer"
-                    },
-                    "ordering": 1,
-                    "version": "ics20-1",
-                    "tags": {
-                        "preferred": true,
-                        "status": "ACTIVE"
-                    }
-                }]
-            },
-            "atomone-terp": {
-                "chain_1": {
-                    "chain_name": "atomone",
-                    "chain_id": "atomone-1",
-                    "client_id": "07-tendermint-46",
-                    "connection_id": "connection-42"
-                },
-                "chain_2": {
-                    "chain_name": "terp",
-                    "chain_id": "morocco-1",
-                    "client_id": "07-tendermint-34",
-                    "connection_id": "connection-12"
-                },
-                "channels": [{
-                    "chain_1": {
-                        "channel_id": "channel-10",
-                        "port_id": "transfer"
-                    },
-                    "chain_2": {
-                        "channel_id": "channel-13",
-                        "port_id": "transfer"
-                    },
-                    "ordering": 1,
-                    "version": "ics20-1",
-                    "tags": {
-                        "preferred": true,
-                        "status": "ACTIVE"
-                    }
-                }]
-            }
-        });
-
-        // Verify structure
-        for (_key, entry) in mock_state_data.as_object().unwrap() {
-            assert!(entry["chain_1"].is_object(), "Missing chain_1");
-            assert!(entry["chain_2"].is_object(), "Missing chain_2");
-            assert!(entry["channels"].is_array(), "Missing channels");
-
-            for chan in entry["channels"].as_array().unwrap() {
-                assert!(chan["chain_1"].is_object(), "Channel missing chain_1");
-                assert!(chan["chain_2"].is_object(), "Channel missing chain_2");
-            }
-        }
-    }
-
-    #[test]
-    fn test_derive_terp_ibc_denom_direct_single_hop_osmosis_native() {
-        let channels = make_terp_channels();
-        let asset = json!({
-            "symbol": "OSMO",
-            "base": "uosmo",
-            "traces": [{
-                "type": "ibc",
-                "counterparty": {
-                    "chain_name": "osmosis",
-                    "base_denom": "uosmo",
-                    "channel_id": "channel-0"
-                },
-                "chain": {
-                    "channel_id": "channel-42",
-                    "path": "transfer/channel-42/uosmo"
-                }
-            }],
-            "_source_chain": "osmosis"
-        });
-
-        let result = derive_terp_ibc_denom(&asset, &channels);
-        assert!(result.is_some());
-        let (hash, path, cp) = result.unwrap();
-        assert_eq!(path, "transfer/channel-5/uosmo");
-        assert_eq!(cp, "osmosis");
-        assert_eq!(hash, compute_ibc_denom_hash("transfer/channel-5/uosmo"));
-    }
-
-    #[test]
-    fn test_derive_terp_ibc_denom_direct_to_cosmoshub_atom() {
-        let channels = make_terp_channels();
-        let asset = json!({
-            "symbol": "ATOM",
-            "base": "uatom",
-            "traces": [{
-                "type": "ibc",
-                "counterparty": {
-                    "chain_name": "cosmoshub",
-                    "base_denom": "uatom",
-                    "channel_id": "channel-0"
-                },
-                "chain": {
-                    "channel_id": "channel-99",
-                    "path": "transfer/channel-99/uatom"
-                }
-            }],
-            "_source_chain": "cosmoshub"
-        });
-
-        let result = derive_terp_ibc_denom(&asset, &channels);
-        assert!(result.is_some());
-        let (hash, path, cp) = result.unwrap();
-        assert_eq!(path, "transfer/channel-0/uatom");
-        assert_eq!(cp, "cosmoshub");
-    }
-
-    #[test]
-    fn test_derive_terp_ibc_denom_multi_hop_via_osmosis_to_atomone() {
-        let channels = make_terp_channels();
-        let asset = json!({
-            "symbol": "ATONE",
-            "base": "ibc/somehash",
-            "traces": [{
-                "type": "ibc",
-                "counterparty": {
-                    "chain_name": "atomone",
-                    "base_denom": "uatone",
-                    "channel_id": "channel-2"
-                },
-                "chain": {
-                    "channel_id": "channel-94814",
-                    "path": "transfer/channel-94814/uatone"
-                }
-            }],
-            "_source_chain": "osmosis"
-        });
-
-        let result = derive_terp_ibc_denom(&asset, &channels);
-        assert!(result.is_some());
-        let (_, path, cp) = result.unwrap();
-        assert_eq!(path, "transfer/channel-5/transfer/channel-94814/uatone");
-        assert_eq!(cp, "atomone");
-    }
-
-    #[test]
-    fn test_derive_terp_ibc_denom_multi_hop_on_source_with_direct_channel() {
-        // Should prefer direct channel when available, even if source has multi-hop trace
-        let channels = make_terp_channels();
-        let asset = json!({
-            "symbol": "ETH",
-            "base": "ibc/someethhash",
-            "traces": [{
-                "type": "ibc",
-                "counterparty": {
-                    "chain_name": "cosmoshub",
-                    "base_denom": "ibc/C0B53...ADFF",
-                    "channel_id": "channel-141"
-                },
-                "chain": {
-                    "channel_id": "channel-0",
-                    "path": "transfer/channel-0/transfer/08-wasm-xxx/0xeth"
-                }
-            }],
-            "_source_chain": "osmosis"
-        });
-
-        let result = derive_terp_ibc_denom(&asset, &channels);
-        assert!(result.is_some());
-        let (_, path, cp) = result.unwrap();
-        assert_eq!(cp, "cosmoshub");
-        assert_eq!(path, "transfer/channel-0/ibc/C0B53...ADFF"); // uses direct + base from counterparty
-    }
-
-    #[test]
-    fn test_derive_terp_ibc_denom_no_channel_fallback_none() {
-        let channels = make_terp_channels();
-        let asset = json!({
-            "symbol": "UNKNOWN",
-            "base": "ibc/xxx",
-            "traces": [{
-                "type": "ibc",
-                "counterparty": {
-                    "chain_name": "secret",
-                    "base_denom": "uscrt"
-                },
-                "chain": { "path": "transfer/channel-999/uscrt" }
-            }],
-            "_source_chain": "secret"
-        });
-
-        let result = derive_terp_ibc_denom(&asset, &channels);
-        assert!(result.is_none());
-    }
-
-    #[test]
-    fn test_build_ibc_asset_entry_full_with_traces() {
-        let asset = json!({
-            "symbol": "ATOM",
-            "name": "Cosmos Hub",
-            "description": "The native token of Cosmos Hub",
-            "display": "atom",
-            "denom_units": [
-                {"denom": "uatom", "exponent": 0},
-                {"denom": "atom", "exponent": 6}
-            ],
-            "coingecko_id": "cosmos",
-            "type_asset": "ics20"
-        });
-
-        let traces = vec![json!({
-            "type": "ibc",
-            "counterparty": {
-                "chain_name": "cosmoshub",
-                "base_denom": "uatom"
-            },
-            "chain": {
-                "channel_id": "channel-0",
-                "path": "transfer/channel-0/uatom"
-            }
-        })];
-
-        let entry = build_ibc_asset_entry(
-            &asset,
-            "ibc/27394C5B9E9A3C6C8A7F4E5D6E7F8A9B0C1D2E3F4A5B6C7D8E9F0A1B2C3D4E5",
-            &traces,
-            "transfer/channel-0/uatom",
-            "ATOM",
-            "cosmoshub",
-            "uatom",
-            "channel-0",
-            None,
-        );
-
-        assert_eq!(
-            entry["base"],
-            "ibc/27394C5B9E9A3C6C8A7F4E5D6E7F8A9B0C1D2E3F4A5B6C7D8E9F0A1B2C3D4E5"
-        );
-        assert_eq!(entry["symbol"], "ATOM");
-        assert!(entry["traces"].is_array());
-        assert!(entry["images"].is_array());
-        assert_eq!(entry["coingecko_id"], "cosmos");
-    }
-
-    #[test]
-    fn test_build_ibc_asset_entry_non_ibc_trace() {
-        let asset = json!({
-            "symbol": "stATOM",
-            "name": "Stride Staked ATOM",
-            "display": "statom",
-            "denom_units": [{"denom": "ustatom", "exponent": 0}, {"denom": "statom", "exponent": 6}]
-        });
-
-        let traces = vec![json!({
-            "type": "liquid-stake",
-            "counterparty": {
-                "chain_name": "stride",
-                "base_denom": "uatom"
-            },
-            "provider": "stride"
-        })];
-
-        let entry = build_ibc_asset_entry(
-            &asset, "ustatom", &traces, "", "stATOM", "stride", "uatom", "", None,
-        );
-
-        assert_eq!(entry["base"], "ustatom");
-        assert_eq!(entry["type_asset"], "ics20");
-    }
-
-    #[test]
-    fn test_compute_ibc_denom_hash_respects_spec() {
-        // Standard IBC hash test vectors
-        let cases = vec![
-            ("transfer/channel-0/uatom", "ibc/27394C5B..."), // real example truncated
-            (
-                "transfer/channel-5/transfer/channel-0/uatom",
-                "ibc/ABC123...",
-            ),
-        ];
-
-        for (path, _) in cases {
-            let hash = compute_ibc_denom_hash(path);
-            assert!(hash.starts_with("ibc/"));
-            assert_eq!(hash.len(), 68);
-            // SHA256 of the path should be deterministic
-            let hash2 = compute_ibc_denom_hash(path);
-            assert_eq!(hash, hash2);
-        }
-    }
-
-    #[test]
-    fn test_derive_terp_ibc_denom_empty_traces() {
-        let channels = make_terp_channels();
-        let asset = json!({
-            "symbol": "TERP",
-            "base": "uterp",
-            "traces": []
-        });
-
-        let result = derive_terp_ibc_denom(&asset, &channels);
-        assert!(result.is_none());
-    }
-
-    #[test]
-    fn test_finalize_channels_and_channel_map_roundtrip() {
-        // Simulate the internal raw channel storage from query (terp as chain_1 in stored)
-        // for a counterparty "akash" (alpha before terp)
-        let raw_chans = vec![json!({
-            "chain_1": { "channel_id": "channel-6", "port_id": "transfer" },
-            "chain_2": { "channel_id": "channel-115", "port_id": "transfer" },
-            "ordering": 1,
-            "version": "ics20-1",
-            "tags": { "status": "ACTIVE" }
-        })];
-        // alpha: akash < terp so chain_1_name = "akash"
-        let final_chs = finalize_channels_for_ibc_entry(&raw_chans, "akash", "akash", "Active");
-        assert_eq!(final_chs.len(), 1);
-        assert_eq!(final_chs[0]["chain_1"]["channel_id"], "channel-115"); // akash side in chain_1
-        assert_eq!(final_chs[0]["chain_2"]["channel_id"], "channel-6"); // terp side in chain_2
-        assert_eq!(final_chs[0]["tags"]["preferred"], true);
-        assert_eq!(final_chs[0]["ordering"], "unordered");
-
-        // Now build a full ibc_data entry like the generator and feed to map builder
-        let ibc_entry = json!({
-            "$schema": "../ibc_data.schema.json",
-            "chain_1": { "chain_name": "akash", "chain_id": "akashnet-2", "client_id": "c1", "connection_id": "conn1" },
-            "chain_2": { "chain_name": "terp", "chain_id": "morocco-1", "client_id": "c2", "connection_id": "conn2" },
-            "channels": final_chs
-        });
-        let mut ibc_data = serde_json::Map::new();
-        ibc_data.insert("akash".to_string(), ibc_entry);
-        let map = build_channel_to_chain_map(&serde_json::Value::Object(ibc_data));
-        assert_eq!(map.len(), 1);
-        let info = map.get("akash").unwrap();
-        assert_eq!(info.terp_channel_id, "channel-6");
-        assert_eq!(info.counterparty_channel_id, "channel-115");
-        println!("  ✓ finalize + map roundtrip validated real channel curation");
-
-        // Ensure both Terp natives (uterp + uthiol) are generated for other chains assetinfo
-        // using the known IBC information between our channels (from the map).
-        let cp_ch = &info.counterparty_channel_id;
-
-        for native in ["uterp", "uthiol"] {
-            let path = format!("transfer/{}/{}", cp_ch, native);
-            let hash = compute_ibc_denom_hash(&path);
-            assert!(hash.starts_with("ibc/"));
-            println!(
-                "  ✓ Terp native ({}) reverse IBC via known channel {}",
-                native, cp_ch
-            );
-        }
-        // using the known IBC information between our channels (from the map).
-        let cp_ch = &info.counterparty_channel_id;
-
-        for native in ["uterp", "uthiol"] {
-            let path = format!("transfer/{}/{}", cp_ch, native);
-            let hash = compute_ibc_denom_hash(&path);
-            assert!(hash.starts_with("ibc/"));
-            println!(
-                "  ✓ Terp native ({}) reverse IBC via known channel {}",
-                native, cp_ch
-            );
-        }
-    }
-}
-/// Current unix timestamp as a string. Used by `prepare` to anchor the message.
+/// Current unix timestamp as a string.
 pub fn now_timestamp() -> String {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)

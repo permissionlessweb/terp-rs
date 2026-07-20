@@ -68,6 +68,9 @@ impl IBCChannelGraph {
     }
 
     /// Build the graph from a state.json ibc_data object (map of pair key → entry).
+    ///
+    /// Only **transfer/transfer** channels with **ACTIVE** status are added. Non-transfer
+    /// ports (ICS-27, wasm, fee middleware, …) must not participate in denom routing.
     pub fn build_from_state(ibc_data_obj: &serde_json::Value) -> Self {
         let mut graph = Self::new();
 
@@ -78,13 +81,21 @@ impl IBCChannelGraph {
 
                 if let Some(channels) = data["channels"].as_array() {
                     for chan in channels {
-                        let ch1_id = chan["chain_1"]["channel_id"].as_str().unwrap_or("");
-                        let ch2_id = chan["chain_2"]["channel_id"].as_str().unwrap_or("");
-                        let preferred = chan["tags"]["preferred"].as_bool().unwrap_or(false);
+                        let port_1 = chan["chain_1"]["port_id"].as_str().unwrap_or("");
+                        let port_2 = chan["chain_2"]["port_id"].as_str().unwrap_or("");
+                        if port_1 != "transfer" || port_2 != "transfer" {
+                            continue;
+                        }
                         let status = chan["tags"]["status"]
                             .as_str()
                             .unwrap_or("UNKNOWN")
                             .to_string();
+                        if status != "ACTIVE" {
+                            continue;
+                        }
+                        let ch1_id = chan["chain_1"]["channel_id"].as_str().unwrap_or("");
+                        let ch2_id = chan["chain_2"]["channel_id"].as_str().unwrap_or("");
+                        let preferred = chan["tags"]["preferred"].as_bool().unwrap_or(false);
 
                         if !ch1_id.is_empty() && !ch2_id.is_empty() {
                             graph.add_channel(
@@ -97,6 +108,18 @@ impl IBCChannelGraph {
         }
 
         graph
+    }
+
+    /// True if there is any ACTIVE transfer edge from `from` to `to` (preferred or not).
+    pub fn has_direct_active(&self, from: &str, to: &str) -> bool {
+        self.edges
+            .get(from)
+            .map(|edges| {
+                edges
+                    .iter()
+                    .any(|e| e.counterparty_chain == to && e.status == "ACTIVE")
+            })
+            .unwrap_or(false)
     }
 
     /// True if there is an ACTIVE preferred transfer edge from `from` to `to`.
@@ -134,12 +157,14 @@ impl IBCChannelGraph {
     }
 
     /// Preferred flag for a route under hard invariant "prefer direct when open":
-    /// multi-hop routes are never preferred if a direct ACTIVE preferred edge exists.
+    /// multi-hop routes are never preferred if **any** direct ACTIVE transfer edge exists
+    /// (not only preferred-tagged). Prevents Osmosis multi-hop winning when a direct
+    /// channel is open but mis-tagged non-preferred.
     pub fn route_is_preferred(&self, origin: &str, dest: &str, route: &[ChannelHop]) -> bool {
         if route.is_empty() {
             return false;
         }
-        if route.len() > 1 && self.has_direct_preferred_active(origin, dest) {
+        if route.len() > 1 && self.has_direct_active(origin, dest) {
             return false;
         }
         self.route_all_hops_preferred(route)
@@ -202,15 +227,21 @@ impl IBCChannelGraph {
     }
 
     /// Compute the IBC denom for an asset on a destination chain via a specific route.
+    ///
+    /// Trace path is built from the **destination looking back** toward origin:
+    /// for route hops origin→…→dest, nest `transfer/{receive_on_dest}/…/transfer/{receive_on_first_hop}/{base}`.
+    /// Receive channel for each hop is `hop.to_channel` (counterparty channel id on the hop destination).
     pub fn compute_ibc_denom_for_route(
         &self,
         origin_denom: &str,
         route: &[ChannelHop],
     ) -> (String, String) {
-        // Build the trace path from the perspective of the dest chain looking back to origin
         let mut trace_path = String::new();
+        // Append in reverse hop order so dest receive channel is the outermost prefix.
         for hop in route.iter().rev() {
-            trace_path = format!("transfer/{}/", hop.to_channel) + &trace_path;
+            trace_path.push_str("transfer/");
+            trace_path.push_str(&hop.to_channel);
+            trace_path.push('/');
         }
         trace_path.push_str(origin_denom);
 
@@ -267,6 +298,57 @@ mod tests {
         assert!(
             !graph.route_is_preferred("a", "c", multi),
             "multi-hop must not be preferred when direct ACTIVE preferred exists"
+        );
+    }
+
+    #[test]
+    fn build_from_state_skips_non_transfer_and_closed() {
+        let ibc = serde_json::json!({
+            "a-b": {
+                "chain_1": { "chain_name": "a", "chain_id": "a", "client_id": "c", "connection_id": "n" },
+                "chain_2": { "chain_name": "b", "chain_id": "b", "client_id": "c", "connection_id": "n" },
+                "channels": [
+                    {
+                        "chain_1": { "channel_id": "channel-0", "port_id": "transfer" },
+                        "chain_2": { "channel_id": "channel-0", "port_id": "transfer" },
+                        "ordering": "unordered",
+                        "version": "ics20-1",
+                        "tags": { "preferred": true, "status": "ACTIVE" }
+                    },
+                    {
+                        "chain_1": { "channel_id": "channel-1", "port_id": "wasm.x" },
+                        "chain_2": { "channel_id": "channel-1", "port_id": "wasm.x" },
+                        "ordering": "unordered",
+                        "version": "ics27-1",
+                        "tags": { "preferred": true, "status": "ACTIVE" }
+                    },
+                    {
+                        "chain_1": { "channel_id": "channel-2", "port_id": "transfer" },
+                        "chain_2": { "channel_id": "channel-2", "port_id": "transfer" },
+                        "ordering": "unordered",
+                        "version": "ics20-1",
+                        "tags": { "preferred": false, "status": "CLOSED" }
+                    }
+                ]
+            }
+        });
+        let g = IBCChannelGraph::build_from_state(&ibc);
+        let edges = g.edges.get("a").expect("a");
+        assert_eq!(edges.len(), 1, "only ACTIVE transfer should remain");
+        assert_eq!(edges[0].this_channel_id, "channel-0");
+    }
+
+    #[test]
+    fn multi_hop_not_preferred_when_direct_active_unpreferred() {
+        let mut graph = IBCChannelGraph::new();
+        // Direct ACTIVE but preferred=false; multi-hop all preferred
+        graph.add_channel("a", "channel-ac", "c", "channel-ca", false, "ACTIVE".into());
+        graph.add_channel("a", "channel-ab", "b", "channel-ba", true, "ACTIVE".into());
+        graph.add_channel("b", "channel-bc", "c", "channel-cb", true, "ACTIVE".into());
+        let multi = graph.find_routes("a", "c", 3).into_iter().find(|r| r.len() == 2).unwrap();
+        assert!(
+            !graph.route_is_preferred("a", "c", &multi),
+            "any direct ACTIVE must demote multi-hop preferred"
         );
     }
 }
