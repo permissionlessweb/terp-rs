@@ -1,27 +1,33 @@
 # Dependency Management Tooling
 
-Tooling for managing 65+ forked crate dependencies across 30+ Rust workspaces
-in the Abstract monorepo.
+Tooling for managing forked crate dependencies across many Rust workspaces
+in the Terp monorepo (`terp-core/crates`).
+
+**Stable operator surface:** see [`STABLE.md`](./STABLE.md) and `_scripts/dep.py`.
 
 ---
 
 ## Quick Reference
 
 ```bash
-# Justfile shortcuts (run from repo root)
-just deps-local          # Switch ALL deps to local paths
-just deps-git            # Switch ALL deps to git remotes
-just deps-stable         # Switch ALL deps to crates.io versions
-just deps-status         # Show current dep modes across all Cargo.tomls
-just deps-scrape         # Scan all projects, generate dep report
-just deps-overview       # Generate OVERVIEW.md dashboard
-just deps-report         # Run scrape + overview together
+# From crates/terp-rs/tools/gen-tools
+just deps-config         # monorepo root + policy
+just deps-validate       # matrix integrity (CI gate)
+just deps-heal           # fix absolute/wrong package paths in matrix
+just deps-status         # workspace dep modes
+just deps-local          # switch → path deps
+just deps-git            # switch → git remotes
+just deps-stable         # switch → crates.io
+just deps-dev            # git identity + local path patches
+just deps-verify local   # cargo metadata source check
+just deps-scrape         # full scan + diagnostics
+just deps-overview       # OVERVIEW.md dashboard
 
-# Granular switching
-just deps-switch git --crate cosmwasm-std
-just deps-switch local --workspace abstract/framework
-just deps-switch git --workspace cw-plus --target patches
-just deps-dry-run git --crate cosmwasm-std   # Preview without writing
+# Granular
+python3 _scripts/dep.py switch git --crate cosmwasm-std
+python3 _scripts/dep.py switch local --workspace cw-plus
+python3 _scripts/dep.py switch git --workspace abstract/framework --target patches
+python3 _scripts/dep.py switch git --dry-run
 ```
 
 ---

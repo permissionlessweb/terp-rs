@@ -384,6 +384,50 @@ dependencies = [
 ]
 
 [[package]]
+name = "ark-bn254"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d69eab57e8d2663efa5c63135b2af4f396d66424f88954c21104125ab6b3e6bc"
+dependencies = [
+ "ark-ec",
+ "ark-ff",
+ "ark-std 0.5.0",
+]
+
+[[package]]
+name = "ark-crypto-primitives"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e0c292754729c8a190e50414fd1a37093c786c709899f29c9f7daccecfa855e"
+dependencies = [
+ "ahash",
+ "ark-crypto-primitives-macros",
+ "ark-ec",
+ "ark-ff",
+ "ark-relations",
+ "ark-serialize",
+ "ark-snark",
+ "ark-std 0.5.0",
+ "blake2",
+ "derivative",
+ "digest 0.10.7",
+ "fnv",
+ "merlin",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "ark-crypto-primitives-macros"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e7e89fe77d1f0f4fe5b96dfc940923d88d17b6a773808124f21e764dfb063c6a"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
+]
+
+[[package]]
 name = "ark-ec"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -450,6 +494,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "ark-groth16"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "88f1d0f3a534bb54188b8dcc104307db6c56cdae574ddc3212aec0625740fc7e"
+dependencies = [
+ "ark-crypto-primitives",
+ "ark-ec",
+ "ark-ff",
+ "ark-poly",
+ "ark-relations",
+ "ark-serialize",
+ "ark-std 0.5.0",
+]
+
+[[package]]
 name = "ark-poly"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -462,6 +521,17 @@ dependencies = [
  "educe",
  "fnv",
  "hashbrown 0.15.5",
+]
+
+[[package]]
+name = "ark-relations"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ec46ddc93e7af44bcab5230937635b06fb5744464dd6a7e7b083e80ebd274384"
+dependencies = [
+ "ark-ff",
+ "ark-std 0.5.0",
+ "tracing",
 ]
 
 [[package]]
@@ -487,6 +557,18 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.117",
+]
+
+[[package]]
+name = "ark-snark"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d368e2848c2d4c129ce7679a7d0d2d612b6a274d3ea6a13bad4445d61b381b88"
+dependencies = [
+ "ark-ff",
+ "ark-relations",
+ "ark-serialize",
+ "ark-std 0.5.0",
 ]
 
 [[package]]
@@ -1253,6 +1335,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "bridge_auth_seams"
+version = "0.1.0"
+dependencies = [
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "bs58"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1596,6 +1685,16 @@ checksum = "ba5a308b75df32fe02788e748662718f03fde005016435c444eea572398219fd"
 dependencies = [
  "bytes",
  "memchr",
+]
+
+[[package]]
+name = "compose_seams"
+version = "0.1.0"
+dependencies = [
+ "bridge_auth_seams",
+ "private_dex_seams",
+ "seam_note_out",
+ "sha2 0.10.9",
 ]
 
 [[package]]
@@ -2004,6 +2103,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "78c8292055d1c1df0cce5d180393dc8cce0abec0a7102adb6c7b1eef6016d60a"
 dependencies = [
  "generic-array",
+ "rand_core 0.6.4",
  "typenum",
 ]
 
@@ -2151,7 +2251,7 @@ dependencies = [
  "rand_core 0.6.4",
  "serde",
  "sha2 0.10.9",
- "terp-auth",
+ "terp-auth 0.2.0",
  "zk-headstash",
 ]
 
@@ -3736,6 +3836,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "037711b3d59c33004d3856fbdc83b99d4ff37a24768fa1be9ce3538a1cde4393"
 
 [[package]]
+name = "futures-timer"
+version = "3.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "af43fadb8a98512d547e37b4e92e0ced13e205c061b87b4623eff01d918d6968"
+
+[[package]]
 name = "futures-util"
 version = "0.3.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4121,12 +4227,14 @@ dependencies = [
  "anyhow",
  "async-trait",
  "axum 0.7.9",
+ "base64 0.22.1",
  "blake3",
  "clap",
  "cw721-nips",
  "ed25519-dalek",
  "futures-util",
  "hex",
+ "hmac 0.12.1",
  "k256",
  "rand_core 0.6.4",
  "reqwest 0.12.28",
@@ -4138,6 +4246,7 @@ dependencies = [
  "tokio",
  "tokio-tungstenite 0.24.0",
  "toml 0.8.23",
+ "tower 0.5.3",
  "tracing",
  "tracing-subscriber",
 ]
@@ -4578,6 +4687,7 @@ dependencies = [
  "tokio",
  "tokio-rustls 0.26.4",
  "tower-service",
+ "webpki-roots 1.0.8",
 ]
 
 [[package]]
@@ -4868,6 +4978,7 @@ dependencies = [
  "bollard",
  "cosmrs",
  "cw-orch-core",
+ "ed25519-dalek",
  "futures",
  "futures-util",
  "hex",
@@ -5887,6 +5998,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3d97bbf43eb4f088f8ca469930cde17fa036207c9a5e02ccc5107c4e8b17c964"
 
 [[package]]
+name = "merlin"
+version = "3.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "58c38e2799fc0978b65dfff8023ec7843e2330bb462f19198840b34b6582397d"
+dependencies = [
+ "byteorder",
+ "keccak",
+ "rand_core 0.6.4",
+ "zeroize",
+]
+
+[[package]]
 name = "metrics"
 version = "0.24.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5901,6 +6024,16 @@ name = "mime"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
+
+[[package]]
+name = "mime_guess"
+version = "2.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f7c44f8e672c00fe5308fa235f821cb4198414e1c77935c1ab6948d3fd78550e"
+dependencies = [
+ "mime",
+ "unicase",
+]
 
 [[package]]
 name = "minimal-lexical"
@@ -6928,6 +7061,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "private_dex_seams"
+version = "0.1.0"
+dependencies = [
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "proc-macro-crate"
 version = "3.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7603,6 +7743,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "relative-path"
+version = "1.9.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ba39f3699c378cd8970968dcbff9c43159ea4cfbd88d43c00b22f2ef10a435d2"
+
+[[package]]
 name = "rend"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7665,6 +7811,7 @@ dependencies = [
  "bytes",
  "encoding_rs",
  "futures-core",
+ "futures-util",
  "h2 0.4.14",
  "http 1.4.1",
  "http-body 1.0.1",
@@ -7676,9 +7823,12 @@ dependencies = [
  "js-sys",
  "log",
  "mime",
+ "mime_guess",
  "native-tls",
  "percent-encoding",
  "pin-project-lite",
+ "quinn",
+ "rustls 0.23.41",
  "rustls-pki-types",
  "serde",
  "serde_json",
@@ -7686,6 +7836,7 @@ dependencies = [
  "sync_wrapper 1.0.2",
  "tokio",
  "tokio-native-tls",
+ "tokio-rustls 0.26.4",
  "tower 0.5.3",
  "tower-http 0.6.11",
  "tower-service",
@@ -7693,6 +7844,7 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
+ "webpki-roots 1.0.8",
 ]
 
 [[package]]
@@ -7857,6 +8009,36 @@ checksum = "ffc936cf8a7ea60c58f030fd36a612a48f440610214dc54bc36431f9ea0c3efb"
 dependencies = [
  "libc",
  "winapi",
+]
+
+[[package]]
+name = "rstest"
+version = "0.23.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0a2c585be59b6b5dd66a9d2084aa1d8bd52fbdb806eafdeffb52791147862035"
+dependencies = [
+ "futures",
+ "futures-timer",
+ "rstest_macros",
+ "rustc_version",
+]
+
+[[package]]
+name = "rstest_macros"
+version = "0.23.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "825ea780781b15345a146be27eaefb05085e337e869bff01b4306a4fd4a9ad5a"
+dependencies = [
+ "cfg-if",
+ "glob",
+ "proc-macro-crate",
+ "proc-macro2",
+ "quote",
+ "regex",
+ "relative-path",
+ "rustc_version",
+ "syn 2.0.117",
+ "unicode-ident",
 ]
 
 [[package]]
@@ -8261,50 +8443,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
-name = "scripts"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "axum 0.7.9",
- "clap",
- "cosmos-sdk-proto",
- "cosmrs",
- "cosmwasm-schema",
- "cosmwasm-std",
- "crosslink-light-client",
- "csv",
- "cw-ics08-wasm-crosslink",
- "cw-orch",
- "cw-orch-interchain",
- "dotenv",
- "ed25519-zebra",
- "env_logger 0.11.10",
- "hash-market",
- "hex",
- "ict-rs",
- "k256",
- "log",
- "rand_core 0.6.4",
- "reqwest 0.13.4",
- "rustls 0.23.41",
- "serde",
- "serde_json",
- "sha2 0.11.0-pre.4",
- "tempfile",
- "terp-account-scripts",
- "terp-rs",
- "tokio",
- "toml 1.1.2+spec-1.1.0",
- "tracing",
- "tracing-subscriber",
- "which",
- "zebra-chain",
- "zebra-crosslink",
- "zk-test-press",
-]
-
-[[package]]
 name = "sct"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8312,6 +8450,18 @@ checksum = "da046153aa2352493d6cb7da4b6e5c0c057d8a1d0a9aa8560baffdd945acd414"
 dependencies = [
  "ring",
  "untrusted",
+]
+
+[[package]]
+name = "seam_note_out"
+version = "0.1.0"
+dependencies = [
+ "chacha20poly1305",
+ "hex",
+ "rand_core 0.6.4",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
 ]
 
 [[package]]
@@ -9387,6 +9537,25 @@ dependencies = [
 
 [[package]]
 name = "terp-account"
+version = "0.1.0"
+dependencies = [
+ "abstract-std",
+ "bech32 0.11.1",
+ "cosmwasm-crypto",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-controllers",
+ "cw-orch",
+ "cw-ownable",
+ "cw721",
+ "ripemd 0.1.3",
+ "serde",
+ "sha2 0.10.9",
+ "terp-auth 0.1.0",
+]
+
+[[package]]
+name = "terp-account"
 version = "0.2.0"
 dependencies = [
  "bech32 0.11.1",
@@ -9431,11 +9600,26 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.9",
- "terp-account",
- "terp-auth",
+ "terp-account 0.2.0",
+ "terp-auth 0.1.0",
  "terp721-account",
  "terp721-account-manifold",
  "tokio",
+]
+
+[[package]]
+name = "terp-auth"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-utils",
+ "rstest",
+ "schemars 0.8.22",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -9453,6 +9637,92 @@ dependencies = [
 ]
 
 [[package]]
+name = "terp-authenticator-suite"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-orch",
+ "hex",
+ "serde",
+ "serde_json",
+ "terp-account 0.1.0",
+ "terp-auth 0.1.0",
+ "terp-ed25519",
+ "terp-eth",
+ "terp-irl",
+ "terp-passkey",
+ "terp-recovery",
+ "terp-vsck",
+ "terp-zkjwt",
+ "terp-zkposiedon",
+ "thiserror 2.0.18",
+ "zk-cosmwasm",
+]
+
+[[package]]
+name = "terp-ed25519"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-ownable",
+ "cw-storage-plus",
+ "cw2",
+ "hex",
+ "serde",
+ "terp-account 0.1.0",
+ "terp-auth 0.1.0",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "terp-eth"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-ownable",
+ "cw-storage-plus",
+ "cw2",
+ "hex",
+ "serde",
+ "sha3",
+ "terp-account 0.1.0",
+ "terp-auth 0.1.0",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "terp-irl"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-storage-plus",
+ "cw2",
+ "serde",
+ "terp-account 0.1.0",
+ "terp-auth 0.1.0",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "terp-passkey"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-ownable",
+ "cw-storage-plus",
+ "cw2",
+ "serde",
+ "terp-account 0.1.0",
+ "terp-auth 0.1.0",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "terp-proto"
 version = "0.1.0"
 dependencies = [
@@ -9462,6 +9732,39 @@ dependencies = [
  "serde",
  "tonic-prost-build",
  "walkdir",
+]
+
+[[package]]
+name = "terp-recovery"
+version = "0.1.0"
+dependencies = [
+ "blake2",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-storage-plus",
+ "cw2",
+ "ff",
+ "halo2_poseidon 0.1.0",
+ "hex",
+ "pasta_curves",
+ "serde",
+ "sha2 0.10.9",
+ "sha3",
+ "terp-account 0.1.0",
+ "terp-auth 0.1.0",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "terp-recovery-poseidon-demo"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "hex",
+ "serde",
+ "terp-recovery",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -9481,6 +9784,93 @@ dependencies = [
 ]
 
 [[package]]
+name = "terp-scripts"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "axum 0.7.9",
+ "clap",
+ "cosmos-sdk-proto",
+ "cosmrs",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "crosslink-light-client",
+ "csv",
+ "cw-ics08-wasm-crosslink",
+ "cw-orch",
+ "cw-orch-interchain",
+ "dotenv",
+ "ed25519-zebra",
+ "env_logger 0.11.10",
+ "hash-market",
+ "hex",
+ "ict-rs",
+ "k256",
+ "log",
+ "rand_core 0.6.4",
+ "reqwest 0.13.4",
+ "rustls 0.23.41",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0-pre.4",
+ "tempfile",
+ "terp-account-scripts",
+ "terp-rs",
+ "tokio",
+ "toml 1.1.2+spec-1.1.0",
+ "tracing",
+ "tracing-subscriber",
+ "which",
+ "zebra-chain",
+ "zebra-crosslink",
+ "zk-test-press",
+]
+
+[[package]]
+name = "terp-vsck"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-storage-plus",
+ "cw2",
+ "serde",
+ "sha2 0.10.9",
+ "terp-account 0.1.0",
+ "terp-auth 0.1.0",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "terp-zkjwt"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-storage-plus",
+ "cw2",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "terp-account 0.1.0",
+ "terp-auth 0.1.0",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "terp-zkposiedon"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw2",
+ "serde",
+ "terp-auth 0.1.0",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "terp721-account"
 version = "0.2.0"
 dependencies = [
@@ -9494,7 +9884,7 @@ dependencies = [
  "cw2",
  "cw721",
  "serde",
- "terp-account",
+ "terp-account 0.1.0",
  "thiserror 1.0.69",
 ]
 
@@ -9512,7 +9902,7 @@ dependencies = [
  "cw-utils",
  "cw2",
  "cw721",
- "terp-account",
+ "terp-account 0.1.0",
  "terp721-account",
  "thiserror 1.0.69",
 ]
@@ -11777,7 +12167,16 @@ dependencies = [
 name = "zk-cosmwasm"
 version = "3.0.3-dev"
 dependencies = [
+ "ark-bn254",
+ "ark-crypto-primitives",
+ "ark-ec",
+ "ark-ff",
+ "ark-groth16",
+ "ark-relations",
+ "ark-serialize",
+ "ark-std 0.5.0",
  "base64 0.22.1",
+ "clap",
  "cosmwasm-vm-derive",
  "group",
  "halo2_gadgets 0.4.0",
@@ -11848,6 +12247,8 @@ dependencies = [
  "async-trait",
  "base64 0.22.1",
  "blake3",
+ "bridge_auth_seams",
+ "compose_seams",
  "corez",
  "cosmwasm-std",
  "cw-headstash",
@@ -11868,6 +12269,7 @@ dependencies = [
  "rand_core 0.6.4",
  "rustls 0.23.41",
  "schemars 0.8.22",
+ "seam_note_out",
  "secp256k1 0.31.1",
  "serde",
  "serde_json",

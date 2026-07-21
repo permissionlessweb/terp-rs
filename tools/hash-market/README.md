@@ -24,7 +24,41 @@ A modular, feature-gated server that acts as a validator sidecar (producing and 
 ### Default features
 
 ```toml
-default = ["nostr", "blossom"]
+default = ["nostr", "blossom"]   # server without vote extensions
+```
+
+### Mint / whitelist host (VE off)
+
+Primary production mode for NFT mint pages:
+
+```toml
+# config.toml
+ve_enabled = false
+bind = "0.0.0.0:9090"
+chain_id = "morocco-1"
+data_dir = "/var/lib/hash-market"
+# no signing_key or [[providers]] required
+```
+
+```bash
+# Build image without VE (Dockerfile default FEATURES)
+docker build -t hash-market:local -f tools/hash-market/Dockerfile .
+
+# Public APIs for frontends (terp.network svg mint)
+# GET  /health
+# GET  /trees
+# GET  /trees/{id}
+# GET  /trees/{id}/members/{addr}  → proof_hashes for fee-bypass mint
+# POST /trees/{id}  (auth)         → upload gen_merkle JSON
+```
+
+Frontend: `websites/terp.network/lib/merkle-server.js` + `config.services.merkleServer`.
+
+### Validator sidecar (VE on)
+
+```bash
+cargo build -p hash-market --features full-sidecar --release
+# config: ve_enabled = true, signing_key, [[providers]]
 ```
 
 ---
@@ -117,14 +151,26 @@ cargo build --release --features "server,ve,blossom,client,nostr" -p hash-market
 
 ```bash
 # From crates/terp-rs workspace root
-docker build -t hash-market-server -f tools/hash-market/Dockerfile .
+docker build -t hash-market:local -f tools/hash-market/Dockerfile .
 
-# Run
+# Run (config mount — never put signing_key in env)
 docker run --rm -p 9090:9090 \
   -v /path/to/config.toml:/etc/hash-market/config.toml:ro \
   -v /path/to/data:/var/lib/hash-market \
-  hash-market-server --config /etc/hash-market/config.toml
+  hash-market:local
 ```
+
+### Akash via o-line (recommended)
+
+```bash
+# SDL: crates/o-line/templates/sdls/oline/hashmerchant.yml
+# Secrets are SFTP'd after lease — never provider env
+oline hashmerchant render
+oline hashmerchant deploy
+oline hashmerchant upload --dseq <D> --config ~/.oline/hashmerchant/config.toml
+```
+
+See `o-line` docs/examples/hashmerchant.md.
 
 ### Minimal build (server only)
 
@@ -285,7 +331,7 @@ cd tests
 cargo check --bin hashmerchant-e2e
 
 # Build release
-cargo build --release --bin e2e -p scripts --features docker,nostr
+cargo build --release --bin e2e -p terp-scripts --features docker,nostr
 
 # The main e2e.rs spins up the full stack (Terp chain, Anvil, sidecars)
 # via ict-rs Docker orchestration.

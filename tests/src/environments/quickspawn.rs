@@ -14,7 +14,7 @@
 // //! # Usage
 // //!
 // //! ```ignore
-// //! use scripts::quickspawn_env::QuickSpawnEnv;
+// //! use terp_scripts::quickspawn_env::QuickSpawnEnv;
 // //!
 // //! #[tokio::test]
 // //! async fn test_against_snapshot() {

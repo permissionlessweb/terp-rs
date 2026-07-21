@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReservedQtyResponse",
+  "type": "object",
+  "required": [
+    "reserved",
+    "sku"
+  ],
+  "properties": {
+    "reserved": {
+      "type": "integer",
+      "format": "uint64",
+      "minimum": 0.0
+    },
+    "sku": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

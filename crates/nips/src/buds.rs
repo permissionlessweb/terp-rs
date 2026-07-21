@@ -9,4 +9,6 @@ pub use bud06::{
     blossom::InMemoryBlobStore, blossom_router, check_action, check_scope,
     extract_payment_proof, parse_hash, BlossomState,
 };
-pub use bud07::{PaymentError, PaymentProof, PaymentVerifier};
+pub use bud07::{
+    NoopAuthVerifier, NoopPaymentVerifier, PaymentError, PaymentProof, PaymentVerifier,
+};

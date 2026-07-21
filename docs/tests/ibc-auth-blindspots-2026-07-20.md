@@ -17,7 +17,7 @@
 ## Executive summary
 
 - Offline lib tests prove **self-consistency of derivation + synthetic graph invariants**, not that mainnet `public/` or live DenomTrace match prediction.
-- The **fat generator binary still owns the live path** and retains pre-fix `premine` (`hop_count: route.len()`, preferred = all hops preferred) while the lib fixed those bugs — green unit/golden is **orthogonal** to what `cargo run -p scripts --bin ibc` emits.
+- The **fat generator binary still owns the live path** and retains pre-fix `premine` (`hop_count: route.len()`, preferred = all hops preferred) while the lib fixed those bugs — green unit/golden is **orthogonal** to what `cargo run -p terp-scripts --bin terp-ibc` emits.
 - Fixture “observe” inverts `known_hashes` written by the same hash function — **compare_predict_observe cannot fail closed on path authenticity** for goldens.
 - Harness reimplements path geometry locally, never builds `PredictedWorld` / `check_invariants` / `ObserveBackend`, and the live Docker test is **unrun** in agent environments — authenticity success criteria remain unproven.
 - Ownership fences (A vs B vs O) deliberately deferred CLI thin-out, Cargo merge, generator wiring, and dual-sided client checks — those gaps are **structural**, not accidental.
@@ -127,7 +127,7 @@
 - **Blind spot:** `tests/bin/ibc_info.rs` still defines local `finalize_channels_for_ibc_entry`, `compute_ibc_denom_hash`, full graph/premine/routing (~1.4k–1.8k+), hardcoded `dead_clients` 0..31, no clap `validate|compare`, no auto `check_invariants` at end of generate, no `ibc_generation_meta.json`.
 - **Framing cause:** Explicit parallel ownership: A and B **must not** edit `tests/bin/**`; Track O owns thin CLI and generator bugfixes; Agent A “except pure-function fixes in the lib that generate will later call” assumed a later call that has not happened. Critic prompt facts state this divergence.
 - **Risk:** Highest — **lib green, mainnet artifacts still wrong** (prefer multi-hop, hop_count lies, dead client list). Authenticity effort can be declared “done” while user-facing binary is unchanged.
-- **Next check:** `rg`/diff for `hop_count: route.len()` and prefer-without-`route_is_preferred` in binary; run generate against fixtures and feed output into lib `check_invariants` — expect errors until O3 lands. Measure: binary must call `scripts::ibc::{..., check_invariants}` with zero local premine copy.
+- **Next check:** `rg`/diff for `hop_count: route.len()` and prefer-without-`route_is_preferred` in binary; run generate against fixtures and feed output into lib `check_invariants` — expect errors until O3 lands. Measure: binary must call `terp_scripts::ibc::{..., check_invariants}` with zero local premine copy.
 
 #### Finding F13: Binary `#[cfg(test)]` still holds large validator/tests
 
@@ -273,7 +273,7 @@ See section below (same ordering).
 ## Prioritized remediations (top 5)
 
 1. **Wire generator to lib + fail closed (Track O2/O3)**  
-   Delete or thin binary-local graph/premine/hash/finalize; call `scripts::ibc`; run `check_invariants` (+ schema) at end of generate; refuse success on Error. Replace dead_clients 0..31 with capability filters.  
+   Delete or thin binary-local graph/premine/hash/finalize; call `terp_scripts::ibc`; run `check_invariants` (+ schema) at end of generate; refuse success on Error. Replace dead_clients 0..31 with capability filters.  
    **Why first:** User-facing authenticity is still the binary; offline green does not fix mainnet JSON.
 
 2. **Prove one live mainnet sample + separate audited vs synthetic goldens**  
@@ -308,7 +308,7 @@ See section below (same ordering).
 
 ## Open questions for the team
 
-1. When is Track O scheduled relative to any consumer release that still runs `cargo run -p scripts --bin ibc`?
+1. When is Track O scheduled relative to any consumer release that still runs `cargo run -p terp-scripts --bin terp-ibc`?
 2. Is preferred policy “prefer any ACTIVE direct transfer” or only “ACTIVE + preferred tag”? Product answer drives F5.
 3. Who owns weekly/nightly `--ignored` harness runs and image rebuilds (`local-zk` vs ghcr tag)?
 4. Should `public/` regeneration be blocked in CI until `check_invariants` is clean (policy), or only documented?
@@ -332,4 +332,4 @@ See section below (same ordering).
 | dead_clients 0..31 | `tests/bin/ibc_info.rs` ~110–115 |
 | expected_lookup unused | `tests/data/ibc/golden/expected_lookup.json`; no test loaders |
 | ibc_core is re-export only | `tests/src/ibc_core.rs` |
-| Binary barely imports lib | `use scripts::ibc_core::TerpChannelInfo` only at top of `ibc_info.rs` |
+| Binary barely imports lib | `use terp_scripts::ibc_core::TerpChannelInfo` only at top of `ibc_info.rs` |

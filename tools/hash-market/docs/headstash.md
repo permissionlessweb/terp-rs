@@ -41,20 +41,57 @@ For JWT auth, set the `JWT_SECRET` environment variable.
 
 ### Authenticated endpoints
 
-All require `X-Auth-Type: secp256k1` headers (or `Authorization: Bearer <jwt>`).
+All require blossom/BUD auth on the unified server (`blossom.auth.verify` — Nostr signed
+events / admin key as configured), or the historical snap headers documented below
+where a dedicated headstash-server is still used.
 
 | Endpoint | Method | Description |
 |---|---|---|
 | `/headstash/{id}` | POST | Register a new headstash |
-| `/headstash/{id}/root` | GET | Get the Merkle root for a headstash |
-| `/headstash/{id}/sync` | POST | Sync/merge state into a headstash record |
-| `/notes/{hs_id}/{addr}` | GET | Fetch an encrypted note for an address |
+| `/headstash/{id}/root` | GET | Get the Merkle root for a headstash (legacy) |
+| `/headstash/{id}/sync` | POST | Sync/merge state into a headstash record (legacy) |
+| `/notes/{hs_id}/{addr}` | GET | Fetch encrypted note envelope |
+| `/notes/{hs_id}/{addr}` | PUT / POST | **Store** encrypted note envelope (mint/bridge client) |
 | `/notes/{hs_id}` | GET | List note keys for a headstash |
 | `/notes/{hs_id}/pir` | POST | PIR-fetch a note (hides which address) |
 | `/keys/{key_id}` | GET | Download a circuit key |
 | `/keys/{key_id}/pir` | POST | PIR-fetch a key (hides which key) |
 
+**Privacy:** private note bodies live only under `HeadstashStore` (`notes/{hs_id}/{addr}.json`).
+They are **not** served on public dual-index `GET /content/{sha256}`. Optional `sha256` on
+the envelope may point at a ciphertext-only BUD pin when `[distribution]` is on; primary
+fetch remains auth-gated `/notes/...`.
+
+## Cashu mesh (separate product)
+
+Cashu e-cash uses a **different** store prefix and routes — do not conflate with Headstash notes:
+
+- Store: `data/cashu/mints/…`, `data/cashu/wallets/…`
+- HTTP: `/cashu/mints/*`, `/cashu/wallets/*`
+- Schema: **canonical** mint registry (not “official”) — see
+  [`docs/plans/cashu/CANONICAL-MINT-REGISTRY.md`](../../../../../docs/plans/cashu/CANONICAL-MINT-REGISTRY.md)
+  and local [`cashu-mesh.md`](./cashu-mesh.md)
+
+Wallet proof backups are always auth-gated and never dual-indexed as public `/content` SSOT.
+
 ## Authentication
+
+### Server config (`[notes_auth]`)
+
+| mode | Behavior |
+|------|----------|
+| `noop` (default) | Allow all — local/dev only |
+| `bearer` | `Authorization: Bearer <token>` (`bearer_token` or env `NOTES_BEARER_TOKEN`) |
+| `secp` | Snap headers; allowlist `allowed_pubkeys` (or `allow_any_secp = true`) |
+| `bearer_or_secp` | Either path |
+
+Client CLI (ops):
+
+```bash
+cargo run -p seam_note_out --features cli --bin headstash-notes -- \
+  recover --base http://127.0.0.1:9090 --hs-id season-1 \
+  --addr cm.… --owner-key <64hex> --auth-bearer "$NOTES_BEARER_TOKEN"
+```
 
 ### secp256k1 (snap client)
 
@@ -145,12 +182,40 @@ curl -X POST http://localhost:8080/headstash/season-1 \
 
 ### Notes
 
-Place encrypted note JSON files directly in the data directory:
+**Production write path (preferred):** mint/bridge client encrypts `SEAM-NOTE-OUT` cleartext
+(opaque 382B) to the owner, then:
+
+```bash
+curl -X PUT "http://localhost:8080/notes/{hs_id}/{addr}" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: …" \
+  -d '{
+    "ciphertext": "<hex|b64>",
+    "nonce": "…",
+    "scheme": "xchacha20poly1305",
+    "cleartext_layout": "SEAM-NOTE-OUT-V0",
+    "cleartext_len": 382
+  }'
+```
+
+| Field | Convention |
+|---|---|
+| `hs_id` | cw-headstash contract bech32 **or** season slug registered in `headstash/{id}.json` |
+| `addr` (claim) | claimant bech32 / `0x`+40 hex as in inclusion leaf |
+| `addr` (bridge) | `cm.` + hex(note_commitment) or `pk.` + hex(pk_d) — `validate_id` charset only |
+
+Caller: **client that holds plaintext** (rcm / note material). Indexer is metadata-only;
+hash-market never re-derives secrets. Chain never sees plaintext.
+
+**Genesis / bootstrap only:** place encrypted note JSON files directly in the data directory:
 
 ```bash
 echo '{"ciphertext":"...","nonce":"...","scheme":"xchacha20poly1305"}' \
   > data/notes/season-1/0xabc123.json
 ```
+
+**L0 smoke (no Docker):** `HeadstashStore::set_note` → `get_note` round-trip
+(`cargo test -p hash-market set_note_get_note --features server`).
 
 ### Circuit keys
 

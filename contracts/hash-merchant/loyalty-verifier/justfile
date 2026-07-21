@@ -1,0 +1,150 @@
+# loyalty-verifier contract justfile
+#
+#   just wasm       — Docker rustc 1.86 (optimizer image) + host wasm-opt bulk lower
+#                     (required for wasmd store / Docker e2e)
+#   just wasm-dev   — host rustc + wasm-opt lower (faster; still wasmd-safe)
+#   just test
+#
+# wasmd 0.61 rejects bulk-memory (memory.copy). Always post-process with
+# binaryen wasm-opt ≥120 (--llvm-memory-copy-fill-lowering).
+
+set dotenv-load := false
+
+contract_dir := justfile_directory()
+artifacts_dir := contract_dir / "artifacts"
+
+# Build wasmd-safe wasm using optimizer image as the *toolchain* (rustc 1.86).
+# Note: stock `bob` only builds packages under contracts/; this crate is a
+# single-package root, so we cargo-build directly then lower bulk-memory on host.
+wasm:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    ARCH="$(uname -m)"
+    case "${ARCH}" in
+      arm64|aarch64)
+        if [[ -n "${OPTIMIZER_IMAGE:-}" ]]; then
+          IMG="${OPTIMIZER_IMAGE}"
+        elif docker image inspect terpnetwork/optimizer-arm64:0.17.0 >/dev/null 2>&1; then
+          IMG="terpnetwork/optimizer-arm64:0.17.0"
+        else
+          IMG="cosmwasm/optimizer-arm64:0.17.0"
+        fi
+        ;;
+      *)
+        if [[ -n "${OPTIMIZER_IMAGE:-}" ]]; then
+          IMG="${OPTIMIZER_IMAGE}"
+        elif docker image inspect terpnetwork/optimizer:0.17.0 >/dev/null 2>&1; then
+          IMG="terpnetwork/optimizer:0.17.0"
+        else
+          IMG="cosmwasm/optimizer:0.17.0"
+        fi
+        ;;
+    esac
+    echo "==> build toolchain image: ${IMG}"
+    mkdir -p "{{artifacts_dir}}"
+    rm -f "{{artifacts_dir}}"/*.wasm
+    docker run --rm \
+      --entrypoint /bin/ash \
+      -v "{{contract_dir}}":/code \
+      -w /code \
+      --mount type=volume,source=loyalty_verifier_cache,target=/target \
+      --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+      -e CARGO_TARGET_DIR=/target \
+      "${IMG}" \
+      -c 'set -e
+          rustup show
+          cargo build --release --target wasm32-unknown-unknown --lib
+          mkdir -p /code/artifacts
+          cp -f /target/wasm32-unknown-unknown/release/loyalty_verifier.wasm /code/artifacts/
+          ls -la /code/artifacts/loyalty_verifier.wasm
+         '
+    just _post_process_wasm
+    just _verify_no_bulk_memory
+    echo "Done:"
+    ls -la "{{artifacts_dir}}/loyalty_verifier.wasm"
+
+# Host build + wasmd-safe post-process (no Docker). Prefer `just wasm` for CI parity.
+wasm-dev:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export RUSTFLAGS="-C target-feature=-bulk-memory,-sign-ext,-mutable-globals,-nontrapping-fptoint,-multivalue,-reference-types"
+    cargo build --target wasm32-unknown-unknown --release --lib
+    mkdir -p "{{artifacts_dir}}"
+    cp -f target/wasm32-unknown-unknown/release/loyalty_verifier.wasm \
+      "{{artifacts_dir}}/loyalty_verifier.wasm"
+    just _post_process_wasm
+    just _verify_no_bulk_memory
+    echo "Dev wasm installed to artifacts/loyalty_verifier.wasm"
+
+# Lower memory.copy/fill + sign-ext for wasmvm gatekeepers (binaryen ≥120).
+_post_process_wasm:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    ART="{{artifacts_dir}}/loyalty_verifier.wasm"
+    if [[ ! -f "${ART}" ]]; then
+      echo "error: missing ${ART}" >&2
+      exit 1
+    fi
+    WASM_OPT="$(command -v wasm-opt || true)"
+    if [[ -z "${WASM_OPT}" ]]; then
+      echo "error: wasm-opt (binaryen) required on PATH" >&2
+      echo "  brew install binaryen" >&2
+      exit 1
+    fi
+    HELP="$("${WASM_OPT}" --help 2>&1 || true)"
+    if ! echo "${HELP}" | grep -q 'llvm-memory-copy-fill-lowering'; then
+      echo "error: wasm-opt too old (need ≥120 with --llvm-memory-copy-fill-lowering)" >&2
+      echo "  brew upgrade binaryen  (have: $("${WASM_OPT}" --version 2>&1 || true))" >&2
+      exit 1
+    fi
+    echo "==> ${WASM_OPT}: lower bulk-memory + sign-ext for CosmWasm gatekeeper"
+    # macOS mktemp requires XXXXXX as suffix of the template basename
+    TMP="$(mktemp "${TMPDIR:-/tmp}/lv-opt.XXXXXX")"
+    # Enable bulk/signext so *input* validates, then lower them out of *output*
+    "${WASM_OPT}" -Os \
+      --enable-bulk-memory \
+      --enable-sign-ext \
+      --llvm-memory-copy-fill-lowering \
+      --signext-lowering \
+      "${ART}" -o "${TMP}"
+    mv "${TMP}" "${ART}"
+    (
+      cd "{{artifacts_dir}}"
+      if command -v sha256sum >/dev/null 2>&1; then
+        sha256sum loyalty_verifier.wasm | tee checksums.txt
+      else
+        shasum -a 256 loyalty_verifier.wasm | tee checksums.txt
+      fi
+    )
+
+_verify_no_bulk_memory:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    ART="{{artifacts_dir}}/loyalty_verifier.wasm"
+    python3 - <<'PY'
+    from pathlib import Path
+    p = Path("{{artifacts_dir}}/loyalty_verifier.wasm")
+    d = p.read_bytes()
+    if b"get_nullifier_claim" not in d:
+        raise SystemExit("error: wasm missing get_nullifier_claim — rebuild from current sources")
+    if b"claim_rewards_private" not in d:
+        raise SystemExit("error: wasm missing claim_rewards_private")
+    print(f"verify strings OK size={len(d)}")
+    PY
+    # Authoritative: wasm-opt feature list must NOT include bulk-memory
+    FEATS="$(wasm-opt --print-features "${ART}" 2>&1 || true)"
+    echo "${FEATS}" | sed 's/^/  feature: /'
+    if echo "${FEATS}" | grep -qi 'enable-bulk-memory'; then
+      echo "error: bulk-memory feature still enabled — wasmd will reject store" >&2
+      exit 1
+    fi
+    echo "verify OK: no bulk-memory feature"
+
+test:
+    cargo test
+
+check:
+    cargo check
+
+clippy:
+    cargo clippy -- -D warnings

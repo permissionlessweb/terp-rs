@@ -7,7 +7,7 @@
 //!
 //! Live run (Docker + Terp image required):
 //! ```sh
-//! cargo test -p scripts --test ibc_multihop_harness -- --ignored --nocapture
+//! cargo test -p terp-scripts --test ibc_multihop_harness -- --ignored --nocapture
 //! ```
 //!
 //! Layout notes: `tests/data/ibc/harness/README.md`.
@@ -23,7 +23,7 @@ use ict_rs::modules::tokenfactory::TokenfactoryMsgExt;
 use ict_rs::relayer::{build_relayer, RelayerType};
 use ict_rs::runtime::{DockerConfig, DockerImage, IctRuntime};
 use ict_rs::tx::{TransferOptions, WalletAmount};
-use scripts::ibc::{
+use terp_scripts::ibc::{
     check_invariants, compute_ibc_denom_hash, hop_count_from_trace_path, ChannelHop,
     IBCChannelGraph, PredictedWorld,
 };

@@ -26,7 +26,7 @@
 // //! ```sh
 // //! cd terp-core && make build-docker-local
 // //! docker images terpnetwork/terp-core:local-zk
-// //! cargo build --bin e2e -p scripts --features docker,nostr
+// //! cargo build --bin e2e -p terp-scripts --features docker,nostr
 // //! ```
 // //!
 
@@ -43,8 +43,8 @@
 // use ict_rs::prelude::*;
 // use ict_rs::testing::TestEnv;
 // use log::info;
-// use scripts::suite::TerpNetworkDeployData;
-// use scripts::suite::{HealthStatus, SidecarFleet};
+// use terp_scripts::suite::TerpNetworkDeployData;
+// use terp_scripts::suite::{HealthStatus, SidecarFleet};
 // use sha2;
 // use sha2::Digest;
 // use tokio::signal;
@@ -211,7 +211,7 @@
 //     //     da.wait_blocks(1)?;
 //     //     //  deploy main app-layer suite
 //     //     let dao_data = TerpNetworkDeployData::local_default(da.sender_addr(), &[])?;
-//     //     let suite = scripts::suite::DeploySuite::deploy_on(da.clone(), dao_data)?;
+//     //     let suite = terp_scripts::suite::DeploySuite::deploy_on(da.clone(), dao_data)?;
 //     //     Ok((da, db, suite))
 //     // })
 //     // .await??;

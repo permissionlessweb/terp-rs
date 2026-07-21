@@ -1,47 +1,116 @@
 # hash-market-server configuration
+#
+# Default production mode for NFT mint frontends: ve_enabled = false
+# (BUD blobs + Merkle whitelist trees only). See config.example-mint.toml.
+#
+# Validator sidecar (ABCI++): ve_enabled = true + build --features ve / full-sidecar
 
-# Address to bind the HTTP API
 bind = "0.0.0.0:9090"
+chain_id = "morocco-1"
+data_dir = "/var/lib/hash-market"
 
-# CometBFT chain ID
-chain_id = "terp-mainnet-1"
+# ── Mint / whitelist host (recommended) ───────────────────────────────────
+ve_enabled = false
+# signing_key and [[providers]] not required when VE is off
 
-# Secp256k1 private key (hex-encoded, 32 bytes)
-# Generate with: openssl rand -hex 32
-signing_key = "deadbeef..."
-
-# ── Providers ─────────────────────────────────────────────────────────
+# ── Validator sidecar only (requires --features ve / full-sidecar) ───────
+# ve_enabled = true
+# signing_key = "deadbeef..."   # openssl rand -hex 32  (valid secp256k1)
 #
-# Each [[providers]] entry registers a named data source for a specific
-# (chain_uid, algo) pair. Multiple providers can run concurrently, each
-# with its own transport.
-#
-# Fields:
-#   name          — human-readable label (for logs and /providers endpoint)
-#   chain_uid     — must match a RegisteredChain in the hashmerchant module
-#   algo          — hash algorithm (default: "keccak256")
-#   mode          — transport: "grpc", "http_poll", or "websocket"
-#   address       — listen addr (grpc) or remote URL (http_poll, websocket)
-#   interval_secs — polling interval for http_poll (default: 12)
-
-[[providers]]
-name = "ethereum-mainnet"
-chain_uid = "ethereum-mainnet"
-algo = "keccak256"
-mode = "grpc"
-address = "0.0.0.0:9091"
-
-[[providers]]
-name = "arbitrum-one"
-chain_uid = "arbitrum-one"
-algo = "keccak256"
-mode = "grpc"
-address = "0.0.0.0:9092"
-
+# Lab/e2e static root (no external feeder) — NOT for production:
 # [[providers]]
-# name = "cosmoshub"
-# chain_uid = "cosmoshub-4"
-# algo = "sha256"
+# name = "ethereum-lab"
+# chain_uid = "ethereum-mainnet"
+# algo = "keccak256"
+# mode = "static"
+# address = "lab"
+# interval_secs = 2
+# static_root = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+# static_height = 1
+#
+# Production-style provider:
+# [[providers]]
+# name = "ethereum-mainnet"
+# chain_uid = "ethereum-mainnet"
+# algo = "keccak256"
+# mode = "grpc"
+# address = "0.0.0.0:9091"
+#
+# terpd: HASHMERCHANT_SIDECAR_URL=http://127.0.0.1:9090
+# (root /vote-extension alias; also available under /ve/vote-extension)
+#
+# ── Connect-style multi-source price bounds (opt-in elevated) ─────────────
+# Many sources → off-chain median → one mid per market_id (role=bound_only).
+# API: GET /oracle/bounds?market_id=ETH/USD
+# Optional VE: algo=price_median_v1 when ve_enabled=true (build --features ve).
+# See docs/oracle-connect-bounds.md
+#
+# [oracle]
+# bounds_enabled = true
+# aggregation = "median"       # median | mean | weighted_mean | trimmed_mean | min | max
+# min_sources = 2
+# max_age_secs = 120
+#
+# [[providers]]
+# name = "binance_eth_usd"
+# kind = "price_bound"
+# market_id = "ETH/USD"
 # mode = "http_poll"
-# address = "http://cosmos-poller:8080/data"
-# interval_secs = 6
+# address = "http://127.0.0.1:18080/ticker/binance"
+# interval_secs = 5
+# weight = 1.0
+#
+# [[providers]]
+# name = "coinbase_eth_usd"
+# kind = "price_bound"
+# market_id = "ETH/USD"
+# mode = "http_poll"
+# address = "http://127.0.0.1:18080/ticker/coinbase"
+# interval_secs = 5
+#
+# [[providers]]
+# name = "okx_eth_usd"
+# kind = "price_bound"
+# market_id = "ETH/USD"
+# mode = "http_poll"
+# address = "http://127.0.0.1:18080/ticker/okx"
+# interval_secs = 5
+
+# ── Content distribution: BUD sha256 + optional IPFS (oline-compatible) ──
+# Default: omitted / enabled=false — mint & VE support unchanged.
+# See docs/content-distribution.md
+#
+# [distribution]
+# enabled = true
+# ipfs_api = "http://127.0.0.1:5001"
+# ipfs_gateway_public = "https://ipfs.example/ipfs/"
+# pin_on_upload = true
+# pin_required = false
+# webhooks = ["http://127.0.0.1:8080/hooks/content"]
+# # webhook_bearer = "secret"
+# # ingest_bearer = "secret"
+# default_labels = ["public"]
+# public_get = true
+# redirect_ipfs_on_miss = false
+
+# ── Private notes + blossom auth (ops product) ───────────────────────────
+# Default: omitted → noop (local/dev). For live notes_base use bearer and/or snap secp.
+# Client: headstash-notes CLI (seam_note_out --features cli) or NotesPersistConfig.auth_headers
+#
+# [notes_auth]
+# mode = "bearer_or_secp"   # noop | bearer | secp | bearer_or_secp
+# bearer_token = "replace-me"   # or env NOTES_BEARER_TOKEN / JWT_SECRET
+# allowed_pubkeys = ["02…compressed…"]
+# # allow_any_secp = false
+# timestamp_tolerance_secs = 300
+
+# ── Cashu mesh: canonical mint discovery cache + encrypted wallet stash ──
+# See docs/cashu-mesh.md and docs/plans/cashu/CANONICAL-MINT-REGISTRY.md
+# (canonical registry — not an “official” mint list).
+# Default when omitted: enabled + public_mint_list (lab). Writes always use notes_auth.
+#
+# [cashu_mesh]
+# enabled = true
+# public_mint_list = true
+# # registry_contract = "terp1…"
+# # chain_rpc = "http://127.0.0.1:26657"

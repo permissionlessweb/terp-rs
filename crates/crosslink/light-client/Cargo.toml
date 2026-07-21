@@ -6,23 +6,15 @@ repository = { workspace = true }
 description = "Core light client verification primitives for Zcash Crosslink TFL"
 
 [features]
-# default = ["sigverify"]
-# sigverify = ["dep:ed25519-zebra", "dep:rand", "dep:rand08"]
 
 [dependencies]
+cosmwasm-std = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true, features = ["std"] }
 hex = { workspace = true }
 thiserror = { workspace = true }
 blake3 = "1.5"
 byteorder = "1.5.0"
-
-# Signature verification — lightweight, wasm-compatible
-ed25519-zebra = { workspace = true }
-cosmwasm-std = { workspace = true }
-rand = { workspace = true, features = ["std", "thread_rng"], optional = true }
-# rand 0.8 for compatibility with ed25519-zebra's rand_core 0.6
-rand08 = { package = "rand", version = "0.8", features = ["std", "std_rng"], optional = true }
 
 [dev-dependencies]
 # Full zebra-crosslink crate imported ONLY for type invariance tests

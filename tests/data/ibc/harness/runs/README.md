@@ -3,7 +3,7 @@
 Live authenticity is **not** proven by default CI. After:
 
 ```sh
-cargo test -p scripts --test ibc_multihop_harness -- --ignored --nocapture
+cargo test -p terp-scripts --test ibc_multihop_harness -- --ignored --nocapture
 ```
 
 file a short note here (or as CI artifact) with:

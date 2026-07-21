@@ -130,13 +130,7 @@ fn genesis_client_state(finalizers: Vec<FinalizerEntry>) -> CrosslinkClientState
 
 /// Helper: build a "genesis" `ConsensusState` anchored at height 0.
 fn genesis_consensus_state() -> CrosslinkConsensusState {
-    CrosslinkConsensusState {
-        bft_height: 0,
-        pow_anchor_height: 0,
-        pow_anchor_hash: [0u8; 32],
-        timestamp: 0,
-        state_commitment: [0u8; 32],
-    }
+    CrosslinkConsensusState::v1(0, 0, [0u8; 32], 0, [0u8; 32])
 }
 
 /// Helper: build a single `PowHeader` (hash, timestamp, height) — the slim
@@ -144,10 +138,15 @@ fn genesis_consensus_state() -> CrosslinkConsensusState {
 fn pow_header(hash_byte: u8, timestamp: u64, height: u32) -> PowHeader {
     let mut hash = [0u8; 32];
     hash[0] = hash_byte;
+    // Deterministic non-zero commitment so v1 anchors are observable in updates.
+    let mut commitment_bytes = [0u8; 32];
+    commitment_bytes[0] = hash_byte ^ 0x5a;
+    commitment_bytes[1] = (height & 0xff) as u8;
     PowHeader {
         hash,
         timestamp,
         height,
+        commitment_bytes,
     }
 }
 
@@ -536,7 +535,7 @@ fn run_scenarios_blocking(chain_info: ChainInfoOwned, mnemonics: Vec<String>) ->
 }
 /// SHA-256 of `artifacts/cw_ics08_wasm_crosslink.wasm` (see `artifacts/checksums.txt`).
 /// 08-wasm ClientState.checksum is the raw 32-byte digest, not the hex string.
-const WASM_CHECKSUM_HEX: &str = "33d506ee481a06a14668bc5f79cc0a1363cf1f3bcc214e82deaf2a69b11f7d33";
+const WASM_CHECKSUM_HEX: &str = "1619e9fee9bf38cb425dc7a450d397864564aa0909eb9df835b7ae08ccbbd8d8";
 
 /// Well-known cosmos-sdk `gov` module account, re-encoded with the `terp` HRP.
 /// 08-wasm `MsgStoreCode.signer` must be the gov authority; the proposal
@@ -714,9 +713,52 @@ fn prepare_wasm_light_clients(daemon: Daemon) -> Result<()> {
         "waiting for voting period + execution"
     );
     std::thread::sleep(GOV_VOTING_WAIT);
-    daemon.wait_blocks(3)?;
+    daemon.wait_blocks(5)?;
 
-    info!(proposal_id, "wasm light client store-code prepare finished");
+    // Confirm governance actually passed and executed MsgStoreCode.
+    // Without this check, CreateClient fails later with "checksum has not
+    // been previously stored" and the real failure is hard to see.
+    let prop_info = rt.block_on(async {
+        use cosmrs::proto::cosmos::gov::v1::query_client::QueryClient;
+        use cosmrs::proto::cosmos::gov::v1::QueryProposalRequest;
+        let channel = daemon.channel();
+        let mut client = QueryClient::new(channel);
+        let resp = client
+            .proposal(QueryProposalRequest { proposal_id })
+            .await?
+            .into_inner();
+        Ok::<_, anyhow::Error>(resp.proposal.map(|p| (p.status, p.failed_reason)))
+    });
+    match prop_info {
+        Ok(Some((status, failed_reason))) => {
+            // ProposalStatus::Passed = 3, Failed = 5
+            info!(proposal_id, status, %failed_reason, "gov proposal final status");
+            if status != 3 {
+                return Err(anyhow!(
+                    "MsgStoreCode proposal {proposal_id} did not pass \
+                     (status={status}, failed_reason={failed_reason:?}); \
+                     08-wasm checksum will be missing. Artifact: {WASM_CHECKSUM_HEX} \
+                     ({} bytes). Typical causes: out-of-gas on store, wasm validation \
+                     failure against the chain's wasmvm, or max contract size.",
+                    include_bytes!("../../artifacts/cw_ics08_wasm_crosslink.wasm").len()
+                ));
+            }
+        }
+        Ok(None) => {
+            return Err(anyhow!(
+                "MsgStoreCode proposal {proposal_id} not found after voting period"
+            ));
+        }
+        Err(e) => {
+            error!(proposal_id, "could not query proposal status: {e:#}");
+        }
+    }
+
+    info!(
+        proposal_id,
+        expected_checksum = WASM_CHECKSUM_HEX,
+        "wasm light client store-code prepare finished"
+    );
     Ok(())
 }
 

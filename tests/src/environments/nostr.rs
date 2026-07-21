@@ -16,7 +16,7 @@
 //! # Usage
 //!
 //! ```ignore
-//! use scripts::nostr_env::NostrTestEnv;
+//! use terp_scripts::nostr_env::NostrTestEnv;
 //! use cw_orch::prelude::*;
 //!
 //! #[tokio::test]
@@ -303,14 +303,25 @@ impl Drop for NostrTestEnv {
 // Helper: build a Nostr event from chain event data
 // ─────────────────────────────────────────────────────────────────────────────
 
-use std::collections::hash_map::DefaultHasher;
-use std::hash::{Hash, Hasher};
+/// Convert hash-market `Nip01Event` (or compatible) into ict-rs `NostrEvent`.
+#[cfg(feature = "hash-market")]
+pub fn nip01_to_ict(ev: hash_market::Nip01Event) -> NostrEvent {
+    NostrEvent {
+        id: ev.id,
+        pubkey: ev.pubkey,
+        created_at: ev.created_at,
+        kind: ev.kind,
+        tags: ev.tags,
+        content: ev.content,
+        sig: ev.sig,
+    }
+}
 
 /// Create a NostrEvent from chain metadata.
 ///
-/// This is a bridge function that converts on-chain event data (attributes,
-/// height, action, contract address) into a Nostr event with kind 31922
-/// (Calendar Date-Based Event) for relaying to the Nostr network.
+/// Bridge function: wasm attributes → NIP-52-shaped kind 31922 event for the
+/// relay. Prefer [`calendar_meta_to_nostr`] when MetadataExt / content body is
+/// available (full Phase B egress).
 pub fn chain_event_to_nostr(
     attrs: &[(String, String)],
     height: u64,
@@ -318,38 +329,96 @@ pub fn chain_event_to_nostr(
     contract: Option<&str>,
     pubkey: &str,
 ) -> NostrEvent {
-    use std::time::{SystemTime, UNIX_EPOCH};
-
-    let content = serde_json::json!({
-        "chain_height": height,
-        "action": action,
-        "contract": contract,
-        "attributes": attrs,
-    })
-    .to_string();
-
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs() as i64;
-
-    // Simple deterministic id (not cryptographically signed — for testing only).
-    let mut hasher = DefaultHasher::new();
-    content.hash(&mut hasher);
-    let id = format!("{:x}", hasher.finish());
-
-    NostrEvent {
-        id,
-        pubkey: pubkey.to_string(),
-        created_at: now,
-        kind: 31922,
-        tags: vec![
-            vec!["t".to_string(), "chain-event".to_string()],
-            vec!["h".to_string(), height.to_string()],
-        ],
-        content,
-        sig: "00".repeat(32),
+    #[cfg(feature = "hash-market")]
+    {
+        return nip01_to_ict(hash_market::chain_attrs_to_nostr(
+            attrs, height, action, contract, pubkey,
+        ));
     }
+    #[cfg(not(feature = "hash-market"))]
+    {
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
+        use std::time::{SystemTime, UNIX_EPOCH};
+        let content = serde_json::json!({
+            "chain_height": height,
+            "action": action,
+            "contract": contract,
+            "attributes": attrs,
+        })
+        .to_string();
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs() as i64;
+        let mut hasher = DefaultHasher::new();
+        content.hash(&mut hasher);
+        NostrEvent {
+            id: format!("{:x}", hasher.finish()),
+            pubkey: pubkey.to_string(),
+            created_at: now,
+            kind: 31922,
+            tags: vec![
+                vec!["t".to_string(), "chain-event".to_string()],
+                vec!["h".to_string(), height.to_string()],
+            ],
+            content,
+            sig: "00".repeat(32),
+        }
+    }
+}
+
+/// Phase B egress: calendar metadata (+ optional resolved off-chain body) → NIP-52.
+///
+/// * Off-chain: pass body from `hash_market::resolve_local` / `resolve_http`.
+/// * On-chain: set `meta.e_json` and omit body (or pass same bytes).
+#[cfg(feature = "hash-market")]
+pub fn calendar_meta_to_nostr(
+    meta: &hash_market::CalendarMetaView,
+    body: Option<&[u8]>,
+    action: Option<&hash_market::CalendarChainAction>,
+    pubkey: &str,
+) -> anyhow::Result<NostrEvent> {
+    let ev = hash_market::metadata_to_nip52_event(meta, body, action, pubkey)
+        .map_err(|e| anyhow::anyhow!(e))?;
+    Ok(nip01_to_ict(ev))
+}
+
+/// End-to-end helper for tests: bind body → off-chain meta → NIP-52 event.
+///
+/// Uses TreeStore as sole BlobStore (no second calendar storage path).
+#[cfg(feature = "hash-market")]
+pub fn bind_and_bridge_offchain(
+    store: &hash_market::store::TreeStore,
+    body: &[u8],
+    kind: u16,
+    d_tag: Option<&str>,
+    calendar_d: Option<&str>,
+    pubkey: &str,
+    action: Option<&hash_market::CalendarChainAction>,
+) -> anyhow::Result<(hash_market::OffchainBind, NostrEvent)> {
+    let (bind, mut meta) = hash_market::bind_offchain_event(store, body, kind)
+        .map_err(|e| anyhow::anyhow!(e))?;
+    if let Some(d) = d_tag {
+        meta.d_tag = Some(d.to_string());
+    }
+    if let Some(c) = calendar_d {
+        meta.calendar_d = Some(c.to_string());
+    }
+    meta.author_pubkey = Some(pubkey.to_string());
+    let resolved = hash_market::resolve_local(store, &meta.cid).map_err(|e| anyhow::anyhow!(e))?;
+    let view = hash_market::CalendarMetaView {
+        on_chain: false,
+        e_json: None,
+        cid: Some(meta.cid),
+        kind: meta.kind,
+        d_tag: meta.d_tag,
+        calendar_d: meta.calendar_d,
+        author_pubkey: meta.author_pubkey,
+        nostr_e_d: None,
+    };
+    let ev = calendar_meta_to_nostr(&view, Some(&resolved), action, pubkey)?;
+    Ok((bind, ev))
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -407,17 +476,52 @@ mod tests {
 
     #[test]
     fn test_chain_event_to_nostr_conversion() {
-        let attrs = vec![("action".into(), "wasm-execute".into())];
+        let attrs = vec![("action".into(), "create_event".into())];
         let result = chain_event_to_nostr(
             &attrs,
             42,
-            Some("wasm-execute"),
+            Some("create_event"),
             Some("terp1test123"),
             "test_pubkey_abc",
         );
         assert_eq!(result.kind, 31922);
         assert!(result.content.contains("chain_height"));
         assert!(result.content.contains("42"));
+    }
+
+    #[cfg(feature = "hash-market")]
+    #[test]
+    fn test_bind_and_bridge_offchain_nip52() {
+        use hash_market::store::TreeStore;
+        use hash_market::{CalendarChainAction, KIND_TIME_BASED};
+
+        let dir = std::env::temp_dir().join(format!("nostr-env-bind-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let store = TreeStore::open(dir.join("trees")).unwrap();
+        let body = br#"{"title":"Suite Event","content":"hi","d_tag":"s1"}"#;
+        let action = CalendarChainAction {
+            action: "create_event".into(),
+            e_d: Some("evt/cal/1/1".into()),
+            d: Some("cal/1".into()),
+            contract: Some("terp1cal".into()),
+            height: 10,
+        };
+        let (bind, ev) = bind_and_bridge_offchain(
+            &store,
+            body,
+            KIND_TIME_BASED,
+            Some("s1"),
+            Some("cal/1"),
+            "pk_test",
+            Some(&action),
+        )
+        .unwrap();
+        assert_eq!(bind.chain_cid.len(), 64);
+        assert_eq!(ev.kind, KIND_TIME_BASED as u32);
+        assert!(ev.tags.iter().any(|t| t.first().map(|s| s.as_str()) == Some("cid")));
+        assert!(ev.content.contains("Suite Event"));
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]

@@ -1,11 +1,28 @@
-//! HashMerchant Nostr types: kind:30070 root events, NIP-87 discovery, NIP-77 negentropy.
+//! HashMerchant Nostr types: kind:30070 root events, NIP-87 discovery, NIP-77 negentropy,
+//! dao-calendar NIP-52 chain→relay egress, and marketplace NIP-15 egress + ingress-intent.
 //!
 //! All types in this module are defined in terms of the existing `msg::HashRoot`
 //! and `cw721-nips` Nostr event primitives.
 
+pub mod calendar_egress;
 pub mod discovery;
+pub mod marketplace_egress;
+pub mod marketplace_ingress;
 pub mod negentropy;
 pub mod roots;
+
+pub use calendar_egress::{
+    chain_attrs_to_nostr, metadata_to_nip52_event, offchain_to_nip52, onchain_to_nip52,
+    parse_calendar_action, CalendarChainAction, CalendarMetaView, Nip01Event,
+};
+pub use marketplace_egress::{
+    chain_action_to_nostr, parse_marketplace_action, product_to_nip15,
+    purchase_confirmation_to_nostr, MarketplaceChainAction, ProductMetaView, KIND_SET_PRODUCT,
+    KIND_SET_STALL,
+};
+pub use marketplace_ingress::{
+    parse_purchase_intent, parse_purchase_intent_value, IngressError, PurchaseIntent,
+};
 
 use crate::msg::HashRoot;
 

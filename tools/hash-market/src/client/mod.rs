@@ -14,7 +14,7 @@ pub mod nostr;
 pub mod ve;
 
 pub use hashmerchant::{HashMerchantClient, RootConfirmation};
-pub use minio_ipfs::MinioIpfsClient;
+pub use minio_ipfs::{MinioIpfsClient, MinioIpfsDurableConfig};
 
 use crate::fields::pasta;
 

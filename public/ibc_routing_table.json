@@ -1,150 +1,30 @@
 {
   "metadata": {
     "chains": [
-      "terp",
+      "gitopia",
+      "juno",
       "atomone",
-      "osmosis",
-      "akash"
+      "evmos",
+      "secret",
+      "akash",
+      "terp",
+      "omniflix",
+      "stargaze",
+      "osmosis"
     ],
-    "generated_at": "1781531346",
-    "total_routes": 36
+    "generated_at": "",
+    "total_routes": 18
   },
   "routes": {
     "akash": [
       {
         "dest_chain": "akash",
-        "dest_denom": "ibc/B92EA79A98FF7E8ED7410364870D317BE549940400C9ABD084BCB03583636620",
-        "hop_count": 2,
+        "dest_denom": "ibc/A59970786FD461637D5A6D33CCB6B89D3DE769A8656FFC95EF67868B0A9BC600",
+        "hop_count": 1,
         "origin_chain": "terp",
-        "origin_denom": "uterp",
-        "preferred": true,
-        "route": [
-          {
-            "from_chain": "atomone",
-            "from_channel": "channel-13",
-            "to_chain": "terp",
-            "to_channel": "channel-10"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-9",
-            "to_chain": "akash",
-            "to_channel": "channel-139"
-          }
-        ],
-        "symbol": "TERP",
-        "trace_path": "transfer/channel-139/transfer/channel-13/uterp"
-      },
-      {
-        "dest_chain": "akash",
-        "dest_denom": "ibc/127DC1606A8D769AEB271CA4C83B67DCCE2548401BCE8AEDD534E309CBC82E4B",
-        "hop_count": 2,
-        "origin_chain": "terp",
-        "origin_denom": "uthiol",
-        "preferred": true,
-        "route": [
-          {
-            "from_chain": "atomone",
-            "from_channel": "channel-13",
-            "to_chain": "terp",
-            "to_channel": "channel-10"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-9",
-            "to_chain": "akash",
-            "to_channel": "channel-139"
-          }
-        ],
-        "symbol": "THIOL",
-        "trace_path": "transfer/channel-139/transfer/channel-13/uthiol"
-      },
-      {
-        "dest_chain": "akash",
-        "dest_denom": "ibc/CAB6ADBF7C637493F7A5266782C0EB319AF0E2C83A123C60DC6710C4D5DE2C48",
-        "hop_count": 2,
-        "origin_chain": "akash",
-        "origin_denom": "uakt",
-        "preferred": true,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-110258",
-            "to_chain": "terp",
-            "to_channel": "channel-11"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-9",
-            "to_chain": "akash",
-            "to_channel": "channel-139"
-          }
-        ],
-        "symbol": "AKT",
-        "trace_path": "transfer/channel-139/transfer/channel-1/uakt"
-      },
-      {
-        "dest_chain": "akash",
-        "dest_denom": "ibc/E1D175E97F3882DB2C5A6DF20C7AC8A84ECC920D10B80C420E97E9BDA417D59F",
-        "hop_count": 2,
-        "origin_chain": "osmosis",
-        "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
-        "preferred": true,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-110258",
-            "to_chain": "terp",
-            "to_channel": "channel-11"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-9",
-            "to_chain": "akash",
-            "to_channel": "channel-139"
-          }
-        ],
-        "symbol": "WBTC",
-        "trace_path": "transfer/channel-11/transfer/channel-139/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
-      },
-      {
-        "dest_chain": "akash",
-        "dest_denom": "ibc/ACB214700BF3930E34210071159C48F5E61E424A514C3446B723F6CADC209654",
-        "hop_count": 2,
-        "origin_chain": "atomone",
-        "origin_denom": "uatone",
-        "preferred": true,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-110258",
-            "to_chain": "terp",
-            "to_channel": "channel-11"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-9",
-            "to_chain": "akash",
-            "to_channel": "channel-139"
-          }
-        ],
-        "symbol": "ATONE",
-        "trace_path": "transfer/channel-139/transfer/channel-94814/uatone"
-      },
-      {
-        "dest_chain": "akash",
-        "dest_denom": "ibc/0572998B998B9D8BBF3650FF6218EE8CC8B89FC3F05C90579C79741104C52038",
-        "hop_count": 2,
-        "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
         "preferred": true,
         "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-110258",
-            "to_chain": "terp",
-            "to_channel": "channel-11"
-          },
           {
             "from_chain": "terp",
             "from_channel": "channel-9",
@@ -153,70 +33,16 @@
           }
         ],
         "symbol": "SPICE",
-        "trace_path": "transfer/channel-11/transfer/channel-139/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+        "trace_path": "transfer/channel-139/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
       },
       {
         "dest_chain": "akash",
-        "dest_denom": "ibc/7B679F39373D03A4C56CCB3654D964306A80E2DF2B9003FCEB748E0CD92EFC9A",
-        "hop_count": 2,
-        "origin_chain": "penumbra",
-        "origin_denom": "upenumbra",
-        "preferred": true,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-110258",
-            "to_chain": "terp",
-            "to_channel": "channel-11"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-9",
-            "to_chain": "akash",
-            "to_channel": "channel-139"
-          }
-        ],
-        "symbol": "UM",
-        "trace_path": "transfer/channel-139/transfer/channel-79703/upenumbra"
-      },
-      {
-        "dest_chain": "akash",
-        "dest_denom": "ibc/81F1F03308F253972BBA88BF296C40B964072F605ABB98F431B794F73A5BC2FC",
-        "hop_count": 2,
-        "origin_chain": "cosmoshub",
-        "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
-        "preferred": true,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-110258",
-            "to_chain": "terp",
-            "to_channel": "channel-11"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-9",
-            "to_chain": "akash",
-            "to_channel": "channel-139"
-          }
-        ],
-        "symbol": "ETH",
-        "trace_path": "transfer/channel-139/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
-      },
-      {
-        "dest_chain": "akash",
-        "dest_denom": "ibc/B3E81972FF1E1182B4E1F35B0A8356E9F5CF60DBDB6B24E4D086C182A8C76079",
-        "hop_count": 2,
+        "dest_denom": "ibc/DDA5EFDDA729FA6C48CFA7F1C69D97E69C2F8C90DC86D89D2ED843D64E818320",
+        "hop_count": 1,
         "origin_chain": "terp",
-        "origin_denom": "uterp",
+        "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
         "preferred": true,
         "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-110258",
-            "to_chain": "terp",
-            "to_channel": "channel-11"
-          },
           {
             "from_chain": "terp",
             "from_channel": "channel-9",
@@ -224,169 +50,19 @@
             "to_channel": "channel-139"
           }
         ],
-        "symbol": "TERP",
-        "trace_path": "transfer/channel-139/transfer/channel-110258/uterp"
-      },
-      {
-        "dest_chain": "akash",
-        "dest_denom": "ibc/8182661D80F8DEE6D99AB5DD2BE6697F436818BF23ECFA71F2CB715F8E7CF7DB",
-        "hop_count": 2,
-        "origin_chain": "terp",
-        "origin_denom": "uthiol",
-        "preferred": true,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-110258",
-            "to_chain": "terp",
-            "to_channel": "channel-11"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-9",
-            "to_chain": "akash",
-            "to_channel": "channel-139"
-          }
-        ],
-        "symbol": "THIOL",
-        "trace_path": "transfer/channel-139/transfer/channel-110258/uthiol"
+        "symbol": "WBTC",
+        "trace_path": "transfer/channel-139/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
       }
     ],
     "atomone": [
       {
         "dest_chain": "atomone",
-        "dest_denom": "ibc/806456C4D6FC441515FB0451015E0ADAEDE3FDD82C75D6F566CF1B252743A88D",
-        "hop_count": 2,
+        "dest_denom": "ibc/16F86E7E041C8D33FB0ABD6C94981B386877CDE7D945D6D5C742C34D089D1A53",
+        "hop_count": 1,
         "origin_chain": "terp",
-        "origin_denom": "uterp",
-        "preferred": true,
-        "route": [
-          {
-            "from_chain": "akash",
-            "from_channel": "channel-139",
-            "to_chain": "terp",
-            "to_channel": "channel-9"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-10",
-            "to_chain": "atomone",
-            "to_channel": "channel-13"
-          }
-        ],
-        "symbol": "TERP",
-        "trace_path": "transfer/channel-13/transfer/channel-139/uterp"
-      },
-      {
-        "dest_chain": "atomone",
-        "dest_denom": "ibc/8DE97F8CA1278E965BFB787E4C51A252790B13857D0784636822F301CB3E3E90",
-        "hop_count": 2,
-        "origin_chain": "terp",
-        "origin_denom": "uthiol",
-        "preferred": true,
-        "route": [
-          {
-            "from_chain": "akash",
-            "from_channel": "channel-139",
-            "to_chain": "terp",
-            "to_channel": "channel-9"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-10",
-            "to_chain": "atomone",
-            "to_channel": "channel-13"
-          }
-        ],
-        "symbol": "THIOL",
-        "trace_path": "transfer/channel-13/transfer/channel-139/uthiol"
-      },
-      {
-        "dest_chain": "atomone",
-        "dest_denom": "ibc/BC1B2E5330A714F9241EEABB79DAC4E942B1820D507E8B10B09840A8DBA75612",
-        "hop_count": 2,
-        "origin_chain": "akash",
-        "origin_denom": "uakt",
-        "preferred": true,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-110258",
-            "to_chain": "terp",
-            "to_channel": "channel-11"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-10",
-            "to_chain": "atomone",
-            "to_channel": "channel-13"
-          }
-        ],
-        "symbol": "AKT",
-        "trace_path": "transfer/channel-13/transfer/channel-1/uakt"
-      },
-      {
-        "dest_chain": "atomone",
-        "dest_denom": "ibc/F29B2D57D8DB312E773BDE8EB0205840368B2BD5E972582F6E112358B3E80B2F",
-        "hop_count": 2,
-        "origin_chain": "osmosis",
-        "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
-        "preferred": true,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-110258",
-            "to_chain": "terp",
-            "to_channel": "channel-11"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-10",
-            "to_chain": "atomone",
-            "to_channel": "channel-13"
-          }
-        ],
-        "symbol": "WBTC",
-        "trace_path": "transfer/channel-11/transfer/channel-13/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
-      },
-      {
-        "dest_chain": "atomone",
-        "dest_denom": "ibc/6EA343A45CD49D9BF077A7FC3F96D672449303214402B787B6BED32288B7E798",
-        "hop_count": 2,
-        "origin_chain": "atomone",
-        "origin_denom": "uatone",
-        "preferred": true,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-110258",
-            "to_chain": "terp",
-            "to_channel": "channel-11"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-10",
-            "to_chain": "atomone",
-            "to_channel": "channel-13"
-          }
-        ],
-        "symbol": "ATONE",
-        "trace_path": "transfer/channel-13/transfer/channel-94814/uatone"
-      },
-      {
-        "dest_chain": "atomone",
-        "dest_denom": "ibc/27455319225D1F4C697A9E9FB7B5DB0C7EEF5A0FE68936596CE094F1E8D06944",
-        "hop_count": 2,
-        "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
         "preferred": true,
         "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-110258",
-            "to_chain": "terp",
-            "to_channel": "channel-11"
-          },
           {
             "from_chain": "terp",
             "from_channel": "channel-10",
@@ -395,70 +71,16 @@
           }
         ],
         "symbol": "SPICE",
-        "trace_path": "transfer/channel-11/transfer/channel-13/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+        "trace_path": "transfer/channel-13/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
       },
       {
         "dest_chain": "atomone",
-        "dest_denom": "ibc/B9FC357FAC52D872E3DF495766B9385A53022578037F5F52CD9F44F0063BCC6A",
-        "hop_count": 2,
-        "origin_chain": "penumbra",
-        "origin_denom": "upenumbra",
-        "preferred": true,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-110258",
-            "to_chain": "terp",
-            "to_channel": "channel-11"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-10",
-            "to_chain": "atomone",
-            "to_channel": "channel-13"
-          }
-        ],
-        "symbol": "UM",
-        "trace_path": "transfer/channel-13/transfer/channel-79703/upenumbra"
-      },
-      {
-        "dest_chain": "atomone",
-        "dest_denom": "ibc/2F97F0ED1B7801FB62C3087503AC7A6F38BE3C7CCFCAF839E66D86C5E17EA665",
-        "hop_count": 2,
-        "origin_chain": "cosmoshub",
-        "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
-        "preferred": true,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-110258",
-            "to_chain": "terp",
-            "to_channel": "channel-11"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-10",
-            "to_chain": "atomone",
-            "to_channel": "channel-13"
-          }
-        ],
-        "symbol": "ETH",
-        "trace_path": "transfer/channel-13/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
-      },
-      {
-        "dest_chain": "atomone",
-        "dest_denom": "ibc/D6BC41949787DB38C1E8C52E246FECCED9280F48ED844B6051EBD04FD65E673B",
-        "hop_count": 2,
+        "dest_denom": "ibc/B401AD86FA0A7658F9760E686A9F1CAD828EA33A7043407585BEEDF9F9AD9DCD",
+        "hop_count": 1,
         "origin_chain": "terp",
-        "origin_denom": "uterp",
+        "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
         "preferred": true,
         "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-110258",
-            "to_chain": "terp",
-            "to_channel": "channel-11"
-          },
           {
             "from_chain": "terp",
             "from_channel": "channel-10",
@@ -466,348 +88,274 @@
             "to_channel": "channel-13"
           }
         ],
-        "symbol": "TERP",
-        "trace_path": "transfer/channel-13/transfer/channel-110258/uterp"
+        "symbol": "WBTC",
+        "trace_path": "transfer/channel-13/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+      }
+    ],
+    "evmos": [
+      {
+        "dest_chain": "evmos",
+        "dest_denom": "ibc/7F04948C1F3CDA862EEAE5364E194806686464854E1D3F023E89DEF945BC1551",
+        "hop_count": 1,
+        "origin_chain": "terp",
+        "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+        "preferred": true,
+        "route": [
+          {
+            "from_chain": "terp",
+            "from_channel": "channel-5",
+            "to_chain": "evmos",
+            "to_channel": "channel-101"
+          }
+        ],
+        "symbol": "SPICE",
+        "trace_path": "transfer/channel-101/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
       },
       {
-        "dest_chain": "atomone",
-        "dest_denom": "ibc/C1FF185ABC6E224983280545B565A08FAF12780C0613FDC83E56299696CEAA8E",
-        "hop_count": 2,
+        "dest_chain": "evmos",
+        "dest_denom": "ibc/12015172A61A3ED85A082C917F28D87023B6DEFE84C44B99914C051B62427F93",
+        "hop_count": 1,
         "origin_chain": "terp",
-        "origin_denom": "uthiol",
+        "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
         "preferred": true,
         "route": [
           {
-            "from_chain": "osmosis",
-            "from_channel": "channel-110258",
-            "to_chain": "terp",
-            "to_channel": "channel-11"
-          },
-          {
             "from_chain": "terp",
-            "from_channel": "channel-10",
-            "to_chain": "atomone",
-            "to_channel": "channel-13"
+            "from_channel": "channel-5",
+            "to_chain": "evmos",
+            "to_channel": "channel-101"
           }
         ],
-        "symbol": "THIOL",
-        "trace_path": "transfer/channel-13/transfer/channel-110258/uthiol"
+        "symbol": "WBTC",
+        "trace_path": "transfer/channel-101/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+      }
+    ],
+    "gitopia": [
+      {
+        "dest_chain": "gitopia",
+        "dest_denom": "ibc/ADD33E9703A911023E73181FCA39B022094A1832F0C2311152A927E580E28B5F",
+        "hop_count": 1,
+        "origin_chain": "terp",
+        "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+        "preferred": true,
+        "route": [
+          {
+            "from_chain": "terp",
+            "from_channel": "channel-4",
+            "to_chain": "gitopia",
+            "to_channel": "channel-1"
+          }
+        ],
+        "symbol": "SPICE",
+        "trace_path": "transfer/channel-1/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+      },
+      {
+        "dest_chain": "gitopia",
+        "dest_denom": "ibc/CF57A83CED6CEC7D706631B5DC53ABC21B7EDA7DF7490732B4361E6D5DD19C73",
+        "hop_count": 1,
+        "origin_chain": "terp",
+        "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
+        "preferred": true,
+        "route": [
+          {
+            "from_chain": "terp",
+            "from_channel": "channel-4",
+            "to_chain": "gitopia",
+            "to_channel": "channel-1"
+          }
+        ],
+        "symbol": "WBTC",
+        "trace_path": "transfer/channel-1/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+      }
+    ],
+    "juno": [
+      {
+        "dest_chain": "juno",
+        "dest_denom": "ibc/9579E9609A560A57DB664E35665F293269CD3F625841A2EEE9478E1897AC00DF",
+        "hop_count": 1,
+        "origin_chain": "terp",
+        "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+        "preferred": true,
+        "route": [
+          {
+            "from_chain": "terp",
+            "from_channel": "channel-0",
+            "to_chain": "juno",
+            "to_channel": "channel-393"
+          }
+        ],
+        "symbol": "SPICE",
+        "trace_path": "transfer/channel-393/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+      },
+      {
+        "dest_chain": "juno",
+        "dest_denom": "ibc/2F57C5B45E550C3FE93975D8683B7731EFA3A094931241A347548740F89C6422",
+        "hop_count": 1,
+        "origin_chain": "terp",
+        "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
+        "preferred": true,
+        "route": [
+          {
+            "from_chain": "terp",
+            "from_channel": "channel-0",
+            "to_chain": "juno",
+            "to_channel": "channel-393"
+          }
+        ],
+        "symbol": "WBTC",
+        "trace_path": "transfer/channel-393/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+      }
+    ],
+    "omniflix": [
+      {
+        "dest_chain": "omniflix",
+        "dest_denom": "ibc/6DE48C0AB3ED2A3AC54D87A2E73804B7DBA4033A40DEB732C37436E1F9286B8D",
+        "hop_count": 1,
+        "origin_chain": "terp",
+        "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+        "preferred": true,
+        "route": [
+          {
+            "from_chain": "terp",
+            "from_channel": "channel-3",
+            "to_chain": "omniflix",
+            "to_channel": "channel-33"
+          }
+        ],
+        "symbol": "SPICE",
+        "trace_path": "transfer/channel-33/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+      },
+      {
+        "dest_chain": "omniflix",
+        "dest_denom": "ibc/EE381F1B7AFA4C4688ECB68BC4EA6168DCB8D8E7754D030EED7FB0F99BD5E62E",
+        "hop_count": 1,
+        "origin_chain": "terp",
+        "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
+        "preferred": true,
+        "route": [
+          {
+            "from_chain": "terp",
+            "from_channel": "channel-3",
+            "to_chain": "omniflix",
+            "to_channel": "channel-33"
+          }
+        ],
+        "symbol": "WBTC",
+        "trace_path": "transfer/channel-33/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
       }
     ],
     "osmosis": [
       {
         "dest_chain": "osmosis",
-        "dest_denom": "ibc/E46AE835F4A64D5C6CA393B65D30163AEAF3995E5002134E7EDD5384559D2DCC",
-        "hop_count": 2,
-        "origin_chain": "terp",
-        "origin_denom": "uterp",
-        "preferred": true,
-        "route": [
-          {
-            "from_chain": "akash",
-            "from_channel": "channel-139",
-            "to_chain": "terp",
-            "to_channel": "channel-9"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-11",
-            "to_chain": "osmosis",
-            "to_channel": "channel-110258"
-          }
-        ],
-        "symbol": "TERP",
-        "trace_path": "transfer/channel-110258/transfer/channel-139/uterp"
-      },
-      {
-        "dest_chain": "osmosis",
-        "dest_denom": "ibc/4E67FDF6E794B2B1C5BC6F029FE3332C56A47645095275F40A27D70522F05040",
-        "hop_count": 2,
-        "origin_chain": "terp",
-        "origin_denom": "uthiol",
-        "preferred": true,
-        "route": [
-          {
-            "from_chain": "akash",
-            "from_channel": "channel-139",
-            "to_chain": "terp",
-            "to_channel": "channel-9"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-11",
-            "to_chain": "osmosis",
-            "to_channel": "channel-110258"
-          }
-        ],
-        "symbol": "THIOL",
-        "trace_path": "transfer/channel-110258/transfer/channel-139/uthiol"
-      },
-      {
-        "dest_chain": "osmosis",
-        "dest_denom": "ibc/1177913478F39BF6CA0728C0E4EBFBBAC34F167BA3177CFB8B9448EF15EBC3EA",
-        "hop_count": 2,
-        "origin_chain": "terp",
-        "origin_denom": "uterp",
-        "preferred": true,
-        "route": [
-          {
-            "from_chain": "atomone",
-            "from_channel": "channel-13",
-            "to_chain": "terp",
-            "to_channel": "channel-10"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-11",
-            "to_chain": "osmosis",
-            "to_channel": "channel-110258"
-          }
-        ],
-        "symbol": "TERP",
-        "trace_path": "transfer/channel-110258/transfer/channel-13/uterp"
-      },
-      {
-        "dest_chain": "osmosis",
-        "dest_denom": "ibc/FB50A30E34B579A6E0CE60CC3DD6AA50A1A50AE0392842829FC6145A3F56F963",
-        "hop_count": 2,
-        "origin_chain": "terp",
-        "origin_denom": "uthiol",
-        "preferred": true,
-        "route": [
-          {
-            "from_chain": "atomone",
-            "from_channel": "channel-13",
-            "to_chain": "terp",
-            "to_channel": "channel-10"
-          },
-          {
-            "from_chain": "terp",
-            "from_channel": "channel-11",
-            "to_chain": "osmosis",
-            "to_channel": "channel-110258"
-          }
-        ],
-        "symbol": "THIOL",
-        "trace_path": "transfer/channel-110258/transfer/channel-13/uthiol"
-      }
-    ],
-    "terp": [
-      {
-        "dest_chain": "terp",
-        "dest_denom": "ibc/E33B06BB97AEACCA859686933E03E02C951B15755064D11D60A3D660C6090889",
+        "dest_denom": "ibc/B6B6B4518F28E2389375FEA0B1CA04F24135EBCC95F24F808E2EBB157AC84BFF",
         "hop_count": 1,
         "origin_chain": "terp",
-        "origin_denom": "uterp",
-        "preferred": true,
-        "route": [
-          {
-            "from_chain": "akash",
-            "from_channel": "channel-139",
-            "to_chain": "terp",
-            "to_channel": "channel-9"
-          }
-        ],
-        "symbol": "TERP",
-        "trace_path": "transfer/channel-9/transfer/channel-139/uterp"
-      },
-      {
-        "dest_chain": "terp",
-        "dest_denom": "ibc/95E58248E240E699639A655F788278688032894A396983A7A015D618C853852D",
-        "hop_count": 1,
-        "origin_chain": "terp",
-        "origin_denom": "uthiol",
-        "preferred": true,
-        "route": [
-          {
-            "from_chain": "akash",
-            "from_channel": "channel-139",
-            "to_chain": "terp",
-            "to_channel": "channel-9"
-          }
-        ],
-        "symbol": "THIOL",
-        "trace_path": "transfer/channel-9/transfer/channel-139/uthiol"
-      },
-      {
-        "dest_chain": "terp",
-        "dest_denom": "ibc/DF733DC7440B309715D6A2812E99D366EE331983A20CC620C7AB751A1B01E1B0",
-        "hop_count": 1,
-        "origin_chain": "terp",
-        "origin_denom": "uterp",
-        "preferred": true,
-        "route": [
-          {
-            "from_chain": "atomone",
-            "from_channel": "channel-13",
-            "to_chain": "terp",
-            "to_channel": "channel-10"
-          }
-        ],
-        "symbol": "TERP",
-        "trace_path": "transfer/channel-10/transfer/channel-13/uterp"
-      },
-      {
-        "dest_chain": "terp",
-        "dest_denom": "ibc/52A6739EEEE63EC79097E7CAEB0359E2FCE1DD0EE3E03B0F420A50FA00D5B103",
-        "hop_count": 1,
-        "origin_chain": "terp",
-        "origin_denom": "uthiol",
-        "preferred": true,
-        "route": [
-          {
-            "from_chain": "atomone",
-            "from_channel": "channel-13",
-            "to_chain": "terp",
-            "to_channel": "channel-10"
-          }
-        ],
-        "symbol": "THIOL",
-        "trace_path": "transfer/channel-10/transfer/channel-13/uthiol"
-      },
-      {
-        "dest_chain": "terp",
-        "dest_denom": "ibc/3EFF20694A413A17072C69EE1B2EF5F0FF6ADB01C7BA1366EB949FE4AD17E83A",
-        "hop_count": 1,
-        "origin_chain": "akash",
-        "origin_denom": "uakt",
-        "preferred": true,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-110258",
-            "to_chain": "terp",
-            "to_channel": "channel-11"
-          }
-        ],
-        "symbol": "AKT",
-        "trace_path": "transfer/channel-11/transfer/channel-1/uakt"
-      },
-      {
-        "dest_chain": "terp",
-        "dest_denom": "ibc/A23FD550904DB23428DFC019CD6ABD52AB0C406DAAA549D6AEAF5E63FC5C98CD",
-        "hop_count": 1,
-        "origin_chain": "osmosis",
-        "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
-        "preferred": true,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-110258",
-            "to_chain": "terp",
-            "to_channel": "channel-11"
-          }
-        ],
-        "symbol": "WBTC",
-        "trace_path": "transfer/channel-11/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
-      },
-      {
-        "dest_chain": "terp",
-        "dest_denom": "ibc/19854C8C6D3D04DF399957B22ABEFE65633A1215B4B91539E1A551830BEA4700",
-        "hop_count": 1,
-        "origin_chain": "atomone",
-        "origin_denom": "uatone",
-        "preferred": true,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-110258",
-            "to_chain": "terp",
-            "to_channel": "channel-11"
-          }
-        ],
-        "symbol": "ATONE",
-        "trace_path": "transfer/channel-11/transfer/channel-94814/uatone"
-      },
-      {
-        "dest_chain": "terp",
-        "dest_denom": "ibc/45CC178B3DBDDFC9ED70A0F89C93584537DD9CEDF878915D1A571A9D44A24294",
-        "hop_count": 1,
-        "origin_chain": "osmosis",
         "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
         "preferred": true,
         "route": [
           {
-            "from_chain": "osmosis",
-            "from_channel": "channel-110258",
-            "to_chain": "terp",
-            "to_channel": "channel-11"
+            "from_chain": "terp",
+            "from_channel": "channel-11",
+            "to_chain": "osmosis",
+            "to_channel": "channel-110258"
           }
         ],
         "symbol": "SPICE",
-        "trace_path": "transfer/channel-11/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+        "trace_path": "transfer/channel-110258/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
       },
       {
-        "dest_chain": "terp",
-        "dest_denom": "ibc/6B32258CACFCBB5486A47CB1EAF4B6F5AD76C9E372E5F3CB08B3D1C606F9F39E",
-        "hop_count": 1,
-        "origin_chain": "penumbra",
-        "origin_denom": "upenumbra",
-        "preferred": true,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-110258",
-            "to_chain": "terp",
-            "to_channel": "channel-11"
-          }
-        ],
-        "symbol": "UM",
-        "trace_path": "transfer/channel-11/transfer/channel-79703/upenumbra"
-      },
-      {
-        "dest_chain": "terp",
-        "dest_denom": "ibc/1F5076EB0FAAC31F2D8B935BB21D18A122EE354F80CAEEA90E7E2D8C8C7E5879",
-        "hop_count": 1,
-        "origin_chain": "cosmoshub",
-        "origin_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
-        "preferred": true,
-        "route": [
-          {
-            "from_chain": "osmosis",
-            "from_channel": "channel-110258",
-            "to_chain": "terp",
-            "to_channel": "channel-11"
-          }
-        ],
-        "symbol": "ETH",
-        "trace_path": "transfer/channel-11/transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
-      },
-      {
-        "dest_chain": "terp",
-        "dest_denom": "ibc/985A5C9C732EAF82D62A3FCA5BF8307256A716BB358B406FC45E4C467D5C3D0C",
+        "dest_chain": "osmosis",
+        "dest_denom": "ibc/02DB0C7201ECC8B9753FE51145F91163AC72ECF7DF21F045B6B1BC6063D37222",
         "hop_count": 1,
         "origin_chain": "terp",
-        "origin_denom": "uterp",
+        "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
         "preferred": true,
         "route": [
           {
-            "from_chain": "osmosis",
-            "from_channel": "channel-110258",
-            "to_chain": "terp",
-            "to_channel": "channel-11"
+            "from_chain": "terp",
+            "from_channel": "channel-11",
+            "to_chain": "osmosis",
+            "to_channel": "channel-110258"
           }
         ],
-        "symbol": "TERP",
-        "trace_path": "transfer/channel-11/transfer/channel-110258/uterp"
-      },
+        "symbol": "WBTC",
+        "trace_path": "transfer/channel-110258/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+      }
+    ],
+    "secret": [
       {
-        "dest_chain": "terp",
-        "dest_denom": "ibc/8E4F42F7E8522F1752EA58386F1165753FE2E88A056343E109B43B3EEA510AAB",
+        "dest_chain": "secret",
+        "dest_denom": "ibc/98B4A0DF010C354724A8694CAB3C8F1BE47BD4DD40E31F2DF21157BBFE99D6EC",
         "hop_count": 1,
         "origin_chain": "terp",
-        "origin_denom": "uthiol",
+        "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
         "preferred": true,
         "route": [
           {
-            "from_chain": "osmosis",
-            "from_channel": "channel-110258",
-            "to_chain": "terp",
-            "to_channel": "channel-11"
+            "from_chain": "terp",
+            "from_channel": "channel-8",
+            "to_chain": "secret",
+            "to_channel": "channel-165"
           }
         ],
-        "symbol": "THIOL",
-        "trace_path": "transfer/channel-11/transfer/channel-110258/uthiol"
+        "symbol": "SPICE",
+        "trace_path": "transfer/channel-165/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+      },
+      {
+        "dest_chain": "secret",
+        "dest_denom": "ibc/D55D1CDD0721C3F9978F1010B8CF34A171E54E1EA674BEAB4AD554AD3D67A9F1",
+        "hop_count": 1,
+        "origin_chain": "terp",
+        "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
+        "preferred": true,
+        "route": [
+          {
+            "from_chain": "terp",
+            "from_channel": "channel-8",
+            "to_chain": "secret",
+            "to_channel": "channel-165"
+          }
+        ],
+        "symbol": "WBTC",
+        "trace_path": "transfer/channel-165/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+      }
+    ],
+    "stargaze": [
+      {
+        "dest_chain": "stargaze",
+        "dest_denom": "ibc/0C31604A03AFA348AE1021B6632E32B662733A4EA3EEB47643A22122E02006F4",
+        "hop_count": 1,
+        "origin_chain": "terp",
+        "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+        "preferred": true,
+        "route": [
+          {
+            "from_chain": "terp",
+            "from_channel": "channel-2",
+            "to_chain": "stargaze",
+            "to_channel": "channel-235"
+          }
+        ],
+        "symbol": "SPICE",
+        "trace_path": "transfer/channel-235/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+      },
+      {
+        "dest_chain": "stargaze",
+        "dest_denom": "ibc/D6535E2CABA69C038A97142E48F4D0B9A569DEC246B2966DB996613ADF5302C5",
+        "hop_count": 1,
+        "origin_chain": "terp",
+        "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
+        "preferred": true,
+        "route": [
+          {
+            "from_chain": "terp",
+            "from_channel": "channel-2",
+            "to_chain": "stargaze",
+            "to_channel": "channel-235"
+          }
+        ],
+        "symbol": "WBTC",
+        "trace_path": "transfer/channel-235/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
       }
     ]
   }

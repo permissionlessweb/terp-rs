@@ -57,8 +57,8 @@ Implementation guidance (adapt to actual ict-rs APIs in this monorepo):
 
 ```rust
 fn predict_ibc_denom(trace_path: &str) -> String {
-    scripts::ibc_core::compute_ibc_denom_hash(trace_path)
-    // or scripts::ibc::hash::compute_ibc_denom_hash if A landed first
+    terp_scripts::ibc_core::compute_ibc_denom_hash(trace_path)
+    // or terp_scripts::ibc::hash::compute_ibc_denom_hash if A landed first
 }
 ```
 
@@ -75,7 +75,7 @@ AUTH_MISMATCH scenario=2 hop=2 expected_path=... expected_denom=ibc/... actual_t
 
 ### 3. Compilability
 
-- File must compile under `cargo test -p scripts --test ibc_multihop_harness --no-run` if the test target is discovered.
+- File must compile under `cargo test -p terp-scripts --test ibc_multihop_harness --no-run` if the test target is discovered.
 - If package only auto-discovers tests when registered, document for orchestrator:
 
 ```toml
@@ -92,13 +92,13 @@ required-features = ["docker"]
 In `tests/README.md`, fix the Multi-chain IBC section:
 
 - Point to `tests/tests/ibc_multihop_harness.rs`
-- Command: `cargo test -p scripts --test ibc_multihop_harness -- --ignored --nocapture`
+- Command: `cargo test -p terp-scripts --test ibc_multihop_harness -- --ignored --nocapture`
 - Do **not** claim scenarios already green if you could not run Docker; say “implemented, run with --ignored”.
 
 ## Running live (if Docker available)
 
 ```sh
-cargo test -p scripts --test ibc_multihop_harness -- --ignored --nocapture
+cargo test -p terp-scripts --test ibc_multihop_harness -- --ignored --nocapture
 ```
 
 If Docker/image missing: still ship compilable test + document failure mode in report. Prefer a compile-clean harness over a half-written panic at module load.

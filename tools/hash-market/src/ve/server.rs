@@ -53,7 +53,7 @@ pub struct ProviderKey {
 // AppState — shared across all handlers
 // ---------------------------------------------------------------------------
 
-/// Build the axum router.
+/// Build the axum router (mounted under `/ve` by the unified server).
 pub fn router(state: Arc<AppState>) -> Router {
     Router::new()
         .route("/health", get(health))
@@ -61,6 +61,17 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/vote-extension", get(vote_extension_get))
         .route("/extend-vote", post(extend_vote))
         .route("/verify-vote-extension", post(verify_vote_extension))
+        .with_state(state)
+}
+
+/// Root-level aliases so `HASHMERCHANT_SIDECAR_URL=http://host:9090` works
+/// without a `/ve` suffix (matches mock_runtime + module docs).
+pub fn root_aliases(state: Arc<AppState>) -> Router {
+    Router::new()
+        .route("/vote-extension", get(vote_extension_get))
+        .route("/extend-vote", post(extend_vote))
+        .route("/verify-vote-extension", post(verify_vote_extension))
+        .route("/providers", get(list_providers))
         .with_state(state)
 }
 
@@ -129,11 +140,14 @@ async fn vote_extension_get(
         .max_by_key(|e| e.received_at)
         .ok_or(StatusCode::SERVICE_UNAVAILABLE)?;
     Ok(Json(serde_json::json!({
+        "runtime_id": entry.data.runtime_id,
         "chain_uid": entry.data.chain_uid,
         "algo": entry.data.algo,
         "root": hex::encode(&entry.data.root),
         "foreign_height": entry.data.foreign_height,
         "foreign_block_time": entry.data.foreign_block_time,
+        // Connect-style price mids: empty attestations (aggregate is the commitment).
+        "attestations": [],
     })))
 }
 
@@ -196,8 +210,11 @@ async fn extend_vote(
         return Err(StatusCode::BAD_REQUEST);
     };
 
-    let signed = state
+    let handler = state
         .ve_handler
+        .as_ref()
+        .ok_or(StatusCode::SERVICE_UNAVAILABLE)?;
+    let signed = handler
         .sign_extension(&state.chain_id, req.height, &data.data)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
@@ -247,9 +264,11 @@ async fn verify_vote_extension(
             signature: hex::decode(&req.signature)?,
             public_key: hex::decode(&req.public_key)?,
         };
-        state
+        let handler = state
             .ve_handler
-            .verify_extension(&state.chain_id, req.height, &signed)?;
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("vote extensions disabled"))?;
+        handler.verify_extension(&state.chain_id, req.height, &signed)?;
         Ok(())
     })();
 

@@ -4,9 +4,9 @@
 
 **Goal:** Make IBC script generation authenticity-provable via a shared predict→observe→diff library, golden tests, a thin CLI, and a 4-chain line Docker harness with tokenfactory multi-hop validation.
 
-**Architecture:** Extract pure IBC derivation into `scripts::ibc` with hard invariants; backends observe fixtures/live/harness state; DiffReport fails closed. Offline golden tests and an `#[ignore]` ict-rs 4-chain line harness both use the same predict path.
+**Architecture:** Extract pure IBC derivation into `terp_scripts::ibc` with hard invariants; backends observe fixtures/live/harness state; DiffReport fails closed. Offline golden tests and an `#[ignore]` ict-rs 4-chain line harness both use the same predict path.
 
-**Tech Stack:** Rust package `scripts` (`tests/`), `ict-rs` (docker, terp, tokenfactory, testing), `cw-orch` / `cw-orch-interchain` for live generate, `serde_json`, `sha2`, `clap` for CLI.
+**Tech Stack:** Rust package `terp-scripts` (`tests/`), `ict-rs` (docker, terp, tokenfactory, testing), `cw-orch` / `cw-orch-interchain` for live generate, `serde_json`, `sha2`, `clap` for CLI.
 
 **Spec:** `docs/superpowers/specs/2026-07-20-ibc-data-authenticity-design.md`
 
@@ -19,7 +19,7 @@
 | Track | Owner | Exclusive paths | Depends on |
 |-------|--------|-----------------|------------|
 | **A — Lib + golden** | Agent A | `tests/src/ibc/**`, `tests/src/lib.rs`, `tests/src/ibc_core.rs`, `tests/tests/ibc_unit.rs`, `tests/tests/ibc_golden.rs`, `tests/data/ibc/golden/**` | None |
-| **B — Harness** | Agent B | `tests/tests/ibc_multihop_harness.rs`, `tests/data/ibc/harness/**`, harness sections of `tests/README.md` | Public API names from design; may stub-call `scripts::ibc` or `scripts::ibc_core` |
+| **B — Harness** | Agent B | `tests/tests/ibc_multihop_harness.rs`, `tests/data/ibc/harness/**`, harness sections of `tests/README.md` | Public API names from design; may stub-call `terp_scripts::ibc` or `terp_scripts::ibc_core` |
 | **O — Orchestrator** | Human/main agent | `tests/bin/ibc_info.rs` CLI thin-out, `tests/Cargo.toml` merge, integration of A+B, docs full rewrite | A + B complete |
 
 **Do not** let A and B both edit `tests/bin/ibc_info.rs` or `tests/Cargo.toml`. Orchestrator merges Cargo.toml `[[test]]` targets after both land.
@@ -32,7 +32,7 @@
 tests/src/ibc/
   mod.rs, hash.rs, graph.rs, routes.rs, schema.rs,
   normalize.rs, predict.rs, observe.rs, diff.rs, fixtures.rs
-tests/src/ibc_core.rs          # thin re-export of scripts::ibc for back-compat
+tests/src/ibc_core.rs          # thin re-export of terp_scripts::ibc for back-compat
 tests/bin/ibc_info.rs          # thin CLI (orchestrator / later)
 tests/tests/ibc_unit.rs
 tests/tests/ibc_golden.rs
@@ -52,9 +52,9 @@ tests/data/ibc/golden/**
 
 - [ ] **Step 1:** Create `tests/src/ibc/mod.rs` exporting public API from submodules.
 - [ ] **Step 2:** Move `compute_ibc_denom_hash`, graph types, routing table from `ibc_core.rs` into `hash.rs` / `graph.rs` / `routes.rs` without behavior change.
-- [ ] **Step 3:** Make `ibc_core.rs` re-export `pub use crate::ibc::*` (or explicit list) so existing `use scripts::ibc_core::...` keeps compiling.
+- [ ] **Step 3:** Make `ibc_core.rs` re-export `pub use crate::ibc::*` (or explicit list) so existing `use terp_scripts::ibc_core::...` keeps compiling.
 - [ ] **Step 4:** `pub mod ibc;` in `lib.rs`.
-- [ ] **Step 5:** Run `cargo test -p scripts --lib` and `cargo check -p scripts --bin ibc`.
+- [ ] **Step 5:** Run `cargo test -p terp-scripts --lib` and `cargo check -p terp-scripts --bin terp-ibc`.
 
 ### Task A2: normalize + schema + diff types
 
@@ -120,7 +120,7 @@ tests/data/ibc/golden/**
 - [ ] **Step 1:** Scaffold `#[tokio::test] #[ignore] async fn test_line_four_chain_tokenfactory_multihop`.
 - [ ] **Step 2:** Use ict-rs `Interchain` + Terp config (see `ict-rs` `TestEnv::terp_config`, `terp_tokenfactory` tests, `ibc_transfer_test`).
 - [ ] **Step 3:** Spawn A–B–C–D line links; create 4 TF denoms per chain; mint.
-- [ ] **Step 4:** For scenarios 1–6: compute predicted denom via `scripts::ibc`/`ibc_core` `compute_ibc_denom_hash` + recorded channels; transfer hop-by-hop; query balance/denom_trace; assert equality.
+- [ ] **Step 4:** For scenarios 1–6: compute predicted denom via `terp_scripts::ibc`/`ibc_core` `compute_ibc_denom_hash` + recorded channels; transfer hop-by-hop; query balance/denom_trace; assert equality.
 - [ ] **Step 5:** On any mismatch, panic with structured expected vs actual (path, hash, balance denom).
 - [ ] **Step 6:** If full live spawn cannot be completed in-session, leave compilable scaffold with clear `todo!` only behind `cfg` **or** better: implement as far as compile-clean with `#[ignore]` and document blockers for orchestrator — prefer maximal real code over placeholders.
 
@@ -169,10 +169,10 @@ tests/data/ibc/golden/**
 ## Verification commands
 
 ```sh
-cargo test -p scripts --lib
-cargo test -p scripts --test ibc_unit --test ibc_golden
-cargo check -p scripts --bin ibc
-cargo test -p scripts --test ibc_multihop_harness -- --ignored --nocapture  # Docker
+cargo test -p terp-scripts --lib
+cargo test -p terp-scripts --test ibc_unit --test ibc_golden
+cargo check -p terp-scripts --bin terp-ibc
+cargo test -p terp-scripts --test ibc_multihop_harness -- --ignored --nocapture  # Docker
 ```
 
 ## Spec coverage checklist

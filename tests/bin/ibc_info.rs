@@ -9,59 +9,281 @@ use cw_orch::{
 };
 use cw_orch_interchain::prelude::*;
 use log::info;
-use clap::{Parser, Subcommand};
-use scripts::ibc::{
+use clap::{Parser, Subcommand, ValueEnum};
+use terp_scripts::ibc::{
     build_channel_to_chain_map as lib_build_channel_to_chain_map, check_invariants,
     compute_ibc_denom_hash, derive_terp_ibc_denom, finalize_channels_for_ibc_entry,
-    FixtureBackend, PredictedWorld, TerpChannelInfo,
+    file_sha256, resolve_out_dir, AtomicPublisher, FixtureBackend, PredictedWorld, TerpChannelInfo,
+};
+use terp_scripts::{
+    preflight_missing, ArtifactRef, CapabilityMode, OutputFormat, RunEnv, RunReport,
 };
 use serde_json::{Value, json};
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use std::time::Instant;
 use terp_rs::{Message, ibc::lightclients::tendermint::v1::ClientState};
 use tracing::warn;
 
+const TOOL: &str = "terp-ibc";
+
 #[derive(Parser, Debug)]
-#[command(name = "ibc", about = "Terp IBC data generate / validate / compare (lib-backed)")]
+#[command(
+    name = "terp-ibc",
+    about = "Terp IBC data generate / validate / compare / rebuild (lib-backed). Agents: tests/agent/COMMANDS.md"
+)]
 struct Cli {
+    /// Output format: human text or machine JSON RunReport
+    #[arg(long, global = true, default_value = "text", value_enum)]
+    format: FormatArg,
+    /// Output / public directory (absolute preferred). Defaults to repo-root public/
+    #[arg(long, global = true)]
+    out: Option<PathBuf>,
+    /// Legacy alias for --out
+    #[arg(long, global = true)]
+    public_dir: Option<PathBuf>,
+    /// Do not write files (rebuild/generate)
+    #[arg(long, global = true, default_value_t = false)]
+    dry_run: bool,
+    /// Fail preflight if .env / required env missing before connect
+    #[arg(long, global = true, default_value_t = false)]
+    require_env_file: bool,
     #[command(subcommand)]
     cmd: Option<Commands>,
 }
 
-#[derive(Subcommand, Debug)]
-enum Commands {
-    /// Query live chains and write public/ artifacts (default)
-    Generate,
-    /// Validate existing public/ibc-data + routing against hard invariants
-    Validate {
-        #[arg(long, default_value = "../public")]
-        public_dir: PathBuf,
-    },
-    /// Compare predicted routes to fixture/snapshot observations
-    Compare {
-        #[arg(long, default_value = "../public")]
-        public_dir: PathBuf,
-        #[arg(long)]
-        snapshot: Option<PathBuf>,
-        #[arg(long)]
-        strict: bool,
-    },
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum FormatArg {
+    Text,
+    Json,
 }
 
-fn main() -> anyhow::Result<()> {
+impl From<FormatArg> for OutputFormat {
+    fn from(f: FormatArg) -> Self {
+        match f {
+            FormatArg::Text => OutputFormat::Text,
+            FormatArg::Json => OutputFormat::Json,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum ModeArg {
+    Offline,
+    #[value(name = "live-query")]
+    LiveQuery,
+    #[value(name = "live-tx")]
+    LiveTx,
+    #[value(name = "docker-harness")]
+    DockerHarness,
+}
+
+// ModeArg is Copy; Commands holds PathBuf in Compare — Clone for match convenience.
+
+impl From<ModeArg> for CapabilityMode {
+    fn from(m: ModeArg) -> Self {
+        match m {
+            ModeArg::Offline => CapabilityMode::Offline,
+            ModeArg::LiveQuery => CapabilityMode::LiveQuery,
+            ModeArg::LiveTx => CapabilityMode::LiveTx,
+            ModeArg::DockerHarness => CapabilityMode::DockerHarness,
+        }
+    }
+}
+
+#[derive(Subcommand, Debug, Clone)]
+enum Commands {
+    /// Query live chains and write public/ artifacts (default)
+    Generate {
+        #[arg(long, default_value = "live-query", value_enum)]
+        mode: ModeArg,
+    },
+    /// Validate existing public/ibc-data + routing against hard invariants
+    Validate,
+    /// Compare predicted routes to fixture/snapshot observations
+    Compare {
+        #[arg(long)]
+        snapshot: Option<PathBuf>,
+        #[arg(long, default_value_t = false)]
+        strict: bool,
+    },
+    /// Check env/mode requirements without network (exit 2 if cannot run)
+    Preflight {
+        #[arg(long, value_enum)]
+        mode: ModeArg,
+    },
+    /// Offline: rebuild routing/lookup tables from public/ibc-data (atomic out)
+    #[command(name = "rebuild-from-public")]
+    RebuildFromPublic,
+}
+
+fn resolved_out(cli: &Cli) -> PathBuf {
+    let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let chosen = cli.out.as_deref().or(cli.public_dir.as_deref());
+    resolve_out_dir(chosen, &manifest)
+}
+
+fn finish(report: RunReport, format: OutputFormat) -> ! {
+    let _ = report.emit(format);
+    std::process::exit(report.exit_code);
+}
+
+fn main() {
     rustls::crypto::aws_lc_rs::default_provider()
         .install_default()
         .unwrap();
     env_logger::init();
+    let _ = dotenv::dotenv();
+
     let cli = Cli::parse();
-    match cli.cmd.unwrap_or(Commands::Generate) {
-        Commands::Generate => derive_full_ibc_state(),
-        Commands::Validate { public_dir } => cmd_validate(&public_dir),
-        Commands::Compare {
-            public_dir,
-            snapshot,
-            strict,
-        } => cmd_compare(&public_dir, snapshot.as_deref(), strict),
+    let format = OutputFormat::from(cli.format);
+    let start = Instant::now();
+
+    let cmd = cli.cmd.clone().unwrap_or(Commands::Generate {
+        mode: ModeArg::LiveQuery,
+    });
+    match cmd {
+        Commands::Preflight { mode } => {
+            let mode = CapabilityMode::from(mode);
+            let missing = preflight_missing(&mode, cli.require_env_file);
+            let duration_ms = start.elapsed().as_millis() as u64;
+            if missing.is_empty() {
+                finish(RunReport::preflight_ok(TOOL, &mode, duration_ms), format);
+            } else {
+                finish(
+                    RunReport::missing_env(
+                        TOOL,
+                        "preflight",
+                        &mode,
+                        missing,
+                        "export required vars (e.g. MAIN_MNEMONIC) or use --mode offline",
+                        duration_ms,
+                    ),
+                    format,
+                );
+            }
+        }
+        Commands::Validate => {
+            let out = resolved_out(&cli);
+            match cmd_validate(&out, start) {
+                Ok(r) => finish(r, format),
+                Err(e) => finish(internal_err("validate", &out, start, e), format),
+            }
+        }
+        Commands::Compare { snapshot, strict } => {
+            let out = resolved_out(&cli);
+            match cmd_compare(&out, snapshot.as_deref(), strict, start) {
+                Ok(r) => finish(r, format),
+                Err(e) => finish(internal_err("compare", &out, start, e), format),
+            }
+        }
+        Commands::RebuildFromPublic => {
+            let out = resolved_out(&cli);
+            match cmd_rebuild_from_public(&out, cli.dry_run, start) {
+                Ok(r) => finish(r, format),
+                Err(e) => finish(internal_err("rebuild-from-public", &out, start, e), format),
+            }
+        }
+        Commands::Generate { mode } => {
+            let mode = CapabilityMode::from(mode);
+            let missing = preflight_missing(&mode, cli.require_env_file);
+            if !missing.is_empty() {
+                finish(
+                    RunReport::missing_env(
+                        TOOL,
+                        "generate",
+                        &mode,
+                        missing,
+                        "export MAIN_MNEMONIC before live generate, or use rebuild-from-public offline",
+                        start.elapsed().as_millis() as u64,
+                    ),
+                    format,
+                );
+            }
+            if matches!(mode, CapabilityMode::Offline) {
+                finish(
+                    RunReport {
+                        tool: TOOL.into(),
+                        verb: "generate".into(),
+                        ok: false,
+                        exit_code: 2,
+                        artifacts: vec![],
+                        findings: vec![],
+                        env: RunEnv {
+                            mode: mode.as_str().into(),
+                            docker: false,
+                            out: None,
+                        },
+                        duration_ms: start.elapsed().as_millis() as u64,
+                        error: Some("wrong_mode".into()),
+                        vars: None,
+                        hint: Some(
+                            "generate is live-only; use rebuild-from-public or validate for offline"
+                                .into(),
+                        ),
+                    },
+                    format,
+                );
+            }
+            match derive_full_ibc_state() {
+                Ok(()) => {
+                    let duration_ms = start.elapsed().as_millis() as u64;
+                    let out = resolved_out(&cli);
+                    finish(
+                        RunReport {
+                            tool: TOOL.into(),
+                            verb: "generate".into(),
+                            ok: true,
+                            exit_code: 0,
+                            artifacts: vec![],
+                            findings: vec![],
+                            env: RunEnv {
+                                mode: mode.as_str().into(),
+                                docker: false,
+                                out: Some(out.display().to_string()),
+                            },
+                            duration_ms,
+                            error: None,
+                            vars: None,
+                            hint: Some(
+                                "generate still writes via legacy paths; prefer rebuild-from-public for offline"
+                                    .into(),
+                            ),
+                        },
+                        format,
+                    );
+                }
+                Err(e) => {
+                    let out = resolved_out(&cli);
+                    finish(internal_err("generate", &out, start, e), format);
+                }
+            }
+        }
+    }
+}
+
+fn internal_err(
+    verb: &str,
+    out: &Path,
+    start: Instant,
+    e: anyhow::Error,
+) -> RunReport {
+    RunReport {
+        tool: TOOL.into(),
+        verb: verb.into(),
+        ok: false,
+        exit_code: 1,
+        artifacts: vec![],
+        findings: vec![],
+        env: RunEnv {
+            mode: "offline".into(),
+            docker: false,
+            out: Some(out.display().to_string()),
+        },
+        duration_ms: start.elapsed().as_millis() as u64,
+        error: Some(e.to_string()),
+        vars: None,
+        hint: None,
     }
 }
 
@@ -126,39 +348,47 @@ fn minimal_assets_from_public(public_dir: &std::path::Path) -> HashMap<String, V
     chain_assets
 }
 
-fn cmd_validate(public_dir: &std::path::Path) -> anyhow::Result<()> {
+fn offline_env(out: &Path) -> RunEnv {
+    RunEnv {
+        mode: "offline".into(),
+        docker: false,
+        out: Some(out.display().to_string()),
+    }
+}
+
+fn cmd_validate(public_dir: &Path, start: Instant) -> anyhow::Result<RunReport> {
     let ibc_data = load_public_ibc_data(public_dir)?;
     let assets = minimal_assets_from_public(public_dir);
     let world = PredictedWorld::from_inputs(ibc_data, &assets, 3);
     let report = check_invariants(&world);
-    for item in &report.items {
-        println!(
-            "[{:?}] {} {} {:?}",
-            item.severity, item.code, item.message, item.path
-        );
-    }
-    if report.has_errors() {
-        anyhow::bail!("validate failed with {} errors", report.errors().count());
-    }
-    println!("✓ validate clean ({} findings)", report.items.len());
-    Ok(())
+    Ok(RunReport::from_diff(
+        TOOL,
+        "validate",
+        &report,
+        offline_env(public_dir),
+        start.elapsed().as_millis() as u64,
+    ))
 }
 
 fn cmd_compare(
-    public_dir: &std::path::Path,
-    snapshot: Option<&std::path::Path>,
+    public_dir: &Path,
+    snapshot: Option<&Path>,
     strict: bool,
-) -> anyhow::Result<()> {
-    use scripts::ibc::{compare_predict_observe_with, CompareOptions, SnapshotBackend};
+    start: Instant,
+) -> anyhow::Result<RunReport> {
+    use terp_scripts::ibc::{compare_predict_observe_with, CompareOptions, SnapshotBackend};
     let ibc_data = load_public_ibc_data(public_dir)?;
     let assets = minimal_assets_from_public(public_dir);
     let world = PredictedWorld::from_inputs(ibc_data, &assets, 3);
     let inv = check_invariants(&world);
     if inv.has_errors() {
-        for e in inv.errors() {
-            eprintln!("invariant ERROR {} {}", e.code, e.message);
-        }
-        anyhow::bail!("invariants failed before compare");
+        return Ok(RunReport::from_diff(
+            TOOL,
+            "compare",
+            &inv,
+            offline_env(public_dir),
+            start.elapsed().as_millis() as u64,
+        ));
     }
     let opts = CompareOptions {
         unobserved_as_error: strict,
@@ -169,20 +399,116 @@ fn cmd_compare(
         compare_predict_observe_with(&world, &backend, &opts)
     } else {
         let golden = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("data/ibc/golden");
-        let backend = FixtureBackend::load_from_golden_dir(&golden).map_err(|e| anyhow::anyhow!(e))?;
+        let backend =
+            FixtureBackend::load_from_golden_dir(&golden).map_err(|e| anyhow::anyhow!(e))?;
         compare_predict_observe_with(&world, &backend, &opts)
     };
-    for item in &report.items {
-        println!(
-            "[{:?}] {} {} {:?}",
-            item.severity, item.code, item.message, item.path
+    Ok(RunReport::from_diff(
+        TOOL,
+        "compare",
+        &report,
+        offline_env(public_dir),
+        start.elapsed().as_millis() as u64,
+    ))
+}
+
+fn cmd_rebuild_from_public(
+    public_dir: &Path,
+    dry_run: bool,
+    start: Instant,
+) -> anyhow::Result<RunReport> {
+    let ibc_data = load_public_ibc_data(public_dir)?;
+    if ibc_data.as_object().map(|o| o.is_empty()).unwrap_or(true) {
+        anyhow::bail!(
+            "no ibc-data JSON under {}/ibc-data — nothing to rebuild",
+            public_dir.display()
         );
     }
+    let assets = minimal_assets_from_public(public_dir);
+    let world = PredictedWorld::from_inputs(ibc_data, &assets, 3);
+    let report = check_invariants(&world);
+    let duration_ms = start.elapsed().as_millis() as u64;
     if report.has_errors() {
-        anyhow::bail!("compare failed");
+        return Ok(RunReport::from_diff(
+            TOOL,
+            "rebuild-from-public",
+            &report,
+            offline_env(public_dir),
+            duration_ms,
+        ));
     }
-    println!("✓ compare clean");
-    Ok(())
+
+    let lookup_json = serde_json::to_vec_pretty(&world.lookup)?;
+    let routing_json = serde_json::to_vec_pretty(&world.routes.to_json())?;
+    let meta = json!({
+        "generated_at": now_timestamp(),
+        "generator": "terp-scripts/bin/terp-ibc rebuild-from-public",
+        "mode": "offline",
+        "max_hops": 3,
+        "total_routes": world.routes.metadata.total_routes,
+        "chains": world.routes.metadata.chains,
+        "source": "public/ibc-data",
+        "invariant_findings": report.items.len(),
+    });
+    let meta_json = serde_json::to_vec_pretty(&meta)?;
+
+    if dry_run {
+        return Ok(RunReport::from_diff(
+            TOOL,
+            "rebuild-from-public",
+            &report,
+            offline_env(public_dir),
+            duration_ms,
+        )
+        .with_artifacts(vec![
+            ArtifactRef {
+                path: public_dir
+                    .join("ibc_lookup_table.json")
+                    .display()
+                    .to_string(),
+                sha256: None,
+                role: "lookup".into(),
+            },
+            ArtifactRef {
+                path: public_dir
+                    .join("ibc_routing_table.json")
+                    .display()
+                    .to_string(),
+                sha256: None,
+                role: "routing".into(),
+            },
+        ]));
+    }
+
+    let publisher = AtomicPublisher::create(public_dir)?;
+    publisher.write_rel("ibc_lookup_table.json", &lookup_json)?;
+    publisher.write_rel("ibc_routing_table.json", &routing_json)?;
+    publisher.write_rel("ibc_generation_meta.json", &meta_json)?;
+    let promoted = publisher.promote()?;
+
+    let mut artifacts = Vec::new();
+    for p in promoted {
+        let role = p
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("file")
+            .to_string();
+        let sha = file_sha256(&p).ok();
+        artifacts.push(ArtifactRef {
+            path: p.display().to_string(),
+            sha256: sha,
+            role,
+        });
+    }
+
+    Ok(RunReport::from_diff(
+        TOOL,
+        "rebuild-from-public",
+        &report,
+        offline_env(public_dir),
+        start.elapsed().as_millis() as u64,
+    )
+    .with_artifacts(artifacts))
 }
 
 
@@ -898,7 +1224,7 @@ fn derive_full_ibc_state() -> anyhow::Result<()> {
 
     let meta = json!({
         "generated_at": now_timestamp(),
-        "generator": "scripts/bin/ibc (lib-backed)",
+        "generator": "terp-scripts/bin/terp-ibc (lib-backed)",
         "max_hops": 3,
         "total_routes": world.routes.metadata.total_routes,
         "chains": world.routes.metadata.chains,

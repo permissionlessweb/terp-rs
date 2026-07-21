@@ -1,6 +1,6 @@
 //! Pure IBC authenticity unit tests (no Docker).
 
-use scripts::ibc::{
+use terp_scripts::ibc::{
     build_channel_to_chain_map, check_invariants, compute_ibc_denom_hash,
     finalize_channels_for_ibc_entry, hop_count_from_trace_path, ordering_to_str,
     validate_ibc_data_entry, IBCAssetRoutingTable, IBCChannelGraph, PredictedWorld,
@@ -145,7 +145,7 @@ fn check_invariants_flags_hop_count_lie() {
     let mut world = PredictedWorld::from_inputs(json!({}), &HashMap::new(), 1);
     world.routes.routes.insert(
         "c".into(),
-        vec![scripts::ibc::IBCAssetRoute {
+        vec![terp_scripts::ibc::IBCAssetRoute {
             symbol: "X".into(),
             origin_chain: "a".into(),
             origin_denom: "ux".into(),

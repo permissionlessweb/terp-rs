@@ -1,6 +1,6 @@
 //! Golden fixture tests for IBC authenticity (offline, no Docker).
 
-use scripts::ibc::{
+use terp_scripts::ibc::{
     check_invariants, compare_predict_observe, compute_ibc_denom_hash, golden_chain_assets,
     golden_root, hop_count_from_trace_path, load_audited_known_hashes, load_expected_lookup,
     load_golden_ibc_data, load_known_hashes, load_synthetic_known_hashes, FixtureBackend,

@@ -40,28 +40,27 @@ use cosmos_sdk_proto::cosmos::{
     base::{query::v1beta1::PageRequest, v1beta1::Coin as ProtoCoin},
     staking::v1beta1::{DelegationResponse, MsgBeginRedelegate, MsgDelegate, MsgUndelegate},
 };
-use cosmrs::{tx::Msg, AccountId};
+use cosmrs::{AccountId, Any, distribution::MsgSetWithdrawAddress, tx::Msg};
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Decimal, Uint128};
 use csv::ReaderBuilder;
 use cw_orch::{
     daemon::{
+        DaemonBuilder, TxSender, Wallet,
         networks::TERP_MAINNET,
         queriers::{Bank, Staking},
-        DaemonBuilder, TxSender, Wallet,
     },
     environment::{ChainKind, NetworkInfo},
     prelude::*,
 };
 
+use terp_rs::{Message, Name, cosmos::staking::v1::MsgCancelUnbondingDelegation};
 use tokio::runtime::Runtime;
 
 pub const TOTAL_OBLIGATED_VALIDATORS: usize = 33;
 pub const TOTAL_OBLIGATED_DELEGATED_BTSG: Uint128 = Uint128::new(9_999_980_000_000u128);
 pub const NEW_DELS_FILE: &str = "./src/bin/data/new-delegations.csv";
 pub const RAW_MSG_JSON: &str = "delegation_messages.json";
-pub const MNEMONIC: &str =
-        "garage dial step tourist hint select patient eternal lesson raccoon shaft palace flee purpose vivid spend place year file life cliff winter race fox";
 
 #[cw_serde]
 struct DelegationDaoEntity {
@@ -173,6 +172,7 @@ struct Args {
 }
 
 fn main() -> anyhow::Result<()> {
+    dotenv::dotenv()?;
     // Fix for rustls 0.23+ CryptoProvider
     rustls::crypto::ring::default_provider()
         .install_default()
@@ -191,39 +191,104 @@ fn main() -> anyhow::Result<()> {
         _ => panic!("Invalid network"),
     }
     .into();
-
     // connect to chain with mnemonic
-    let mut chain = DaemonBuilder::new(bitsong_chain.clone())
-        .mnemonic(MNEMONIC)
-        .build()?;
+    let mut chain = DaemonBuilder::new(bitsong_chain.clone()).build()?;
 
     // create client
     let staking_query_client: Staking = chain.querier();
     let bank_query_client: Bank = chain.querier();
     let node_query: queriers::Node = chain.node_querier();
+    let sender = chain.sender_mut().clone();
+    let block = chain.node_querier().latest_block()?;
+    let derived_address = chain.sender().address();
 
-    // Create a new runtime for async execution
-    let rt = Runtime::new()?;
+    let rt = chain.rt_handle;
 
-    eprintln!("[MAIN] Starting realign_delegations (dry run + file generation)...");
-    // Execute the async function using the runtime
-    rt.block_on(realign_delegations(
-        staking_query_client,
-        bank_query_client,
-        &delegation_dao_addrs,
-        chain.node_querier().latest_block()?.height,
-        args.csv.as_deref(),
-        &args.method,
-    ))?;
-    eprintln!("[MAIN] realign_delegations completed successfully");
+    let account = rt.block_on(sender.base_account())?;
+    println!("Script is using BaseAccount: {:#?}", account);
+    println!("Script is using address: {}", derived_address);
 
-    eprintln!("[MAIN] Starting form_and_broadcast_obligated_msgs...");
-    form_and_broadcast_obligated_msgs(
-        rt,
-        chain.sender_mut().clone(),
-        RAW_MSG_JSON,
-        delegation_dao_addrs,
-    )?;
+    // let witdraw = MsgSetWithdrawAddress {
+    //     delegator_address: AccountId::from_str(&sender.pub_addr_str()).unwrap(),
+    //     withdraw_address: AccountId::from_str(
+    //         &"terp14w2qva6dx6wcsmq5fvplh7cr7nvptejznyvpe5hp5mtyqhxxjamsz3kw2w",
+    //     )
+    //     .unwrap(),
+    // };
+
+    // let any = Any {
+    //     type_url: MsgCancelUnbondingDelegation::type_url(),
+    //     value: MsgCancelUnbondingDelegation {
+    //         delegator_address: sender.pub_addr_str(),
+    //         validator_address: "terpvaloper1g80p4suzrz4vqsvs3za0yqhqcphlvnjy7snfnw".into(),
+    //         amount: Some(terp_rs::Coin {
+    //             denom: "uterp".into(),
+    //             amount: Uint128::new(750000000000).to_string(),
+    //         }),
+    //         creation_height: 21482756 as i64,
+    //         // creation_height: i.0 as i64,
+    //     }
+    //     .encode_to_vec(),
+    // };
+
+    let any = Any {
+        type_url: MsgUndelegate::type_url(),
+        value: MsgUndelegate {
+            delegator_address: sender.pub_addr_str(),
+            validator_address: "terpvaloper126jdyc74p70ahzrf3wvaka7hmeke8g2ntym70p".into(),
+            amount: Some(cosmos_sdk_proto::cosmos::base::v1beta1::Coin {
+                denom: "uterp".into(),
+                amount: Uint128::new(750000000000).to_string(),
+            }),
+            // creation_height: i.0 as i64,
+        }
+        .encode_to_vec(),
+    };
+
+    let any2 = Any {
+        type_url: MsgUndelegate::type_url(),
+        value: MsgUndelegate {
+            delegator_address: sender.pub_addr_str(),
+            validator_address: "terpvaloper1g80p4suzrz4vqsvs3za0yqhqcphlvnjy7snfnw".into(),
+            amount: Some(cosmos_sdk_proto::cosmos::base::v1beta1::Coin {
+                denom: "uterp".into(),
+                amount: Uint128::new(750000000000).to_string(),
+            }),
+            // creation_height: i.0 as i64,
+        }
+        .encode_to_vec(),
+    };
+
+    // let msg = form_redel_msg(RedelegateMsg {
+    //     delegator_address: sender.pub_addr_str(),
+    //     validator_src_address: "terpvaloper1g80p4suzrz4vqsvs3za0yqhqcphlvnjy7snfnw".into(),
+    //     validator_dst_address: "terpvaloper1mzns2fp4urelqxyjxyjelef34j9eynu8ffd9vt".into(),
+    //     amount: Uint128::new(750000000000).to_string(),
+    //     denom: "uterp".into(),
+    // });
+    // let msg2 = form_redel_msg(RedelegateMsg {
+    //     delegator_address: sender.pub_addr_str(),
+    //     validator_src_address: "terpvaloper1fak8qed3zu86d8hlmkdsee9h2xtutawlqm660j".into(),
+    //     validator_dst_address: "terpvaloper1dmyu7jdu7pgzgsxucnav6sanfk8s7jfsw0y60a".into(),
+    //     amount: Uint128::new(500000000000).to_string(),
+    //     denom: "uterp".into(),
+    // });
+    rt.block_on(sender.commit_tx_any(vec![any,any2], None))?;
+
+    // eprintln!("[MAIN] Starting realign_delegations (dry run + file generation)...");
+    // // Execute the async function using the runtime
+    // rt.block_on(realign_delegations(
+    //     staking_query_client,
+    //     bank_query_client,
+    //     &delegation_dao_addrs,
+    //     block.height,
+    //     args.csv.as_deref(),
+    //     &args.method,
+    // ))?;
+    // eprintln!("[MAIN] realign_delegations completed successfully");
+
+    // eprintln!("[MAIN] Starting form_and_broadcast_obligated_msgs...");
+    // form_and_broadcast_obligated_msgs(&rt, sender, RAW_MSG_JSON, delegation_dao_addrs)?;
     eprintln!("[MAIN] Script completed successfully");
     Ok(())
 }
@@ -643,7 +708,7 @@ async fn fetch_delegations_to_bad_validators(
 }
 
 fn form_and_broadcast_obligated_msgs(
-    rt: Runtime,
+    rt: &tokio::runtime::Handle,
     mut wallet: Wallet,
     json: &str,
     dao_addrs: Vec<String>,
@@ -733,6 +798,9 @@ fn form_and_broadcast_obligated_msgs(
                 end - 1,
                 bundle.len(),
             );
+            let account = rt.block_on(wallet.base_account())?;
+            println!("{:#?}", account.sequence);
+            println!("{:#?}", account.address);
 
             // simulate first
             eprintln!("[BROADCAST] Simulating bundle {}...", i + 1);
@@ -2084,5 +2152,3 @@ mod tests {
 
 //     Ok(())
 // }
-
-

@@ -55,7 +55,7 @@ use relayer::RelayerSuite;
 /// # Example
 ///
 /// ```ignore
-/// use scripts::suite::SidecarFleet;
+/// use terp_scripts::suite::SidecarFleet;
 ///
 /// #[tokio::test]
 /// async fn test_full_suite() {

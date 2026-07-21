@@ -34,13 +34,16 @@ After successful verification, the contract updates the `ClientState` (latest he
 
 ### Membership Proofs
 
-Membership and non-membership proofs verify values (or their absence) under the **state commitment root** stored in the `ConsensusState`.
+Membership and non-membership proofs verify values (or their absence) under the
+**v1 shielded pool root** (`ConsensusState.shielded_commitment`), which is also
+mirrored on `ClientState.latest_shielded_commitment` after each header update.
 
-- For the initial version, these are **stubs** that return an error (`not yet implemented`).
-- Full implementation will integrate with **ZIP 222** (the finalized state commitment format on Zcash) once the proof format and Merkle structure are finalized.
-- Future work may include VM precompiles for BLAKE3, Poseidon, and other Zcash-specific primitives.
+- **v1**: ICS-23 proofs against `pool_root_proof_specs()` (BLAKE3 simple-merkle
+  layout). Proof bytes are an IBC `MerkleProof` (or a single `CommitmentProof`).
+- **IBC-v2**: ZIP-222 app-state roots will use `app_state_commitment` once
+  populated; the same ICS-23 shape applies with a different root.
 
-See `packages/crosslink/light-client/src/membership.rs`.
+See `crates/crosslink/light-client/src/membership.rs`.
 
 ### Misbehavior Handling
 
@@ -57,11 +60,25 @@ Future detection will cover **equivocation**: two valid but conflicting fat poin
 - Docker (for optimized builds via `cosmwasm/optimizer`)
 
 ```bash
-# Build the contract
-cargo build -p cw-ics08-wasm-crosslink --lib --target wasm32-unknown-unknown --release
+# MSRV for published CosmWasm artifacts: Rust **1.86 only** (Docker optimizer).
+# From the terp-rs crate — volume path = parent crates/ by default.
+./scripts/build-crosslink-wasm.sh
+./scripts/build-crosslink-wasm.sh /path/to/crates   # explicit volume path
 
-# Or use the optimizer for smaller size
-just build-cw-ics08-wasm-crosslink   # if a Justfile is present
+# Equivalent (cwd = terp-rs):
+#   docker run --rm \
+#     -v "$(cd .. && pwd):/workspace" \
+#     -w /workspace/terp-rs \
+#     -e PROJECT_DIR=/workspace/terp-rs \
+#     --mount type=volume,source=terp-rs_optimizer_cache,target=/target \
+#     --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+#     terpnetwork/optimizer-arm64:0.17.0
+#
+# Rebuild optimizer image (rustc 1.86):
+#   cd ../../optimizer && make build-arm64
+
+# Store on-chain via **governance** (08-wasm MsgStoreCode), not x/wasm store-code.
+#   cargo test -p terp-scripts --test crosslink_light_client -- --ignored --nocapture
 
 
 
