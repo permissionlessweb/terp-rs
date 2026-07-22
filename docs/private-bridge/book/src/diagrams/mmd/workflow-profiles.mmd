@@ -1,0 +1,8 @@
+flowchart LR
+    Lab[lab_simulated]
+    Funded[ict_local_funded]
+    Prod[production]
+
+    Lab -->|same workflow shape| Funded
+    Funded -->|same workflow shape| Prod
+    Funded -.->|not equal settlement| Prod

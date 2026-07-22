@@ -1,0 +1,136 @@
+flowchart TB
+    src_lib_DepositNotifyHub_report_observation["report_observation method CC=10"]
+    proxy_unresolved_obs_txid_is_empty["obs.txid.is_empty proxy"]
+    proxy_unresolved_obs_btc_deposit_addr_is_empty["obs.btc_deposit_addr.is_empty proxy"]
+    proxy_unresolved_src_lib_Err["src.lib:Err proxy"]
+    proxy_unresolved__txid_and_btc_deposit_addr_required__into["txid and btc_deposit_addr required.into proxy"]
+    proxy_unresolved__amount_sats_must_be___0__dust_rejected__into["amount_sats must be 0 dust rejected .into proxy"]
+    src_lib_now_secs["now_secs function CC=1"]
+    proxy_unresolved_self_inner_write__map_err["self.inner.write .map_err proxy"]
+    proxy_unresolved_self_inner_write["self.inner.write proxy"]
+    proxy_unresolved_e_to_string["e.to_string proxy"]
+    proxy_unresolved_g__watches__get_obs_intent_id___ok_or_else["g .watches .get obs.intent_id .ok_or_else proxy"]
+    proxy_unresolved_g__watches__get["g .watches .get proxy"]
+    proxy_unresolved__no_watch_for_intent_id__open_from_webapp_first__to_string["no watch for intent_id open from webapp first .to_string proxy"]
+    proxy_unresolved__btc_deposit_addr_does_not_match_open_watch__into["btc_deposit_addr does not match open watch.into proxy"]
+    proxy_unresolved__domain_bind_mismatch__into["domain_bind mismatch.into proxy"]
+    proxy_unresolved_src_lib_Some["src.lib:Some proxy"]
+    proxy_unresolved_watch_domain_bind_clone["watch.domain_bind.clone proxy"]
+    proxy_unresolved__watch_expired__into["watch expired.into proxy"]
+    proxy_unresolved_g_observations__insert["g.observations .insert proxy"]
+    proxy_unresolved_obs_intent_id_clone["obs.intent_id.clone proxy"]
+    proxy_unresolved_obs_clone["obs.clone proxy"]
+    proxy_unresolved_self_publish["self.publish proxy"]
+    proxy_unresolved_src_lib_Ok["src.lib:Ok proxy"]
+    src_lib_DepositNotifyHub_open_watch["open_watch method CC=4"]
+    src_lib_DepositNotifyHub_subscribe["subscribe method CC=2"]
+    src_lib_DepositNotifyHub_put_automation["put_automation method CC=3"]
+    src_lib_validate_id["validate_id function CC=3"]
+    proxy_unresolved_SystemTime__now___duration_since_UNIX_EPOCH___map_d__d_as_secs___unwrap_or["SystemTime::now .duration_since UNIX_EPOCH .map d d.as_secs .unwrap_o..."]
+    proxy_unresolved_SystemTime__now___duration_since_UNIX_EPOCH___map["SystemTime::now .duration_since UNIX_EPOCH .map proxy"]
+    proxy_unresolved_SystemTime__now___duration_since["SystemTime::now .duration_since proxy"]
+    proxy_unresolved_SystemTime__now["SystemTime::now proxy"]
+    proxy_unresolved_d_as_secs["d.as_secs proxy"]
+    src_lib_DepositNotifyHub_get_status["get_status method CC=5"]
+    src_lib_DepositNotifyHub_list_open_watches["list_open_watches method CC=1"]
+    src_lib_DepositNotifyHub_publish["publish method CC=4"]
+    src_lib_DepositNotifyHub_already_observed["already_observed method CC=1"]
+    src_lib_DepositNotifyHub_get_automation["get_automation method CC=1"]
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved_obs_txid_is_empty
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved_obs_btc_deposit_addr_is_empty
+    src_lib_DepositNotifyHub_report_observation --> proxy_unresolved_src_lib_Err
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved__txid_and_btc_deposit_addr_required__into
+    src_lib_DepositNotifyHub_report_observation --> proxy_unresolved_src_lib_Err
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved__amount_sats_must_be___0__dust_rejected__into
+    src_lib_DepositNotifyHub_report_observation --> src_lib_now_secs
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved_self_inner_write__map_err
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved_self_inner_write
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved_e_to_string
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved_g__watches__get_obs_intent_id___ok_or_else
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved_g__watches__get
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved__no_watch_for_intent_id__open_from_webapp_first__to_string
+    src_lib_DepositNotifyHub_report_observation --> proxy_unresolved_src_lib_Err
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved__btc_deposit_addr_does_not_match_open_watch__into
+    src_lib_DepositNotifyHub_report_observation --> proxy_unresolved_src_lib_Err
+    src_lib_DepositNotifyHub_report_observation --> proxy_unresolved_src_lib_Err
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved__domain_bind_mismatch__into
+    src_lib_DepositNotifyHub_report_observation --> proxy_unresolved_src_lib_Some
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved_watch_domain_bind_clone
+    src_lib_DepositNotifyHub_report_observation --> src_lib_now_secs
+    src_lib_DepositNotifyHub_report_observation --> proxy_unresolved_src_lib_Err
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved__watch_expired__into
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved_g_observations__insert
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved_obs_intent_id_clone
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved_obs_clone
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved_self_publish
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved_obs_clone
+    src_lib_DepositNotifyHub_report_observation --> proxy_unresolved_src_lib_Ok
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved_obs_txid_is_empty
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved_obs_btc_deposit_addr_is_empty
+    src_lib_DepositNotifyHub_open_watch --> proxy_unresolved_src_lib_Err
+    src_lib_DepositNotifyHub_open_watch --> proxy_unresolved_src_lib_Err
+    src_lib_DepositNotifyHub_open_watch --> proxy_unresolved_src_lib_Err
+    src_lib_DepositNotifyHub_report_observation --> proxy_unresolved_src_lib_Err
+    src_lib_DepositNotifyHub_report_observation --> proxy_unresolved_src_lib_Err
+    src_lib_DepositNotifyHub_report_observation --> proxy_unresolved_src_lib_Err
+    src_lib_DepositNotifyHub_report_observation --> proxy_unresolved_src_lib_Err
+    src_lib_DepositNotifyHub_report_observation --> proxy_unresolved_src_lib_Err
+    src_lib_DepositNotifyHub_report_observation --> proxy_unresolved_src_lib_Err
+    src_lib_DepositNotifyHub_subscribe --> proxy_unresolved_src_lib_Err
+    src_lib_DepositNotifyHub_put_automation --> proxy_unresolved_src_lib_Err
+    src_lib_DepositNotifyHub_put_automation --> proxy_unresolved_src_lib_Err
+    src_lib_validate_id --> proxy_unresolved_src_lib_Err
+    src_lib_validate_id --> proxy_unresolved_src_lib_Err
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved__txid_and_btc_deposit_addr_required__into
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved__amount_sats_must_be___0__dust_rejected__into
+    src_lib_now_secs -.-> proxy_unresolved_SystemTime__now___duration_since_UNIX_EPOCH___map_d__d_as_secs___unwrap_or
+    src_lib_now_secs -.-> proxy_unresolved_SystemTime__now___duration_since_UNIX_EPOCH___map
+    src_lib_now_secs -.-> proxy_unresolved_SystemTime__now___duration_since
+    src_lib_now_secs -.-> proxy_unresolved_SystemTime__now
+    src_lib_now_secs -.-> proxy_unresolved_d_as_secs
+    src_lib_DepositNotifyHub_open_watch --> src_lib_now_secs
+    src_lib_DepositNotifyHub_get_status --> src_lib_now_secs
+    src_lib_DepositNotifyHub_list_open_watches --> src_lib_now_secs
+    src_lib_DepositNotifyHub_report_observation --> src_lib_now_secs
+    src_lib_DepositNotifyHub_report_observation --> src_lib_now_secs
+    src_lib_DepositNotifyHub_put_automation --> src_lib_now_secs
+    src_lib_DepositNotifyHub_open_watch -.-> proxy_unresolved_self_inner_write__map_err
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved_self_inner_write__map_err
+    src_lib_DepositNotifyHub_subscribe -.-> proxy_unresolved_self_inner_write__map_err
+    src_lib_DepositNotifyHub_put_automation -.-> proxy_unresolved_self_inner_write__map_err
+    src_lib_DepositNotifyHub_open_watch -.-> proxy_unresolved_self_inner_write
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved_self_inner_write
+    src_lib_DepositNotifyHub_subscribe -.-> proxy_unresolved_self_inner_write
+    src_lib_DepositNotifyHub_publish -.-> proxy_unresolved_self_inner_write
+    src_lib_DepositNotifyHub_put_automation -.-> proxy_unresolved_self_inner_write
+    src_lib_DepositNotifyHub_open_watch -.-> proxy_unresolved_e_to_string
+    src_lib_DepositNotifyHub_get_status -.-> proxy_unresolved_e_to_string
+    src_lib_DepositNotifyHub_list_open_watches -.-> proxy_unresolved_e_to_string
+    src_lib_DepositNotifyHub_already_observed -.-> proxy_unresolved_e_to_string
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved_e_to_string
+    src_lib_DepositNotifyHub_subscribe -.-> proxy_unresolved_e_to_string
+    src_lib_DepositNotifyHub_put_automation -.-> proxy_unresolved_e_to_string
+    src_lib_DepositNotifyHub_get_automation -.-> proxy_unresolved_e_to_string
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved_g__watches__get_obs_intent_id___ok_or_else
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved_g__watches__get
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved__no_watch_for_intent_id__open_from_webapp_first__to_string
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved__btc_deposit_addr_does_not_match_open_watch__into
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved__domain_bind_mismatch__into
+    src_lib_DepositNotifyHub_report_observation --> proxy_unresolved_src_lib_Some
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved_watch_domain_bind_clone
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved__watch_expired__into
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved_g_observations__insert
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved_obs_intent_id_clone
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved_obs_clone
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved_obs_clone
+    src_lib_DepositNotifyHub_open_watch -.-> proxy_unresolved_self_publish
+    src_lib_DepositNotifyHub_report_observation -.-> proxy_unresolved_self_publish
+    src_lib_DepositNotifyHub_open_watch --> proxy_unresolved_src_lib_Ok
+    src_lib_DepositNotifyHub_get_status --> proxy_unresolved_src_lib_Ok
+    src_lib_DepositNotifyHub_list_open_watches --> proxy_unresolved_src_lib_Ok
+    src_lib_DepositNotifyHub_already_observed --> proxy_unresolved_src_lib_Ok
+    src_lib_DepositNotifyHub_report_observation --> proxy_unresolved_src_lib_Ok
+    src_lib_DepositNotifyHub_subscribe --> proxy_unresolved_src_lib_Ok
+    src_lib_DepositNotifyHub_put_automation --> proxy_unresolved_src_lib_Ok
+    src_lib_DepositNotifyHub_get_automation --> proxy_unresolved_src_lib_Ok
+    src_lib_validate_id --> proxy_unresolved_src_lib_Ok

@@ -1,0 +1,88 @@
+flowchart TB
+    src_lib_intent_allows_swap["intent_allows_swap function CC=16"]
+    proxy_unresolved_intent_validate["intent.validate proxy"]
+    proxy_unresolved_src_lib_Err["src.lib:Err proxy"]
+    proxy_unresolved_src_lib_Ok["src.lib:Ok proxy"]
+    src_lib_expected_out_from_mid["expected_out_from_mid function CC=1"]
+    src_lib_apply_slip_floor["apply_slip_floor function CC=1"]
+    src_lib_apply_slip_ceiling["apply_slip_ceiling function CC=1"]
+    src_lib_CorridorMintedSet_authorize_mint["authorize_mint method CC=2"]
+    src_lib_sim_deposit["sim_deposit function CC=6"]
+    src_lib_DepositIntentV0_new_preauth["new_preauth method CC=5"]
+    src_lib_DepositIntentV0_validate["validate method CC=6"]
+    src_lib_DepositIntentV0_bind_deposit_id["bind_deposit_id method CC=2"]
+    src_lib_oracle_mint_forbidden["oracle_mint_forbidden function CC=1"]
+    src_lib_CorridorMintedSet_insert["insert method CC=3"]
+    proxy_unresolved__amount_in_as_u128___checked_mul_mid___map_n__n___PRICE_SCALE___ok_or["amount_in as u128 .checked_mul mid .map n n PRICE_SCALE .ok_or proxy"]
+    proxy_unresolved__amount_in_as_u128___checked_mul_mid___map["amount_in as u128 .checked_mul mid .map proxy"]
+    proxy_unresolved__amount_in_as_u128___checked_mul["amount_in as u128 .checked_mul proxy"]
+    proxy_unresolved_BPS_DEN_saturating_sub["BPS_DEN.saturating_sub proxy"]
+    proxy_unresolved_expected_saturating_mul["expected.saturating_mul proxy"]
+    proxy_unresolved_expected__checked_mul_BPS_DEN_saturating_add_bps___map_x__x___BPS_DEN___unwrap_or["expected .checked_mul BPS_DEN.saturating_add bps .map x x BPS_DEN .un..."]
+    proxy_unresolved_expected__checked_mul_BPS_DEN_saturating_add_bps___map["expected .checked_mul BPS_DEN.saturating_add bps .map proxy"]
+    proxy_unresolved_expected__checked_mul["expected .checked_mul proxy"]
+    proxy_unresolved_BPS_DEN_saturating_add["BPS_DEN.saturating_add proxy"]
+    src_lib_intent_allows_swap -.-> proxy_unresolved_intent_validate
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Ok
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> src_lib_expected_out_from_mid
+    src_lib_intent_allows_swap --> src_lib_apply_slip_floor
+    src_lib_intent_allows_swap --> src_lib_apply_slip_ceiling
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Ok
+    src_lib_intent_allows_swap -.-> proxy_unresolved_intent_validate
+    src_lib_CorridorMintedSet_authorize_mint -.-> proxy_unresolved_intent_validate
+    src_lib_sim_deposit -.-> proxy_unresolved_intent_validate
+    src_lib_DepositIntentV0_new_preauth --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_new_preauth --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_new_preauth --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_new_preauth --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_validate --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_validate --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_validate --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_validate --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_validate --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_bind_deposit_id --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_oracle_mint_forbidden --> proxy_unresolved_src_lib_Err
+    src_lib_CorridorMintedSet_insert --> proxy_unresolved_src_lib_Err
+    src_lib_CorridorMintedSet_insert --> proxy_unresolved_src_lib_Err
+    src_lib_CorridorMintedSet_authorize_mint --> proxy_unresolved_src_lib_Err
+    src_lib_sim_deposit --> proxy_unresolved_src_lib_Err
+    src_lib_sim_deposit --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_new_preauth --> proxy_unresolved_src_lib_Ok
+    src_lib_DepositIntentV0_validate --> proxy_unresolved_src_lib_Ok
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Ok
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Ok
+    src_lib_CorridorMintedSet_insert --> proxy_unresolved_src_lib_Ok
+    src_lib_sim_deposit --> proxy_unresolved_src_lib_Ok
+    src_lib_sim_deposit --> proxy_unresolved_src_lib_Ok
+    src_lib_expected_out_from_mid -.-> proxy_unresolved__amount_in_as_u128___checked_mul_mid___map_n__n___PRICE_SCALE___ok_or
+    src_lib_expected_out_from_mid -.-> proxy_unresolved__amount_in_as_u128___checked_mul_mid___map
+    src_lib_expected_out_from_mid -.-> proxy_unresolved__amount_in_as_u128___checked_mul
+    src_lib_intent_allows_swap --> src_lib_expected_out_from_mid
+    src_lib_apply_slip_floor -.-> proxy_unresolved_BPS_DEN_saturating_sub
+    src_lib_apply_slip_floor -.-> proxy_unresolved_expected_saturating_mul
+    src_lib_intent_allows_swap --> src_lib_apply_slip_floor
+    src_lib_apply_slip_ceiling -.-> proxy_unresolved_expected__checked_mul_BPS_DEN_saturating_add_bps___map_x__x___BPS_DEN___unwrap_or
+    src_lib_apply_slip_ceiling -.-> proxy_unresolved_expected__checked_mul_BPS_DEN_saturating_add_bps___map
+    src_lib_apply_slip_ceiling -.-> proxy_unresolved_expected__checked_mul
+    src_lib_apply_slip_ceiling -.-> proxy_unresolved_BPS_DEN_saturating_add
+    src_lib_intent_allows_swap --> src_lib_apply_slip_ceiling

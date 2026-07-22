@@ -1,0 +1,7 @@
+Nodes: 553
+  Functions: 97
+  Classes: 0
+  Proxies: 415
+Call edges: 797
+Dependencies: cosmwasm_schema, cosmwasm_std, cw_storage_plus, sha2, distro, tokenfactory, pasta_curves, std, zk_headstash, cw_orch, ark_ff, msg, serde, bridge
+Entrypoints: 0

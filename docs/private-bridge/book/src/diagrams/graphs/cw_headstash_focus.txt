@@ -1,0 +1,188 @@
+cw-headstash — Trailmark focus (BridgeMintNote / bridge)
+
+summary: {'total_nodes': 553, 'functions': 97, 'classes': 0, 'proxies': 415, 'call_edges': 797, 'dependencies': ['cosmwasm_schema', 'cosmwasm_std', 'cw_storage_plus', 'sha2', 'distro', 'tokenfactory', 'pasta_curves', 'std', 'zk_headstash', 'cw_orch', 'ark_ff', 'msg', 'serde', 'bridge'], 'entrypoints': 0}
+
+Target: crates/headstash/contracts/cw-headstash/src
+Language: rust
+BridgeMintNote execute path → bridge::execute_bridge_mint_note → authorize_bridge_mint_pure.
+
+Complexity hotspots (top):
+  - bridge:authorize_bridge_mint_pure  name=authorize_bridge_mint_pure  CC=23
+  - bridge:BridgeMintError.as_str  name=as_str  CC=20
+  - headstash:process_headstash  name=process_headstash  CC=12
+  - lib:query  name=query  CC=12
+  - lib:execute  name=execute  CC=11
+
+## focus: execute_bridge_mint_note
+  callers (0):
+  callees (35):
+    -> bridge:asset_id_key [function] cc=1
+    -> bridge:authorize_bridge_mint_pure [function] cc=23
+    -> bridge:bridge_claim_storage_key [function] cc=1
+    -> bridge:mock_verify_bridge_proof [function] cc=4
+    -> bridge:require_hash32 [function] cc=2
+    -> bridge:terp_asset_id_from_tacit [function] cc=1
+    -> proxy.unresolved:ASSET_REGISTRY.may_load [proxy] cc=None
+    -> proxy.unresolved:BRIDGE_CFG_.may_load [proxy] cc=None
+    -> proxy.unresolved:BRIDGE_CFG_.may_load_deps.storage__.ok_or [proxy] cc=None
+    -> proxy.unresolved:BRIDGE_MINTED.may_load [proxy] cc=None
+    -> proxy.unresolved:BRIDGE_MINTED.may_load_deps.storage___mint_key_.is_some [proxy] cc=None
+    -> proxy.unresolved:BRIDGE_MINTED.save [proxy] cc=None
+    -> proxy.unresolved:REFLECTION_SNAPSHOT_.may_load [proxy] cc=None
+    -> proxy.unresolved:REFLECTION_SNAPSHOT_.may_load_deps.storage__.ok_or [proxy] cc=None
+    -> proxy.unresolved:Response::new [proxy] cc=None
+    -> proxy.unresolved:Response::new__.add_attribute [proxy] cc=None
+    -> proxy.unresolved:Response::new__.add_attribute_action___bridge_mint_note__.add_attribute [proxy] cc=None
+    -> proxy.unresolved:Response::new__.add_attribute_action___bridge_mint_note__.add_attribute_nullifier__hex::encode_nu__.add_attribute [proxy] cc=None
+    -> proxy.unresolved:Response::new__.add_attribute_action___bridge_mint_note__.add_attribute_nullifier__hex::encode_nu__.add_attribute_claim_key__mint_key__.add_attribute [proxy] cc=None
+    -> proxy.unresolved:Response::new__.add_attribute_action___bridge_mint_note__.add_attribute_nullifier__hex::encode_nu__.add_attribute_claim_key__mint_key__.add_attribute_value__note.value.to_string__.add_attribute [proxy] cc=None
+    -> proxy.unresolved:Response::new__.add_attribute_action___bridge_mint_note__.add_attribute_nullifier__hex::encode_nu__.add_attribute_claim_key__mint_key__.add_attribute_value__note.value.to_string__.add_attribute_rcm_flag__note.rcm_flag.to_string__.add_attribute [proxy] cc=None
+    -> proxy.unresolved:Response::new__.add_attribute_action___bridge_mint_note__.add_attribute_nullifier__hex::encode_nu__.add_attribute_claim_key__mint_key__.add_attribute_value__note.value.to_string__.add_attribute_rcm_flag__note.rcm_flag.to_string__.add_attribute_dex_consumable__note.is_dex_consumable_.to_string__.add_attribute [proxy] cc=None
+    -> proxy.unresolved:asset.as_ref [proxy] cc=None
+    -> proxy.unresolved:asset.is_none [proxy] cc=None
+    -> proxy.unresolved:bridge:Ok [proxy] cc=None
+    -> proxy.unresolved:bridge:to_json_binary [proxy] cc=None
+    -> proxy.unresolved:crate::NULLIFIERS.save [proxy] cc=None
+    -> proxy.unresolved:hex::encode [proxy] cc=None
+    -> proxy.unresolved:mint_key.clone [proxy] cc=None
+    -> proxy.unresolved:mock_verify_bridge_proof_cfg.mock_verify___claim___proof__.map_err [proxy] cc=None
+    -> proxy.unresolved:note.is_dex_consumable [proxy] cc=None
+    -> proxy.unresolved:note.is_dex_consumable_.to_string [proxy] cc=None
+    -> proxy.unresolved:note.rcm_flag.to_string [proxy] cc=None
+    -> proxy.unresolved:note.value.to_string [proxy] cc=None
+    -> proxy.unresolved:note_bin.to_base64 [proxy] cc=None
+
+## focus: authorize_bridge_mint_pure
+  callers (1):
+    <- bridge:execute_bridge_mint_note [function]
+  callees (41):
+    -> bridge:derive_claim_id_with_dest [function] cc=1
+    -> bridge:derive_domain_binding [function] cc=1
+    -> bridge:hash_source_chain_tag [function] cc=1
+    -> bridge:is_zero_hash [function] cc=1
+    -> bridge:require_hash32 [function] cc=2
+    -> bridge:terp_asset_id_from_tacit [function] cc=1
+    -> proxy.unresolved:Binary::from [proxy] cc=None
+    -> proxy.unresolved:asset.ok_or [proxy] cc=None
+    -> proxy.unresolved:bridge:Err [proxy] cc=None
+    -> proxy.unresolved:bridge:Ok [proxy] cc=None
+    -> proxy.unresolved:cm_public.to_vec [proxy] cc=None
+    -> proxy.unresolved:dest_cm.to_vec [proxy] cc=None
+    -> proxy.unresolved:entry_id.to_vec [proxy] cc=None
+    -> proxy.unresolved:hash_source_chain_tag_claim.source_chain_tag_.to_vec [proxy] cc=None
+    -> proxy.unresolved:nu.to_vec [proxy] cc=None
+    -> proxy.unresolved:pool_domain.to_vec [proxy] cc=None
+    -> proxy.unresolved:presented_claim.to_vec [proxy] cc=None
+    -> proxy.unresolved:rcm.to_vec [proxy] cc=None
+    -> proxy.unresolved:require_hash32_b___rcm_.map_err [proxy] cc=None
+    -> proxy.unresolved:require_hash32_cfg.dest_domain___cfg.dest_domain__.map_err [proxy] cc=None
+    -> proxy.unresolved:require_hash32_claim.burn_dest_commitment___burn_dest_commitment__.map_err [proxy] cc=None
+    -> proxy.unresolved:require_hash32_claim.claim_id___claim_id_.map_err [proxy] cc=None
+    -> proxy.unresolved:require_hash32_claim.cm_public___cm_public_.map_err [proxy] cc=None
+    -> proxy.unresolved:require_hash32_claim.dest_commitment___dest_commitment__.map_err [proxy] cc=None
+    -> proxy.unresolved:require_hash32_claim.dest_domain___dest_domain_.map_err [proxy] cc=None
+    -> proxy.unresolved:require_hash32_claim.domain_binding___domain_binding__.map_err [proxy] cc=None
+    -> proxy.unresolved:require_hash32_claim.dst_chain_id___dst_chain_id__.map_err [proxy] cc=None
+    -> proxy.unresolved:require_hash32_claim.lc_client_id___lc_client_id__.map_err [proxy] cc=None
+    -> proxy.unresolved:require_hash32_claim.nullifier___nullifier__.map_err [proxy] cc=None
+    -> proxy.unresolved:require_hash32_claim.pool_domain___pool_domain__.map_err [proxy] cc=None
+    -> proxy.unresolved:require_hash32_claim.source_burn_root___source_burn_root__.map_err [proxy] cc=None
+    -> proxy.unresolved:require_hash32_claim.source_pool_root___source_pool_root__.map_err [proxy] cc=None
+    -> proxy.unresolved:require_hash32_claim.src_chain_id___src_chain_id__.map_err [proxy] cc=None
+    -> proxy.unresolved:require_hash32_claim.tacit_asset_id___tacit_asset_id__.map_err [proxy] cc=None
+    -> proxy.unresolved:require_hash32_entry.asset_id___asset_id_.map_err [proxy] cc=None
+    -> proxy.unresolved:require_hash32_snapshot.burn_root___burn_root__.map_err [proxy] cc=None
+    -> proxy.unresolved:require_hash32_snapshot.pool_root___pool_root__.map_err [proxy] cc=None
+    -> proxy.unresolved:snapshot.conf_mature [proxy] cc=None
+    -> proxy.unresolved:snapshot.lag_ok [proxy] cc=None
+    -> proxy.unresolved:snapshot.tip_ok [proxy] cc=None
+
+## focus: execute
+  callers (0):
+  callees (10):
+    -> lib:execute_burn [function] cc=2
+    -> lib:execute_mint [function] cc=2
+    -> proxy.unresolved:bridge::execute_bridge_mint_note [proxy] cc=None
+    -> proxy.unresolved:bridge::execute_register_asset [proxy] cc=None
+    -> proxy.unresolved:bridge::execute_set_bridge_cfg [proxy] cc=None
+    -> proxy.unresolved:bridge::execute_set_external_asset_registry [proxy] cc=None
+    -> proxy.unresolved:bridge::execute_set_reflection_snapshot [proxy] cc=None
+    -> proxy.unresolved:bridge::execute_update_reflection [proxy] cc=None
+    -> proxy.unresolved:crate::headstash::process_headstash [proxy] cc=None
+    -> proxy.unresolved:crate::headstash::register_eligibility_root [proxy] cc=None
+
+## focus: process_headstash
+  callers (0):
+  callees (48):
+    -> headstash:verify_nullifier_stateful [function] cc=3
+    -> proxy.unresolved:CanonicalAddr::from [proxy] cc=None
+    -> proxy.unresolved:HEADSTASH_CFG.load [proxy] cc=None
+    -> proxy.unresolved:HashMap::new [proxy] cc=None
+    -> proxy.unresolved:HashSet::new [proxy] cc=None
+    -> proxy.unresolved:Response::new [proxy] cc=None
+    -> proxy.unresolved:StdError::msg [proxy] cc=None
+    -> proxy.unresolved:Uint128::new [proxy] cc=None
+    -> proxy.unresolved:Uint128::new_total_required_as_u128_.into [proxy] cc=None
+    -> proxy.unresolved:_HeadstashInstances_as_Into_Instance_::into [proxy] cc=None
+    -> proxy.unresolved:_HeadstashInstances_as_Into_Instance_::into_claim.i.clone_.to_bytes [proxy] cc=None
+    -> proxy.unresolved:cfg.cid.into [proxy] cc=None
+    -> proxy.unresolved:cfg_.ts_.iter [proxy] cc=None
+    -> proxy.unresolved:cfg_.ts_.iter__.any [proxy] cc=None
+    -> proxy.unresolved:claim.i.clone [proxy] cc=None
+    -> proxy.unresolved:claim.i.nd.clone [proxy] cc=None
+    -> proxy.unresolved:claim.i.nf.to_hex [proxy] cc=None
+    -> proxy.unresolved:claim.rr.clone [proxy] cc=None
+    -> proxy.unresolved:claim.verify_recp_posiedon_hash [proxy] cc=None
+    -> proxy.unresolved:cts.entry [proxy] cc=None
+    -> proxy.unresolved:cts.entry_claim.i.nd.clone__claim.rr.clone__.or_insert [proxy] cc=None
+    -> proxy.unresolved:cts_.iter [proxy] cc=None
+    -> proxy.unresolved:cts_.iter__.filter [proxy] cc=None
+    -> proxy.unresolved:cts_.iter__.filter____d_____d____t.proof_representation__.map [proxy] cc=None
+    -> proxy.unresolved:cts_.iter__.filter____d_____d____t.proof_representation__.map_k___v___k.clone__v__.collect [proxy] cc=None
+    -> proxy.unresolved:denom_entries.iter [proxy] cc=None
+    -> proxy.unresolved:denom_entries.iter_.map [proxy] cc=None
+    -> proxy.unresolved:denom_entries.iter_.map____amount___amount_.sum [proxy] cc=None
+    -> proxy.unresolved:deps.api.addr_humanize [proxy] cc=None
+    -> proxy.unresolved:deps_.api_.proof_instance_verify [proxy] cc=None
+    -> proxy.unresolved:deps_.api_.proof_instance_verify__cfg.cid.into___claim.p___HeadstashInstances_as_Into_Instance_::into_claim.i.clone_.to_bytes____.map_err [proxy] cc=None
+    -> proxy.unresolved:deps_.querier_.query_balance [proxy] cc=None
+    -> proxy.unresolved:distro::assert_claim_domain_poseidon_v1 [proxy] cc=None
+    -> proxy.unresolved:distro::assert_claim_root [proxy] cc=None
+    -> proxy.unresolved:distro::nullifier_storage_key [proxy] cc=None
+    -> proxy.unresolved:e.proof_representation [proxy] cc=None
+    -> proxy.unresolved:e.to_string [proxy] cc=None
+    -> proxy.unresolved:headstash:Err [proxy] cc=None
+    -> proxy.unresolved:headstash:Ok [proxy] cc=None
+    -> proxy.unresolved:headstash:Some [proxy] cc=None
+
+## focus: mock_verify_bridge_proof
+  callers (1):
+    <- bridge:execute_bridge_mint_note [function]
+  callees (4):
+    -> proxy.unresolved:StdError::msg [proxy] cc=None
+    -> proxy.unresolved:bridge:Err [proxy] cc=None
+    -> proxy.unresolved:bridge:Ok [proxy] cc=None
+    -> proxy.unresolved:proof.is_empty [proxy] cc=None
+
+## focus: derive_claim_id_with_dest
+  callers (2):
+    <- bridge:happy_bridge_mint_world [function]
+    <- bridge:authorize_bridge_mint_pure [function]
+  callees (5):
+    -> proxy.unresolved:Sha256::new [proxy] cc=None
+    -> proxy.unresolved:h.finalize [proxy] cc=None
+    -> proxy.unresolved:h.update [proxy] cc=None
+    -> proxy.unresolved:out.copy_from_slice [proxy] cc=None
+    -> proxy.unresolved:value.to_be_bytes [proxy] cc=None
+
+## focus: derive_domain_binding
+  callers (2):
+    <- bridge:happy_bridge_mint_world [function]
+    <- bridge:authorize_bridge_mint_pure [function]
+  callees (5):
+    -> proxy.unresolved:Sha256::new [proxy] cc=None
+    -> proxy.unresolved:consensus_height.to_be_bytes [proxy] cc=None
+    -> proxy.unresolved:h.finalize [proxy] cc=None
+    -> proxy.unresolved:h.update [proxy] cc=None
+    -> proxy.unresolved:out.copy_from_slice [proxy] cc=None
+

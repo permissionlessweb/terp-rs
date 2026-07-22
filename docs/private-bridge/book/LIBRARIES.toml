@@ -1,0 +1,318 @@
+# Library registry for Private Bridge mdBook.
+# Categories group path deps / products. Each entry has a source README or operator doc
+# that is included at build time via mdbook include of src/_include/ — do not duplicate
+# body content in the book shells.
+#
+# Paths are monorepo-relative (from terp-core root).
+# Optional keys: non_goals, test (how-to-test one-liner), stub (when no README).
+
+[meta]
+title = "Private Bridge library map"
+ssot_product = "docs/plans/spectrum/DEMO-CASHAPP-ZEC-CORRIDOR.md"
+ssot_user = "docs/plans/spectrum/USER-GUIDE-CASHAPP-PRIVATE-BRIDGE.md"
+ssot_freezes = "docs/plans/spectrum/DESIGN-DECISIONS-CORRIDOR-ACCEPTED-2026-07-20.md"
+
+# ── Category: product (user + operator narrative) ───────────────────────────
+[[libraries]]
+id = "user-guide"
+category = "product"
+kind = "curated-doc"
+title = "End-user guide — Cash App Private Bridge"
+path = "docs/plans/spectrum/USER-GUIDE-CASHAPP-PRIVATE-BRIDGE.md"
+role = "Intent auth, profiles, stage ownership, ict_local_funded honesty"
+non_goals = "Does not own contract ABIs, harness wiring, or freeze text"
+
+[[libraries]]
+id = "demo-corridor"
+category = "product"
+kind = "curated-doc"
+title = "DEMO Cash App → ZEC corridor SPEC"
+path = "docs/plans/spectrum/DEMO-CASHAPP-ZEC-CORRIDOR.md"
+role = "Product spine SSOT"
+non_goals = "Not a runbook for Docker/ict; see e2e + harness-ict"
+
+[[libraries]]
+id = "operator-privatecorridor"
+category = "product"
+kind = "operator"
+title = "PrivateCorridor OPERATOR"
+path = "websites/dao-dao-ui/packages/stateful/modules/modules/PrivateCorridor/OPERATOR.md"
+role = "Operator film path + env"
+non_goals = "Does not redefine DepositIntent or mint policy"
+
+# ── Category: design (freezes + domain SPECs) ───────────────────────────────
+[[libraries]]
+id = "freezes-d1-d7"
+category = "design"
+kind = "curated-doc"
+title = "Design freezes D1–D7 ACCEPTED"
+path = "docs/plans/spectrum/DESIGN-DECISIONS-CORRIDOR-ACCEPTED-2026-07-20.md"
+role = "Locked product freezes"
+non_goals = "Do not amend freezes from book shells; open a design change if needed"
+
+[[libraries]]
+id = "flow-private-bridge"
+category = "design"
+kind = "curated-doc"
+title = "FLOW private bridge auth"
+path = "docs/plans/spectrum/FLOW-private-bridge-auth.md"
+role = "Compose auth flow (Domain E)"
+non_goals = "Not the pure-crate implementation (see fixtures)"
+
+[[libraries]]
+id = "spec-lc-hinge"
+category = "design"
+kind = "curated-doc"
+title = "SPEC LC hinge private bridge"
+path = "docs/plans/spectrum/SPEC-lc-hinge-private-bridge.md"
+role = "Domain C"
+non_goals = "Not host/wasm build policy"
+
+[[libraries]]
+id = "spec-tacit"
+category = "design"
+kind = "curated-doc"
+title = "SPEC Tacit bridge mapping"
+path = "docs/plans/spectrum/SPEC-tacit-bridge-mapping.md"
+role = "Domain B"
+non_goals = "Not UI or operator film path"
+
+[[libraries]]
+id = "spec-private-dex"
+category = "design"
+kind = "curated-doc"
+title = "SPEC private DEX seams"
+path = "docs/plans/spectrum/SPEC-private-dex-seams.md"
+role = "Domain D"
+non_goals = "Not production AMM deployment docs"
+
+[[libraries]]
+id = "seam-note-out"
+category = "design"
+kind = "curated-doc"
+title = "SEAM-NOTE-OUT"
+path = "docs/plans/spectrum/SEAM-NOTE-OUT.md"
+role = "SeamNoteOutV0 (D1)"
+non_goals = "Does not own second note formats; pure crate must match this"
+
+# ── Category: pure-seams (circuit/manifold-style pure crates) ───────────────
+[[libraries]]
+id = "fixture-cashapp"
+category = "pure-seams"
+kind = "crate-readme"
+title = "cashapp_zec_corridor fixture"
+path = "docs/plans/spectrum/fixtures/cashapp_zec_corridor/README.md"
+role = "I1–I6 pure intent/corridor tests"
+non_goals = "No Docker, wasmd, or funded nets"
+test = "cd docs/plans/spectrum/fixtures/cashapp_zec_corridor && cargo test"
+optional = false
+
+[[libraries]]
+id = "fixture-bridge-auth"
+category = "pure-seams"
+kind = "crate-readme"
+title = "bridge_auth_seams"
+path = "docs/plans/spectrum/fixtures/bridge_auth_seams/README.md"
+role = "Bridge mint policy pure (E2E-01..07 seeds)"
+non_goals = "Does not store notes on-chain; policy only"
+test = "cd docs/plans/spectrum/fixtures/bridge_auth_seams && cargo test"
+
+[[libraries]]
+id = "fixture-private-dex"
+category = "pure-seams"
+kind = "crate-readme"
+title = "private_dex_seams"
+path = "docs/plans/spectrum/fixtures/private_dex_seams/README.md"
+role = "Oracle-bound swap pure (E2E-10..13)"
+non_goals = "Not a live DEX; math + bind rules only"
+test = "cd docs/plans/spectrum/fixtures/private_dex_seams && cargo test"
+
+[[libraries]]
+id = "fixture-compose"
+category = "pure-seams"
+kind = "crate-readme"
+title = "compose_seams"
+path = "docs/plans/spectrum/fixtures/compose_seams/README.md"
+role = "Mint→SEAM→swap compose pure"
+non_goals = "No chain IO; composes pure crates only"
+test = "cd docs/plans/spectrum/fixtures/compose_seams && cargo test"
+
+[[libraries]]
+id = "fixture-seam-note"
+category = "pure-seams"
+kind = "crate-readme"
+title = "seam_note_out"
+path = "docs/plans/spectrum/fixtures/seam_note_out/README.md"
+role = "SeamNoteOutV0 pure + headstash-notes bin"
+non_goals = "Does not invent a second note format vs SEAM-NOTE-OUT"
+test = "cd docs/plans/spectrum/fixtures/seam_note_out && cargo test"
+
+# ── Category: contracts-circuit ─────────────────────────────────────────────
+[[libraries]]
+id = "headstash-workspace"
+category = "contracts-circuit"
+kind = "crate-readme"
+title = "headstash workspace"
+path = "crates/headstash/README.md"
+role = "Workspace root: circuit, contracts, test-press"
+non_goals = "Not product narrative; see DEMO + USER-GUIDE"
+
+[[libraries]]
+id = "zk-headstash-circuit"
+category = "contracts-circuit"
+kind = "crate-readme"
+title = "zk-headstash (circuit)"
+path = "crates/headstash/circuit/README.md"
+role = "Orchard/Headstash circuit; host-crypto vs guest Instance surface"
+non_goals = "Guest must not pull full host-prove graph into wasmd"
+
+[[libraries]]
+id = "cw-headstash"
+category = "contracts-circuit"
+kind = "crate-readme"
+title = "cw-headstash contract"
+path = "crates/headstash/contracts/cw-headstash/README.md"
+role = "Mint router + BridgeMintNote; wasmd-safe guest build"
+non_goals = "Does not own observe plane or UI; host floor is platform-wasmvm"
+
+# ── Category: harness-ict ───────────────────────────────────────────────────
+[[libraries]]
+id = "ict-rs"
+category = "harness-ict"
+kind = "crate-readme"
+title = "ict-rs"
+path = "crates/ict-rs/README.md"
+role = "Docker multi-chain test; funded Terp nets"
+non_goals = "Not pure policy SSOT; lab_simulated must stay honest"
+
+[[libraries]]
+id = "ict-rs-core"
+category = "harness-ict"
+kind = "crate-readme"
+title = "ict-rs core crate"
+path = "crates/ict-rs/ict-rs/README.md"
+role = "ChainSpec, runtime, faucet"
+non_goals = "Not product freezes or note formats"
+
+[[libraries]]
+id = "e2e-corridor"
+category = "harness-ict"
+kind = "crate-readme"
+title = "Corridor e2e README"
+path = "docs/plans/spectrum/e2e/README.md"
+role = "Lab + ict_local_funded commands"
+non_goals = "Does not redefine D1–D7"
+
+[[libraries]]
+id = "corridor-lab-status"
+category = "harness-ict"
+kind = "curated-doc"
+title = "CORRIDOR-LAB-STATUS"
+path = "docs/plans/spectrum/e2e/CORRIDOR-LAB-STATUS.md"
+role = "Lab vs ict_local_funded columns"
+non_goals = "Snapshot status; prefer STATUS-* agents for sprint evidence"
+
+# ── Category: observe-notify ────────────────────────────────────────────────
+[[libraries]]
+id = "hash-market"
+category = "observe-notify"
+kind = "crate-readme"
+title = "hash-market"
+path = "crates/terp-rs/tools/hash-market/README.md"
+role = "Watches, SSE, observations, oracle bounds"
+non_goals = "Does not mint notes or authorize bridge policy"
+
+[[libraries]]
+id = "corridor-deposit-notify"
+category = "observe-notify"
+kind = "curated-doc"
+title = "Corridor deposit notify (hash-market)"
+path = "crates/terp-rs/tools/hash-market/docs/corridor-deposit-notify.md"
+role = "Watch/observe/SSE notify plane for Private Bridge deposits"
+non_goals = "Not the mint router; emits observations only"
+
+[[libraries]]
+id = "corridor-btc-reporter"
+category = "observe-notify"
+kind = "curated-doc"
+title = "corridor-btc-reporter"
+path = "crates/terp-rs/tools/hash-market/docs/corridor-btc-reporter.md"
+role = "Production BTC deposit monitor → /corridor/observations"
+non_goals = "Not Zakura dest preauth; BTC watch only"
+
+[[libraries]]
+id = "oline-play"
+category = "observe-notify"
+kind = "crate-readme"
+title = "oline private-bridge-corridor play"
+path = "crates/o-line/plays/private-bridge-corridor/README.md"
+role = "D4 topology preflight/e2e"
+non_goals = "Topology/play only; not pure seam math"
+
+# ── Category: ui ────────────────────────────────────────────────────────────
+[[libraries]]
+id = "privatecorridor-ui"
+category = "ui"
+kind = "operator"
+title = "PrivateCorridor module (OPERATOR)"
+path = "websites/dao-dao-ui/packages/stateful/modules/modules/PrivateCorridor/OPERATOR.md"
+role = "dao-dao UI production-shaped path"
+non_goals = "Does not own pure policy crates or wasm guest build"
+
+# ── Category: zakura ────────────────────────────────────────────────────────
+[[libraries]]
+id = "zakura-local"
+category = "zakura"
+kind = "curated-doc"
+title = "ZAKURA-LOCAL"
+path = "docs/plans/spectrum/e2e/ZAKURA-LOCAL.md"
+role = "D6 dest UX + regtest"
+non_goals = "Not BTC observe plane; dest preauth only"
+
+[[libraries]]
+id = "zakura-e2e"
+category = "zakura"
+kind = "crate-readme"
+title = "e2e/zakura README"
+path = "docs/plans/spectrum/e2e/zakura/README.md"
+role = "Golden binding + compose"
+non_goals = "Not production ZEC wallet product docs"
+
+# ── Category: platform-wasmvm ───────────────────────────────────────────────
+[[libraries]]
+id = "cosmwasm"
+category = "platform-wasmvm"
+kind = "crate-readme"
+title = "cosmwasm (in-tree)"
+path = "crates/cosmwasm/README.md"
+role = "Guest std + host floor; align with chain wasmvm"
+non_goals = "Running chain image is still the capability floor"
+
+[[libraries]]
+id = "wasm-prepare"
+category = "platform-wasmvm"
+kind = "script"
+title = "prepare-corridor-ict-wasm.sh"
+path = "docs/plans/spectrum/e2e/prepare-corridor-ict-wasm.sh"
+role = "Wasmd-safe guest build + wasm-opt bulk-memory lower"
+non_goals = "Does not change product freezes; host-image alignment only"
+# script is wrapped to .md by sync_includes.py and included when present
+
+# ── Category: sprint-status (ephemeral; keep thin) ──────────────────────────
+[[libraries]]
+id = "sprint-meta"
+category = "sprint-status"
+kind = "curated-doc"
+title = "STATUS-META-REVIEW (final sprint)"
+path = "docs/plans/spectrum/agents/final-sprint-2026-07-22/STATUS-META-REVIEW.md"
+role = "CONDITIONAL GO snapshot"
+non_goals = "Archive later; do not freeze epic prose forever in the book"
+
+[[libraries]]
+id = "sprint-wasm-green"
+category = "sprint-status"
+kind = "curated-doc"
+title = "STATUS-WASM-FUNDED-GREEN"
+path = "docs/plans/spectrum/agents/final-sprint-2026-07-22/STATUS-WASM-FUNDED-GREEN.md"
+role = "demo-corridor-ict green evidence"
+non_goals = "Evidence snapshot, not the host-floor design chapter"

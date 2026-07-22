@@ -1,0 +1,5 @@
+4 entrypoint(s) detected:
+  bin.client:main  kind=user_input  trust=untrusted_external  asset=high
+  bin.corridor_btc_reporter:main  kind=user_input  trust=untrusted_external  asset=high
+  bin.relay:main  kind=user_input  trust=untrusted_external  asset=high
+  bin.server:main  kind=user_input  trust=untrusted_external  asset=high

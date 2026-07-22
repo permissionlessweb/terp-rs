@@ -1,0 +1,17 @@
+classDiagram
+    class src_lib_DepositNotifyHub {
+        +new() Self
+        +open_watch() ResultDepositWatch  String
+        +get_status() ResultWatchStatusResponse  String
+        +list_open_watches() ResultVecDepositWatch  String
+        +already_observed() Resultbool  String
+        +report_observation() ResultDepositObservation  String
+        +subscribe() Result(std::sync::mpsc::ReceiverDepositEvent  OptionDepositObservation)  String
+        +publish()
+        +put_automation() ResultAutomationStatus  String
+        +get_automation() ResultOptionAutomationStatus  String
+    }
+    class src_lib_SharedDepositNotifyHub {
+        +new() Self
+        +hub() &DepositNotifyHub
+    }

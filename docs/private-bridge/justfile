@@ -1,0 +1,111 @@
+# Spectrum pure-seam / harness recipes (no Docker, no H1 prove).
+# Prefer `just demo-e2e-l0` from `crates/headstash` for suite re-exports too.
+
+fixtures := justfile_directory() / "fixtures"
+
+# Run four L0 pure crates only (fast PR CI seed).
+e2e-l0-pure:
+        #!/usr/bin/env bash
+        set -euo pipefail
+        for c in bridge_auth_seams private_dex_seams seam_note_out compose_seams; do
+          echo "== $c =="
+          (cd "{{fixtures}}/$c" && cargo test)
+        done
+
+# Product pure e2e (V0c): register → bridge mint note → SwapAction apply → reserves+ν
+product-pure-e2e:
+        #!/usr/bin/env bash
+        set -euo pipefail
+        (cd "{{fixtures}}/compose_seams" && cargo test product_path_burn_to_swap_sketch -- --nocapture)
+
+# -----------------------------------------------------------------------------
+# spine-t1 — Card C / Spine T1 named corridor (pure L0 only; no Docker, no Halo2)
+#
+# Single compose of existing green crates. Not a new framework: shell orchestration
+# of cargo test targets already used by product-pure-e2e + e2e-l0-pure.
+#
+# FLOW matrix C0/C1 → L0 coverage (honest partial):
+#   C0.1  burn→bridge_mint note accept
+#         → bridge_auth_seams: t1_happy_path_mint, hinge_t1_authorize_bridge_mint_happy
+#         → compose_seams: c1_happy_bridge_mint_to_seam_note_out + product_path_burn_to_swap_sketch
+#   C0.2  unshield exit                    → not pure-L0 green (needs SEAM-SPEND exit fixture / L1)
+#   C0.3  bridge_burn → SEAM-CROSS-OUT     → not pure-L0 green (C8 suite; design)
+#   C0.4  conservation burn-in = out       → product_path reserves+ν + bridge value/conservation rejects
+#   C1.1  claim → private note             → not cashapp corridor (distro claim = Domain A / L1 headstash);
+#         cashapp covers deposit-intent corridor analog, not eligibility root claim
+#   C1.2  note → swap, public reserves Δ   → product_path_burn_to_swap_sketch + private_dex_seams::swap_happy
+#         (+ swap_action structural / seam→swap compose tests)
+#   C1.3  oracle-bound swap (fresh mid)    → private_dex oracle_* + cashapp i5 happy / i2 slip / i6 stale
+#   C1.4  post-swap exit                   → not pure-L0 green (exit path deferred)
+#   C1.5  anonymity-set property           → not automated here (doc/property only)
+#
+# Why one recipe (not split): all targets are pure cargo tests under fixtures/, no
+# Docker/feature gates, same host toolchain — sequential bash is enough.
+# cashapp_zec_corridor is intentionally outside e2e-l0-pure (BTC/ZEC corridor demo);
+# spine-t1 pulls it in as the E-BTC L0 product spine companion.
+# private_dex_seams included: already green, cheap, underpins C1.2–C1.3.
+# -----------------------------------------------------------------------------
+spine-t1:
+        #!/usr/bin/env bash
+        set -euo pipefail
+        echo "=== spine-t1: compose_seams product_path_burn_to_swap_sketch ==="
+        (cd "{{fixtures}}/compose_seams" && cargo test product_path_burn_to_swap_sketch -- --nocapture)
+        echo "=== spine-t1: cashapp_zec_corridor (full) ==="
+        (cd "{{fixtures}}/cashapp_zec_corridor" && cargo test)
+        echo "=== spine-t1: bridge_auth_seams (full) ==="
+        (cd "{{fixtures}}/bridge_auth_seams" && cargo test)
+        echo "=== spine-t1: private_dex_seams (full; C1.2–C1.3 cheap) ==="
+        (cd "{{fixtures}}/private_dex_seams" && cargo test)
+        echo "=== spine-t1: ALL STEPS GREEN ==="
+
+# L1 Mock bridge mint — delegate to crates/headstash (cw-orch + cw-headstash).
+e2e-l1:
+        just --justfile {{justfile_directory()}}/../../../crates/headstash/justfile e2e-l1
+
+# Private Bridge corridor lab film (host Layer A). Delegates to crates/headstash.
+# Honest: lab notify + pure cashapp — not mainnet BTC/ZEC.
+demo-corridor-lab:
+        just --justfile {{justfile_directory()}}/../../../crates/headstash/justfile demo-corridor-lab
+
+demo-corridor-lab-smoke:
+        just --justfile {{justfile_directory()}}/../../../crates/headstash/justfile demo-corridor-lab-smoke
+
+demo-corridor-mint-after-observe:
+        just --justfile {{justfile_directory()}}/../../../crates/headstash/justfile demo-corridor-mint-after-observe
+
+# ict_local_funded: fresh Terp (ict-rs) + regtest observe + chain BridgeMintNote.
+demo-corridor-ict:
+        just --justfile {{justfile_directory()}}/../../../crates/headstash/justfile demo-corridor-ict
+
+demo-corridor-ict-mint-only:
+        just --justfile {{justfile_directory()}}/../../../crates/headstash/justfile demo-corridor-ict-mint-only
+
+demo-zakura-local:
+        just --justfile {{justfile_directory()}}/../../../crates/headstash/justfile demo-zakura-local
+
+demo-zakura-local-dest:
+        just --justfile {{justfile_directory()}}/../../../crates/headstash/justfile demo-zakura-local-dest
+
+# P1 one-button: prepare wasm → Zakura best-effort → Option D full local.
+demo-corridor-full-local:
+        just --justfile {{justfile_directory()}}/../../../crates/headstash/justfile demo-corridor-full-local
+
+demo-corridor-ict-egress-d:
+        just --justfile {{justfile_directory()}}/../../../crates/headstash/justfile demo-corridor-ict-egress-d
+
+# Thin documented L3 smoke stub — dual container NOT implemented this round.
+# When ready: clone hashmerchant Anvil+Terp bootstrap, strip VE, assert ports only (E2E-19).
+e2e-l3-smoke-stub:
+        @echo "E2E-19 stub: ict-rs dual Anvil+Terp not wired (see E2E-HARNESS-PLAN §7)."
+        @echo "Template: crates/ict-rs/examples/hashmerchant.rs (oracle/VE ≠ mint)."
+        @echo "Do not claim joint private-bridge e2e until CW mint + L0 compose green."
+
+# Round-3 Tacit→headstash mint-packet glue (golden fixture; optional anvil meta).
+# Prefer `just demo-bridge-fixture` from crates/headstash (also runs harness tests).
+demo-bridge-fixture:
+        #!/usr/bin/env bash
+        set -euo pipefail
+        bash "{{fixtures}}/emit_bridge_mint_fixture.sh" --regenerate
+        echo "golden: {{fixtures}}/bridge_mint_claim_happy.v1.json"
+        echo "loader: crates/headstash/test-press/src/harness/bridge_mint_fixture.rs"
+        echo "full check: cd crates/headstash && just demo-bridge-fixture"

@@ -1,0 +1,164 @@
+flowchart TB
+    headstash_process_headstash["process_headstash function CC=12"]
+    proxy_unresolved_HEADSTASH_CFG_load["HEADSTASH_CFG.load proxy"]
+    proxy_unresolved_HashSet__new["HashSet::new proxy"]
+    proxy_unresolved_HashMap__new["HashMap::new proxy"]
+    proxy_unresolved_distro__assert_claim_root["distro::assert_claim_root proxy"]
+    proxy_unresolved_headstash_Some["headstash:Some proxy"]
+    proxy_unresolved_distro__assert_claim_domain_poseidon_v1["distro::assert_claim_domain_poseidon_v1 proxy"]
+    proxy_unresolved_claim_i_nf_to_hex["claim.i.nf.to_hex proxy"]
+    proxy_unresolved_distro__nullifier_storage_key["distro::nullifier_storage_key proxy"]
+    proxy_unresolved_n_insert["n.insert proxy"]
+    proxy_unresolved_nf_key_clone["nf_key.clone proxy"]
+    proxy_unresolved_headstash_Err["headstash:Err proxy"]
+    proxy_unresolved_StdError__msg["StdError::msg proxy"]
+    headstash_verify_nullifier_stateful["verify_nullifier_stateful function CC=3"]
+    proxy_unresolved_cfg__ts__iter___any["cfg .ts .iter .any proxy"]
+    proxy_unresolved_cfg__ts__iter["cfg .ts .iter proxy"]
+    proxy_unresolved_e_proof_representation["e.proof_representation proxy"]
+    proxy_unresolved_deps__api__proof_instance_verify__cfg_cid_into___claim_p___HeadstashInstances_as_Into_Instance___into_claim_i_clone__to_bytes_____map_err["deps .api .proof_instance_verify cfg.cid.into claim.p HeadstashInstan..."]
+    proxy_unresolved_deps__api__proof_instance_verify["deps .api .proof_instance_verify proxy"]
+    proxy_unresolved_cfg_cid_into["cfg.cid.into proxy"]
+    proxy_unresolved__HeadstashInstances_as_Into_Instance___into_claim_i_clone__to_bytes["HeadstashInstances as Into Instance ::into claim.i.clone .to_bytes proxy"]
+    proxy_unresolved__HeadstashInstances_as_Into_Instance___into["HeadstashInstances as Into Instance ::into proxy"]
+    proxy_unresolved_claim_i_clone["claim.i.clone proxy"]
+    proxy_unresolved_e_to_string["e.to_string proxy"]
+    proxy_unresolved_claim_verify_recp_posiedon_hash["claim.verify_recp_posiedon_hash proxy"]
+    proxy_unresolved_cts_entry_claim_i_nd_clone__claim_rr_clone___or_insert["cts.entry claim.i.nd.clone claim.rr.clone .or_insert proxy"]
+    proxy_unresolved_cts_entry["cts.entry proxy"]
+    headstash_register_eligibility_root["register_eligibility_root function CC=1"]
+    headstash_query_distro_config["query_distro_config function CC=1"]
+    lib_CwHeadstash_on_auth_request["on_auth_request method CC=3"]
+    headstash_verify_nullifier_stateless["verify_nullifier_stateless function CC=1"]
+    headstash_HeadstashNote_verify_recp_posiedon_hash["verify_recp_posiedon_hash method CC=3"]
+    bridge_require_hash32["require_hash32 function CC=2"]
+    bridge_mock_verify_bridge_proof["mock_verify_bridge_proof function CC=4"]
+    bridge_StdError_from["from method CC=1"]
+    bridge_execute_register_asset["execute_register_asset function CC=2"]
+    distro_DistroHashDomain_parse["parse method CC=4"]
+    distro_validate_root_bytes["validate_root_bytes function CC=3"]
+    distro_validate_additive_domain["validate_additive_domain function CC=3"]
+    distro_require_root["require_root function CC=1"]
+    distro_assert_claim_root["assert_claim_root function CC=3"]
+    distro_assert_claim_domain_poseidon_v1["assert_claim_domain_poseidon_v1 function CC=2"]
+    distro_DistroRegistry_require_root["require_root method CC=1"]
+    distro_DistroRegistry_spend_nullifier["spend_nullifier method CC=2"]
+    lib_instantiate["instantiate function CC=5"]
+    lib_execute_mint["execute_mint function CC=2"]
+    lib_execute_burn["execute_burn function CC=2"]
+    lib_reply["reply function CC=7"]
+    wavs_WavsProofOfOwnership_verify["verify method CC=3"]
+    wavs_WavsProofOfOwnership_proof_of_ownership["proof_of_ownership method CC=3"]
+    bridge_execute_update_reflection["execute_update_reflection function CC=3"]
+    bridge_execute_set_reflection_snapshot["execute_set_reflection_snapshot function CC=1"]
+    bridge_execute_set_external_asset_registry["execute_set_external_asset_registry function CC=3"]
+    bridge_execute_set_bridge_cfg["execute_set_bridge_cfg function CC=1"]
+    bridge_execute_bridge_mint_note["execute_bridge_mint_note function CC=2"]
+    headstash_process_headstash -.-> proxy_unresolved_HEADSTASH_CFG_load
+    headstash_process_headstash -.-> proxy_unresolved_HashSet__new
+    headstash_process_headstash -.-> proxy_unresolved_HashMap__new
+    headstash_process_headstash -.-> proxy_unresolved_distro__assert_claim_root
+    headstash_process_headstash --> proxy_unresolved_headstash_Some
+    headstash_process_headstash -.-> proxy_unresolved_distro__assert_claim_domain_poseidon_v1
+    headstash_process_headstash -.-> proxy_unresolved_claim_i_nf_to_hex
+    headstash_process_headstash -.-> proxy_unresolved_distro__nullifier_storage_key
+    headstash_process_headstash -.-> proxy_unresolved_n_insert
+    headstash_process_headstash -.-> proxy_unresolved_nf_key_clone
+    headstash_process_headstash --> proxy_unresolved_headstash_Err
+    headstash_process_headstash -.-> proxy_unresolved_StdError__msg
+    headstash_process_headstash --> headstash_verify_nullifier_stateful
+    headstash_process_headstash -.-> proxy_unresolved_cfg__ts__iter___any
+    headstash_process_headstash -.-> proxy_unresolved_cfg__ts__iter
+    headstash_process_headstash -.-> proxy_unresolved_e_proof_representation
+    headstash_process_headstash --> proxy_unresolved_headstash_Err
+    headstash_process_headstash -.-> proxy_unresolved_StdError__msg
+    headstash_process_headstash -.-> proxy_unresolved_deps__api__proof_instance_verify__cfg_cid_into___claim_p___HeadstashInstances_as_Into_Instance___into_claim_i_clone__to_bytes_____map_err
+    headstash_process_headstash -.-> proxy_unresolved_deps__api__proof_instance_verify
+    headstash_process_headstash -.-> proxy_unresolved_cfg_cid_into
+    headstash_process_headstash -.-> proxy_unresolved__HeadstashInstances_as_Into_Instance___into_claim_i_clone__to_bytes
+    headstash_process_headstash -.-> proxy_unresolved__HeadstashInstances_as_Into_Instance___into
+    headstash_process_headstash -.-> proxy_unresolved_claim_i_clone
+    headstash_process_headstash -.-> proxy_unresolved_StdError__msg
+    headstash_process_headstash -.-> proxy_unresolved_e_to_string
+    headstash_process_headstash --> proxy_unresolved_headstash_Err
+    headstash_process_headstash -.-> proxy_unresolved_StdError__msg
+    headstash_process_headstash --> proxy_unresolved_headstash_Err
+    headstash_process_headstash -.-> proxy_unresolved_StdError__msg
+    headstash_process_headstash -.-> proxy_unresolved_claim_verify_recp_posiedon_hash
+    headstash_process_headstash -.-> proxy_unresolved_cts_entry_claim_i_nd_clone__claim_rr_clone___or_insert
+    headstash_process_headstash -.-> proxy_unresolved_cts_entry
+    headstash_process_headstash --> proxy_unresolved_headstash_Err
+    headstash_process_headstash -.-> proxy_unresolved_StdError__msg
+    headstash_process_headstash -.-> proxy_unresolved_HEADSTASH_CFG_load
+    headstash_register_eligibility_root -.-> proxy_unresolved_HEADSTASH_CFG_load
+    headstash_query_distro_config -.-> proxy_unresolved_HEADSTASH_CFG_load
+    lib_CwHeadstash_on_auth_request -.-> proxy_unresolved_HEADSTASH_CFG_load
+    headstash_process_headstash -.-> proxy_unresolved_HashSet__new
+    headstash_process_headstash -.-> proxy_unresolved_HashMap__new
+    headstash_process_headstash -.-> proxy_unresolved_distro__assert_claim_root
+    headstash_process_headstash --> proxy_unresolved_headstash_Some
+    headstash_verify_nullifier_stateless --> proxy_unresolved_headstash_Some
+    headstash_process_headstash -.-> proxy_unresolved_distro__assert_claim_domain_poseidon_v1
+    headstash_process_headstash -.-> proxy_unresolved_claim_i_nf_to_hex
+    headstash_process_headstash -.-> proxy_unresolved_distro__nullifier_storage_key
+    headstash_process_headstash -.-> proxy_unresolved_n_insert
+    headstash_process_headstash -.-> proxy_unresolved_nf_key_clone
+    headstash_HeadstashNote_verify_recp_posiedon_hash --> proxy_unresolved_headstash_Err
+    headstash_process_headstash --> proxy_unresolved_headstash_Err
+    headstash_process_headstash --> proxy_unresolved_headstash_Err
+    headstash_process_headstash --> proxy_unresolved_headstash_Err
+    headstash_process_headstash --> proxy_unresolved_headstash_Err
+    headstash_process_headstash --> proxy_unresolved_headstash_Err
+    headstash_verify_nullifier_stateful --> proxy_unresolved_headstash_Err
+    bridge_require_hash32 -.-> proxy_unresolved_StdError__msg
+    bridge_mock_verify_bridge_proof -.-> proxy_unresolved_StdError__msg
+    bridge_mock_verify_bridge_proof -.-> proxy_unresolved_StdError__msg
+    bridge_mock_verify_bridge_proof -.-> proxy_unresolved_StdError__msg
+    bridge_StdError_from -.-> proxy_unresolved_StdError__msg
+    bridge_execute_register_asset -.-> proxy_unresolved_StdError__msg
+    distro_DistroHashDomain_parse -.-> proxy_unresolved_StdError__msg
+    distro_validate_root_bytes -.-> proxy_unresolved_StdError__msg
+    distro_validate_root_bytes -.-> proxy_unresolved_StdError__msg
+    distro_validate_additive_domain -.-> proxy_unresolved_StdError__msg
+    distro_require_root -.-> proxy_unresolved_StdError__msg
+    distro_assert_claim_root -.-> proxy_unresolved_StdError__msg
+    distro_assert_claim_root -.-> proxy_unresolved_StdError__msg
+    distro_assert_claim_root -.-> proxy_unresolved_StdError__msg
+    distro_assert_claim_domain_poseidon_v1 -.-> proxy_unresolved_StdError__msg
+    distro_DistroRegistry_require_root -.-> proxy_unresolved_StdError__msg
+    distro_DistroRegistry_spend_nullifier -.-> proxy_unresolved_StdError__msg
+    headstash_HeadstashNote_verify_recp_posiedon_hash -.-> proxy_unresolved_StdError__msg
+    headstash_process_headstash -.-> proxy_unresolved_StdError__msg
+    headstash_process_headstash -.-> proxy_unresolved_StdError__msg
+    headstash_process_headstash -.-> proxy_unresolved_StdError__msg
+    headstash_process_headstash -.-> proxy_unresolved_StdError__msg
+    headstash_process_headstash -.-> proxy_unresolved_StdError__msg
+    headstash_process_headstash -.-> proxy_unresolved_StdError__msg
+    headstash_verify_nullifier_stateful -.-> proxy_unresolved_StdError__msg
+    lib_instantiate -.-> proxy_unresolved_StdError__msg
+    lib_execute_mint -.-> proxy_unresolved_StdError__msg
+    lib_execute_burn -.-> proxy_unresolved_StdError__msg
+    lib_reply -.-> proxy_unresolved_StdError__msg
+    lib_reply -.-> proxy_unresolved_StdError__msg
+    lib_CwHeadstash_on_auth_request -.-> proxy_unresolved_StdError__msg
+    wavs_WavsProofOfOwnership_verify -.-> proxy_unresolved_StdError__msg
+    wavs_WavsProofOfOwnership_verify -.-> proxy_unresolved_StdError__msg
+    wavs_WavsProofOfOwnership_proof_of_ownership -.-> proxy_unresolved_StdError__msg
+    headstash_verify_nullifier_stateful --> proxy_unresolved_headstash_Err
+    headstash_verify_nullifier_stateful -.-> proxy_unresolved_StdError__msg
+    headstash_process_headstash --> headstash_verify_nullifier_stateful
+    headstash_process_headstash -.-> proxy_unresolved_cfg__ts__iter___any
+    headstash_process_headstash -.-> proxy_unresolved_cfg__ts__iter
+    headstash_process_headstash -.-> proxy_unresolved_e_proof_representation
+    headstash_process_headstash -.-> proxy_unresolved_deps__api__proof_instance_verify__cfg_cid_into___claim_p___HeadstashInstances_as_Into_Instance___into_claim_i_clone__to_bytes_____map_err
+    headstash_process_headstash -.-> proxy_unresolved_deps__api__proof_instance_verify
+    headstash_process_headstash -.-> proxy_unresolved_cfg_cid_into
+    headstash_process_headstash -.-> proxy_unresolved__HeadstashInstances_as_Into_Instance___into_claim_i_clone__to_bytes
+    headstash_process_headstash -.-> proxy_unresolved__HeadstashInstances_as_Into_Instance___into
+    headstash_process_headstash -.-> proxy_unresolved_claim_i_clone
+    headstash_process_headstash -.-> proxy_unresolved_e_to_string
+    lib_reply -.-> proxy_unresolved_e_to_string
+    headstash_process_headstash -.-> proxy_unresolved_claim_verify_recp_posiedon_hash
+    headstash_process_headstash -.-> proxy_unresolved_cts_entry_claim_i_nd_clone__claim_rr_clone___or_insert
+    headstash_process_headstash -.-> proxy_unresolved_cts_entry
+%% pruned 78->55 nodes for mmdc

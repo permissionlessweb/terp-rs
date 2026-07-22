@@ -1,0 +1,56 @@
+flowchart TB
+    src_lib_CorridorMintedSet_authorize_mint["authorize_mint method CC=2"]
+    proxy_unresolved_intent_validate["intent.validate proxy"]
+    src_lib_is_zero_hash["is_zero_hash function CC=1"]
+    proxy_unresolved_src_lib_Err["src.lib:Err proxy"]
+    proxy_unresolved_self_insert["self.insert proxy"]
+    src_lib_intent_allows_swap["intent_allows_swap function CC=16"]
+    src_lib_sim_deposit["sim_deposit function CC=6"]
+    proxy_unresolved_h_iter__all["h.iter .all proxy"]
+    proxy_unresolved_h_iter["h.iter proxy"]
+    src_lib_DepositIntentV0_new_preauth["new_preauth method CC=5"]
+    src_lib_DepositIntentV0_validate["validate method CC=6"]
+    src_lib_DepositIntentV0_bind_deposit_id["bind_deposit_id method CC=2"]
+    src_lib_CorridorMintedSet_insert["insert method CC=3"]
+    src_lib_oracle_mint_forbidden["oracle_mint_forbidden function CC=1"]
+    src_lib_CorridorMintedSet_authorize_mint -.-> proxy_unresolved_intent_validate
+    src_lib_CorridorMintedSet_authorize_mint --> src_lib_is_zero_hash
+    src_lib_CorridorMintedSet_authorize_mint --> proxy_unresolved_src_lib_Err
+    src_lib_CorridorMintedSet_authorize_mint -.-> proxy_unresolved_self_insert
+    src_lib_intent_allows_swap -.-> proxy_unresolved_intent_validate
+    src_lib_CorridorMintedSet_authorize_mint -.-> proxy_unresolved_intent_validate
+    src_lib_sim_deposit -.-> proxy_unresolved_intent_validate
+    src_lib_is_zero_hash -.-> proxy_unresolved_h_iter__all
+    src_lib_is_zero_hash -.-> proxy_unresolved_h_iter
+    src_lib_DepositIntentV0_new_preauth --> src_lib_is_zero_hash
+    src_lib_DepositIntentV0_validate --> src_lib_is_zero_hash
+    src_lib_DepositIntentV0_bind_deposit_id --> src_lib_is_zero_hash
+    src_lib_CorridorMintedSet_insert --> src_lib_is_zero_hash
+    src_lib_CorridorMintedSet_authorize_mint --> src_lib_is_zero_hash
+    src_lib_DepositIntentV0_new_preauth --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_new_preauth --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_new_preauth --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_new_preauth --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_validate --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_validate --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_validate --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_validate --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_validate --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_bind_deposit_id --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_oracle_mint_forbidden --> proxy_unresolved_src_lib_Err
+    src_lib_CorridorMintedSet_insert --> proxy_unresolved_src_lib_Err
+    src_lib_CorridorMintedSet_insert --> proxy_unresolved_src_lib_Err
+    src_lib_CorridorMintedSet_authorize_mint --> proxy_unresolved_src_lib_Err
+    src_lib_sim_deposit --> proxy_unresolved_src_lib_Err
+    src_lib_sim_deposit --> proxy_unresolved_src_lib_Err
+    src_lib_CorridorMintedSet_authorize_mint -.-> proxy_unresolved_self_insert

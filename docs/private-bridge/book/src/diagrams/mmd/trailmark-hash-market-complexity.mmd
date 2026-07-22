@@ -1,0 +1,10 @@
+flowchart TB
+    bin_server_main["main function CC=23"]:::high
+    client_minio_ipfs_MinioIpfsClient_on_root_confirmed["on_root_confirmed method CC=15"]:::high
+    client_nostr_calendar_egress_metadata_to_nip52_event["metadata_to_nip52_event function CC=19"]:::high
+    client_nostr_marketplace_egress_parse_marketplace_action["parse_marketplace_action function CC=15"]:::high
+    client_nostr_marketplace_ingress_parse_purchase_intent_value["parse_purchase_intent_value function CC=19"]:::high
+    oracle_mod_aggregate_bounds["aggregate_bounds function CC=17"]:::high
+    classDef low fill:#d4edda,stroke:#28a745,color:#155724
+    classDef medium fill:#fff3cd,stroke:#e6a817,color:#856404
+    classDef high fill:#f8d7da,stroke:#dc3545,color:#721c24
