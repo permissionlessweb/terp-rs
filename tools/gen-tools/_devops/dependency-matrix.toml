@@ -3,8 +3,9 @@
 # Do not store absolute paths. Package names must match Cargo.toml [package].name.
 
 [defaults]
-git_branch = "main"
-zk_git_branch = "zk-mvp"
+# CosmWasm-aligned product line (see _devops/BRANCHING.md). No freeze labels.
+git_branch = "v3.1.0-zk.0"
+zk_git_branch = "v3.1.0-zk.0"
 
 [crates.abstract]
 description = "Abstract monorepo (framework, modules, integrations, interchain)"
@@ -14,7 +15,7 @@ repo_only = true
 
 [crates.abstract.git]
 url = "https://github.com/permissionlessweb/abstract"
-branch = "mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.abstract-cw-plus]
 description = "AbstractSDK's cw-plus fork with orchestrator interfaces"
@@ -34,11 +35,11 @@ consumers = ["terp-rs"]
 
 [crates.abstract-interface.git]
 url = "https://github.com/permissionlessweb/abstract"
-branch = "mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.abstract-interface.zk_git]
 url = "https://github.com/permissionlessweb/abstract"
-branch = "zk-mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.abstract-std]
 description = "Abstract SDK standard library"
@@ -48,11 +49,11 @@ consumers = ["terp-rs"]
 
 [crates.abstract-std.git]
 url = "https://github.com/permissionlessweb/abstract"
-branch = "mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.abstract-std.zk_git]
 url = "https://github.com/permissionlessweb/abstract"
-branch = "zk-mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.alloy]
 description = ""
@@ -124,7 +125,7 @@ local = "c-kzg-4844"
 
 [crates.c-kzg-4844.git]
 url = "https://github.com/permissionlessweb/c-kzg-4844"
-branch = "mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.callback-capturer]
 description = "Callback capturer contract for IBC callback testing"
@@ -151,7 +152,7 @@ url = "https://github.com/permissionlessweb/cw-multi-test-fork"
 branch = "main"
 
 [crates.clone-cw-multi-test.zk_git]
-branch = "zk-mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.cnidarium]
 description = "Versioned key-value store for Penumbra chain state"
@@ -209,7 +210,7 @@ zk_local = "cosmwasm/packages/core"
 
 [crates.cosmwasm-core.git]
 url = "https://github.com/permissionlessweb/cosmwasm"
-branch = "mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.cosmwasm-crypto]
 description = "Crypto bindings for CosmWasm contracts"
@@ -219,7 +220,7 @@ zk_local = "cosmwasm/packages/crypto"
 
 [crates.cosmwasm-crypto.git]
 url = "https://github.com/permissionlessweb/cosmwasm"
-branch = "mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.cosmwasm-derive]
 description = "Auto-generated code for CosmWasm contract development, shipped as part of cosmwasm-std"
@@ -229,7 +230,7 @@ zk_local = "cosmwasm/packages/derive"
 
 [crates.cosmwasm-derive.git]
 url = "https://github.com/permissionlessweb/cosmwasm"
-branch = "mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.cosmwasm-schema]
 description = "Dev-dependency for CosmWasm contracts to generate JSON Schema files"
@@ -254,7 +255,7 @@ consumers = [
 
 [crates.cosmwasm-schema.git]
 url = "https://github.com/permissionlessweb/cosmwasm"
-branch = "mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.cosmwasm-schema-derive]
 description = "Derive macros for cosmwasm-schema"
@@ -265,7 +266,7 @@ patch_only = true
 
 [crates.cosmwasm-schema-derive.git]
 url = "https://github.com/permissionlessweb/cosmwasm"
-branch = "mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.cosmwasm-std]
 description = "Standard library for Wasm-based smart contracts on Cosmos blockchains"
@@ -296,7 +297,7 @@ consumers = [
 
 [crates.cosmwasm-std.git]
 url = "https://github.com/permissionlessweb/cosmwasm"
-branch = "mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.cosmwasm-vm]
 description = "VM bindings to run CosmWasm contracts"
@@ -307,7 +308,7 @@ consumers = ["clone-cw-multi-test"]
 
 [crates.cosmwasm-vm.git]
 url = "https://github.com/permissionlessweb/cosmwasm"
-branch = "mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.cosmwasm-vm.features]
 "." = ["ibc2", "iterator", "staking", "stargate"]
@@ -325,7 +326,7 @@ branch = "feat/mvp"
 
 [crates.cw-address-like.zk_git]
 url = "https://github.com/permissionlessweb/cw-plus-plus"
-branch = "zk-mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.cw-asset]
 description = "Helper library for interacting with Cosmos assets (native coins and CW20 tokens)"
@@ -378,7 +379,7 @@ url = "https://github.com/permissionlessweb/cw-ica-controller"
 branch = "bump/cw3"
 
 [crates.cw-ica-controller.zk_git]
-branch = "zk-mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.cw-ica-controller.features]
 "." = ["query"]
@@ -391,7 +392,7 @@ repo_only = true
 
 [crates.cw-multi-test.git]
 url = "https://github.com/permissionlessweb/cw-multi-test"
-branch = "mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.cw-multi-test_zk]
 description = "cw-multi-test-fork with IBC support, built on ZK CosmWasm crates"
@@ -417,7 +418,7 @@ url = "https://github.com/permissionlessweb/cw-multi-test-fork"
 branch = "bump/cw3/official-ibc-fork"
 
 [crates.cw-multi-test_zk.zk_git]
-branch = "zk-mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.cw-orch]
 description = "CosmWasm Orchestrator - multi-environment smart contract scripting"
@@ -630,7 +631,7 @@ branch = "feat/mvp"
 
 [crates.cw-ownable.zk_git]
 url = "https://github.com/permissionlessweb/cw-plus-plus"
-branch = "zk-mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.cw-paginate]
 description = "Helper function for iterating CosmWasm storage maps with pagination"
@@ -645,7 +646,7 @@ branch = "feat/mvp"
 
 [crates.cw-paginate.zk_git]
 url = "https://github.com/permissionlessweb/cw-plus-plus"
-branch = "zk-mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.cw-placeholder]
 description = "CW placeholder contract from WyndDEX"
@@ -656,7 +657,7 @@ consumers = ["wynd-lsd"]
 
 [crates.cw-placeholder.git]
 url = "https://github.com/permissionlessweb/wynddex"
-branch = "mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.cw-placeholder.features]
 "." = ["library"]
@@ -681,7 +682,7 @@ consumers = ["osmosis-rust"]
 
 [crates.cw-schema.git]
 url = "https://github.com/permissionlessweb/cosmwasm"
-branch = "mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.cw-schema-derive]
 description = "Derive macros for cw-schema"
@@ -692,7 +693,7 @@ patch_only = true
 
 [crates.cw-schema-derive.git]
 url = "https://github.com/permissionlessweb/cosmwasm"
-branch = "mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.cw-storage-plus]
 description = "Enhanced storage engines for CosmWasm smart contracts"
@@ -931,7 +932,7 @@ origin = "mine"
 
 [crates.cw721.zk_git]
 url = "https://github.com/permissionlessweb/cw-nfts"
-branch = "zk-mvp"
+branch = "v3.1.0-zk.0"
 origin = "mine"
 
 [crates.cw721-base]
@@ -948,7 +949,7 @@ origin = "mine"
 
 [crates.cw721-base.zk_git]
 url = "https://github.com/permissionlessweb/cw-nfts"
-branch = "zk-mvp"
+branch = "v3.1.0-zk.0"
 origin = "mine"
 
 [crates.cw721-svg]
@@ -1004,7 +1005,7 @@ zk_local = "halo2-axiom/halo2_proofs"
 
 [crates.halo2-axiom.git]
 url = "https://github.com/permissionlessweb/halo2-axiom"
-branch = "mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.halo2_gadgets]
 description = "Halo2 gadgets library (zcash fork)"
@@ -1014,7 +1015,7 @@ consumers = ["terp-rs"]
 
 [crates.halo2_gadgets.git]
 url = "https://github.com/permissionlessweb/halo2"
-branch = "mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.halo2_poseidon]
 description = "Halo2 Poseidon hash (zcash fork)"
@@ -1024,7 +1025,7 @@ consumers = ["terp-rs"]
 
 [crates.halo2_poseidon.git]
 url = "https://github.com/permissionlessweb/halo2"
-branch = "mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.halo2_proofs]
 description = "Halo2 proving system (zcash fork)"
@@ -1035,7 +1036,7 @@ required_default_features_off = ["terp-rs/crates/zk/headstash"]
 
 [crates.halo2_proofs.git]
 url = "https://github.com/permissionlessweb/halo2"
-branch = "mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.halo2_proofs.required_features]
 "terp-rs/crates/zk/headstash" = ["batch"]
@@ -1772,7 +1773,7 @@ consumers = ["abstract", "wynd-lsd", "wynddex"]
 
 [crates.wyndex.git]
 url = "https://github.com/permissionlessweb/wynddex"
-branch = "mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.wyndex-factory]
 description = "WyndDEX factory contract"
@@ -1783,7 +1784,7 @@ consumers = ["abstract", "wynd-lsd", "wynddex"]
 
 [crates.wyndex-factory.git]
 url = "https://github.com/permissionlessweb/wynddex"
-branch = "mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.wyndex-multi-hop]
 description = "WyndDEX multi-hop swap contract"
@@ -1794,7 +1795,7 @@ consumers = ["abstract", "wynddex"]
 
 [crates.wyndex-multi-hop.git]
 url = "https://github.com/permissionlessweb/wynddex"
-branch = "mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.wyndex-pair]
 description = "WyndDEX pair contract"
@@ -1805,7 +1806,7 @@ consumers = ["abstract", "wynddex"]
 
 [crates.wyndex-pair.git]
 url = "https://github.com/permissionlessweb/wynddex"
-branch = "mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.wyndex-pair-lsd]
 description = "WyndDEX LSD pair contract"
@@ -1816,7 +1817,7 @@ consumers = ["wynd-lsd", "wynddex"]
 
 [crates.wyndex-pair-lsd.git]
 url = "https://github.com/permissionlessweb/wynddex"
-branch = "mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.wyndex-stake]
 description = "WyndDEX staking contract"
@@ -1827,7 +1828,7 @@ consumers = ["abstract", "wynd-lsd", "wynddex"]
 
 [crates.wyndex-stake.git]
 url = "https://github.com/permissionlessweb/wynddex"
-branch = "mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.xion-account]
 description = "Xion smart account contract for Abstract"
@@ -1849,7 +1850,7 @@ zk_local = "cosmwasm/packages/zk"
 
 [crates.zk-cosmwasm.git]
 url = "https://github.com/permissionlessweb/cosmwasm"
-branch = "mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.zk-headstash]
 description = "ZK headstash circuit - secp256k1 key pairing, genesis merkle inclusion, nullifier integrity, note commitment"
@@ -1863,7 +1864,7 @@ branch = "genesis-sinsemilla"
 
 [crates.zk-headstash.zk_git]
 url = "https://github.com/hard-nett/airdrop"
-branch = "zk-mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.zk-test-press]
 description = "ZK test press for genesis sinsemilla airdrop"
@@ -1877,7 +1878,7 @@ branch = "genesis-sinsemilla"
 
 [crates.zk-test-press.zk_git]
 url = "https://github.com/hard-nett/airdrop"
-branch = "zk-mvp"
+branch = "v3.1.0-zk.0"
 
 [crates.zk-test-press.features]
 "." = ["interface"]

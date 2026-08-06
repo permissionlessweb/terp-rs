@@ -93,15 +93,25 @@ ZK is a profile overlay on the same machinery (`zk_*` keys in the matrix).
 
 Heal algorithm: index all packages under monorepo root → rewrite broken/absolute locals → prefer non-`vancw/` forks.
 
-## Dual-identity / freeze drift
+## Branch labels
+
+See **[BRANCHING.md](./BRANCHING.md)**. Default product line:
+
+```text
+v3.1.0-zk.0    # CosmWasm 3.1.0-dev line + zk fork sub-version 0
+```
+
+Retired: `cw3-base-local-freeze`, `cw3-base-git-freeze`, freeze-as-default `mvp`/`zk-mvp`.
+
+## Dual-identity / version-line drift
 
 Cargo treats these as **different crates** even when the package name matches:
 
 | Source | Example |
 |---|---|
 | path | `../cosmwasm/packages/std` (e.g. via `cw721-nips`) |
-| git branch A | `permissionlessweb/cosmwasm` @ `cw3-base-local-freeze` |
-| git branch B | same URL @ `mvp` / `main` |
+| git branch A | `permissionlessweb/cosmwasm` @ `v3.1.0-zk.0` |
+| git branch B | same URL @ stale `mvp` / retired freeze |
 
 Symptoms: `cw-controllers` typed against one CosmWasm tip, workspace against
 another → dual `cosmwasm_std` / `cw_schema` compile failures.
@@ -110,23 +120,20 @@ another → dual `cosmwasm_std` / `cw_schema` compile failures.
 
 - Prefer **path** CosmWasm + path `cw-minus` in consumer workspaces, **or**
 - `dep.py switch dev` (git-shaped ws-deps + `[patch.'https://…']` → local path)
-- Do **not** mix freeze-branch ws-deps with matrix `mvp` + path leaves without
-  git-url patches
-- Fork workspaces: no self-referential `git = own-repo, branch = main` for
-  internal packages (use `path = "packages/…"`)
+- One product branch line monorepo-wide: **`v*-zk.*`** (see BRANCHING.md)
+- Fork workspaces: no self-referential `git = own-repo` for internal packages
+  (use `path = "packages/…"`)
 - Matrix `package` must match real `[package].name` (e.g. `clone-cw-multi-test`
   publishes as `abstract-cw-multi-test`)
 
-After any hybrid switch, regenerate locks so stale freeze/mvp entries die:
+After any hybrid switch, regenerate locks so stale multi-branch entries die:
 
 ```bash
 rm -f Cargo.lock && cargo generate-lockfile
 python3 _scripts/dep.py verify --mode dev --workspace dao-contracts
 ```
 
-**Machine basis:** treat **groot** product tips as source of truth; pull into
-lab laptops, then layer preventive tooling (this section / DUAL-IDENTITY verify)
-on top — do not reintroduce freeze-only local hybrids as default.
+**Machine basis:** **groot** product tips (`v*-zk.*`) are source of truth.
 
 ## Recommended git workflow
 
