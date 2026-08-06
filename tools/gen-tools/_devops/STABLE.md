@@ -9,13 +9,35 @@ Locked-in workflow for local ↔ remote crate swapping across the monorepo.
 | Config | `_devops/dep-config.toml` | `monorepo_root`, policy flags |
 | Matrix | `_devops/dependency-matrix.toml` | Desired state per forked crate |
 | Mode state | `_devops/.dep-mode` | Last full switch mode |
+| Nix repos | `_devops/nix/repos.json` | Generated clone list (from matrix) |
+| Flake | `terp-core/crates/flake.nix` | Toolchain + bootstrap apps |
 | CLI | `_scripts/dep.py` | **Stable entrypoint** |
 | Engine | `_scripts/dep-switch.py` + `dep_common.py` | Implementation |
 
 **Monorepo root** defaults to `terp-core/crates` (resolved from config).  
 Override with `TERP_DEP_ROOT` / `DEP_MONOREPO_ROOT` if needed.
 
+**Nix complements; it does not replace switch.** Flake clones fork *trees*;
+`dep.py switch` still rewrites Cargo.toml. See `_devops/nix/README.md`.
+
 **Rust `gen-tools deps`** is experimental (incomplete parity). Prefer `dep.py` / just recipes below.
+
+## First-time bootstrap (new machine / empty crates/)
+
+```bash
+# With Nix (recommended for newcomers)
+cd terp-core/crates
+nix develop
+nix run .#setup              # export + clone all matrix forks + switch local
+
+# Without Nix
+export TERP_DEP_ROOT="$PWD"
+python3 terp-rs/tools/gen-tools/_scripts/dep.py bootstrap
+python3 terp-rs/tools/gen-tools/_scripts/dep.py validate
+python3 terp-rs/tools/gen-tools/_scripts/dep.py switch local
+```
+
+This avoids hand-syncing 50 git remotes. Day-to-day still uses `switch local|git|dev`.
 
 ## Daily commands
 
@@ -65,8 +87,46 @@ ZK is a profile overlay on the same machinery (`zk_*` keys in the matrix).
 3. `[package].name` at that path must match matrix `package` (or key)
 4. Virtual workspace manifests are not valid package locals
 5. `dep.py switch` refuses to run if validate would fail (unless `--force`)
+6. **Single identity** for CosmWasm-stack crates (`cosmwasm-std`, `cw-schema`,
+   `cw-controllers`, …): `dep.py verify` reports `DUAL-IDENTITY` if the same
+   package name resolves from two sources (path + git, or two git branches).
 
 Heal algorithm: index all packages under monorepo root → rewrite broken/absolute locals → prefer non-`vancw/` forks.
+
+## Dual-identity / freeze drift
+
+Cargo treats these as **different crates** even when the package name matches:
+
+| Source | Example |
+|---|---|
+| path | `../cosmwasm/packages/std` (e.g. via `cw721-nips`) |
+| git branch A | `permissionlessweb/cosmwasm` @ `cw3-base-local-freeze` |
+| git branch B | same URL @ `mvp` / `main` |
+
+Symptoms: `cw-controllers` typed against one CosmWasm tip, workspace against
+another → dual `cosmwasm_std` / `cw_schema` compile failures.
+
+**Prevention (monorepo develop shape — matches groot product worktrees):**
+
+- Prefer **path** CosmWasm + path `cw-minus` in consumer workspaces, **or**
+- `dep.py switch dev` (git-shaped ws-deps + `[patch.'https://…']` → local path)
+- Do **not** mix freeze-branch ws-deps with matrix `mvp` + path leaves without
+  git-url patches
+- Fork workspaces: no self-referential `git = own-repo, branch = main` for
+  internal packages (use `path = "packages/…"`)
+- Matrix `package` must match real `[package].name` (e.g. `clone-cw-multi-test`
+  publishes as `abstract-cw-multi-test`)
+
+After any hybrid switch, regenerate locks so stale freeze/mvp entries die:
+
+```bash
+rm -f Cargo.lock && cargo generate-lockfile
+python3 _scripts/dep.py verify --mode dev --workspace dao-contracts
+```
+
+**Machine basis:** treat **groot** product tips as source of truth; pull into
+lab laptops, then layer preventive tooling (this section / DUAL-IDENTITY verify)
+on top — do not reintroduce freeze-only local hybrids as default.
 
 ## Recommended git workflow
 

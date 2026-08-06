@@ -2259,6 +2259,37 @@ def verify_workspace_resolution(
     for pkg in meta.get("packages", []):
         by_name.setdefault(pkg["name"], []).append(pkg)
 
+    lookup = pkg_to_matrix(matrix)
+    known = matrix_pkg_names(matrix)
+
+    # Dual/multi-identity: same crate name from multiple sources (classic freeze/matrix drift).
+    # e.g. cosmwasm-std as path + git@freeze + git@mvp → type mismatches in dao-testing.
+    critical_unity = {
+        "cosmwasm-std",
+        "cosmwasm-schema",
+        "cosmwasm-core",
+        "cosmwasm-crypto",
+        "cw-schema",
+        "cw-storage-plus",
+        "cw-controllers",
+        "cw-utils",
+        "cw2",
+    }
+    for name, pkgs in sorted(by_name.items()):
+        if len(pkgs) <= 1:
+            continue
+        if name not in critical_unity and name not in known and name not in lookup:
+            continue
+        sources = sorted(
+            {(pkg.get("source") or f"path:{pkg.get('manifest_path', '')}") for pkg in pkgs}
+        )
+        if len(sources) > 1:
+            errors.append(
+                f"{workspace_dir.name}: DUAL-IDENTITY '{name}' has {len(sources)} sources "
+                f"(matrix mode drift — prefer `dep.py switch dev` or unify "
+                f"[patch.'git-url'] → single path tip): {sources[:4]}"
+            )
+
     # Determine expected source kind for mode
     is_dev = mode in DEV_MODE_MAP
     if is_dev:
@@ -2275,9 +2306,6 @@ def verify_workspace_resolution(
             expect_kind = "registry"
         else:
             expect_kind = None
-
-    lookup = pkg_to_matrix(matrix)
-    known = matrix_pkg_names(matrix)
 
     # Only check packages that appear in this workspace's package set
     for name, pkgs in sorted(by_name.items()):
@@ -2386,5 +2414,260 @@ def verify_mode_resolution(
         errs = verify_workspace_resolution(ws_dir, matrix, mode, defaults=defaults)
         report["checked"].append(proj.rel_path)
         report["errors"].extend(errs)
+
+    return report
+
+
+# ── Nix / monorepo bootstrap (complements dep-switch; does not replace it) ───
+
+NIX_DIR = DEVOPS_DIR / "nix"
+REPOS_JSON_PATH = NIX_DIR / "repos.json"
+
+
+def github_repo_name(url: str) -> str:
+    """Extract repo name from a git URL."""
+    u = url.rstrip("/")
+    if u.endswith(".git"):
+        u = u[:-4]
+    return u.split("/")[-1]
+
+
+def collect_bootstrap_repos(matrix: dict = None, defaults: dict = None) -> list:
+    """Collapse matrix crates into unique git clones for monorepo bootstrap.
+
+    Returns list of dicts:
+      {
+        id, url, branch, dest,  # dest = top-level dir under REPO_ROOT
+        package_paths,          # matrix local paths living inside dest
+        crate_keys,             # matrix keys covered
+        zk_branch,              # optional
+      }
+    """
+    from collections import Counter, defaultdict
+
+    matrix = matrix if matrix is not None else load_matrix()
+    defaults = defaults if defaults is not None else load_defaults()
+
+    # url -> accum
+    acc = defaultdict(lambda: {
+        "branches": Counter(),
+        "zk_branches": Counter(),
+        "tops": Counter(),
+        "package_paths": set(),
+        "keys": [],
+    })
+
+    for key, info in matrix.items():
+        if not isinstance(info, dict):
+            continue
+
+        url, branch = resolve_git_source(info, "git", defaults)
+        zk_url, zk_branch = resolve_git_source(info, "zk_git", defaults)
+
+        # Prefer primary git URL; zk may share same URL with different branch
+        primary = url or zk_url
+        if not primary or primary == "N/A":
+            continue
+
+        e = acc[primary]
+        e["keys"].append(key)
+        if branch:
+            e["branches"][branch] += 1
+        if zk_url == primary and zk_branch:
+            e["zk_branches"][zk_branch] += 1
+        elif zk_url and zk_url != primary:
+            # separate zk remote — rare; track as its own entry via recursion-like insert
+            ze = acc[zk_url]
+            ze["keys"].append(key + "#zk")
+            if zk_branch:
+                ze["branches"][zk_branch] += 1
+
+        for field in ("local", "zk_local"):
+            loc = info.get(field)
+            if not loc or loc == "N/A":
+                continue
+            norm = normalize_matrix_local(loc)
+            if not norm:
+                continue
+            e["package_paths"].add(norm)
+            top = norm.split("/")[0]
+            if top:
+                e["tops"][top] += 1
+
+    repos = []
+    for url, e in sorted(acc.items(), key=lambda kv: github_repo_name(kv[0]).lower()):
+        if e["branches"]:
+            branch = e["branches"].most_common(1)[0][0]
+        else:
+            branch = defaults.get("git_branch", "main")
+        zk_branch = None
+        if e["zk_branches"]:
+            zk_branch = e["zk_branches"].most_common(1)[0][0]
+
+        if e["tops"]:
+            dest = e["tops"].most_common(1)[0][0]
+        else:
+            dest = github_repo_name(url)
+
+        # Special cases: avoid collapsing unrelated tops
+        # If tops disagree heavily, prefer github name if present in tops
+        gname = github_repo_name(url)
+        if gname in e["tops"]:
+            dest = gname
+        # cw-multi-test-fork clones often map to clone-cw-multi-test or cw-multi-test-fork
+        if "cw-multi-test-fork" in url and "clone-cw-multi-test" in e["tops"]:
+            dest = "clone-cw-multi-test"
+        if "cw-multi-test-fork" in url and "cw-multi-test-fork" in e["tops"]:
+            dest = "cw-multi-test-fork"
+
+        repos.append({
+            "id": gname,
+            "url": url,
+            "branch": branch,
+            "zk_branch": zk_branch,
+            "dest": dest,
+            "package_paths": sorted(e["package_paths"]),
+            "crate_keys": sorted(set(e["keys"])),
+        })
+
+    # Dedup by dest: prefer more package_paths
+    by_dest = {}
+    for r in repos:
+        d = r["dest"]
+        if d not in by_dest or len(r["package_paths"]) > len(by_dest[d]["package_paths"]):
+            by_dest[d] = r
+    return sorted(by_dest.values(), key=lambda r: r["dest"])
+
+
+def export_nix_repos(path: Path = None, matrix: dict = None) -> Path:
+    """Write repos.json for Nix bootstrap + documentation."""
+    path = path or REPOS_JSON_PATH
+    path.parent.mkdir(parents=True, exist_ok=True)
+    repos = collect_bootstrap_repos(matrix=matrix)
+    payload = {
+        "schema_version": 1,
+        "description": (
+            "Unique git forks to clone under monorepo_root for first-time bootstrap. "
+            "Generated from dependency-matrix.toml — do not hand-edit; run dep.py nix-export."
+        ),
+        "monorepo_root_hint": "terp-core/crates (see dep-config.toml monorepo_root)",
+        "generated_by": "dep.py nix-export",
+        "repo_count": len(repos),
+        "repos": repos,
+    }
+    path.write_text(json.dumps(payload, indent=2) + "\n")
+    return path
+
+
+def bootstrap_status(repos: list = None) -> dict:
+    """Report which bootstrap dests exist under REPO_ROOT."""
+    repos = repos if repos is not None else collect_bootstrap_repos()
+    present = []
+    missing = []
+    for r in repos:
+        dest = REPO_ROOT / r["dest"]
+        git_ok = (dest / ".git").exists() or (dest / ".git").is_file()
+        if dest.is_dir() and (git_ok or any(dest.iterdir())):
+            present.append({**r, "path": str(dest), "has_git": git_ok})
+        else:
+            missing.append({**r, "path": str(dest)})
+    return {
+        "repo_root": str(REPO_ROOT),
+        "total": len(repos),
+        "present": present,
+        "missing": missing,
+    }
+
+
+def bootstrap_clone_repos(
+    repos: list = None,
+    *,
+    dry_run: bool = False,
+    shallow: bool = True,
+    update: bool = False,
+    only_missing: bool = True,
+    jobs: int = 1,
+) -> dict:
+    """Clone matrix forks into REPO_ROOT/<dest>.
+
+    Complements dep-switch: gets the *source trees* onto disk so path mode works.
+    Does not rewrite Cargo.toml (use dep.py switch for that).
+    """
+    repos = repos if repos is not None else collect_bootstrap_repos()
+    report = {
+        "repo_root": str(REPO_ROOT),
+        "cloned": [],
+        "skipped": [],
+        "updated": [],
+        "failed": [],
+        "dry_run": dry_run,
+    }
+
+    def _run(cmd, cwd=None):
+        return subprocess.run(
+            cmd, cwd=cwd, capture_output=True, text=True, timeout=600,
+        )
+
+    for r in repos:
+        dest = REPO_ROOT / r["dest"]
+        url = r["url"]
+        branch = r["branch"]
+
+        if dest.exists() and any(dest.iterdir()):
+            if only_missing and not update:
+                report["skipped"].append({"dest": r["dest"], "reason": "exists"})
+                continue
+            if update and (dest / ".git").exists():
+                if dry_run:
+                    report["updated"].append({"dest": r["dest"], "action": "fetch+checkout"})
+                    continue
+                # fetch branch tip
+                r1 = _run(["git", "-C", str(dest), "fetch", "origin", branch])
+                if r1.returncode != 0:
+                    report["failed"].append({
+                        "dest": r["dest"], "step": "fetch",
+                        "stderr": (r1.stderr or "")[-400:],
+                    })
+                    continue
+                r2 = _run(["git", "-C", str(dest), "checkout", branch])
+                r3 = _run(["git", "-C", str(dest), "pull", "--ff-only", "origin", branch])
+                if r2.returncode != 0 or r3.returncode != 0:
+                    report["failed"].append({
+                        "dest": r["dest"], "step": "checkout/pull",
+                        "stderr": ((r2.stderr or "") + (r3.stderr or ""))[-400:],
+                    })
+                else:
+                    report["updated"].append({"dest": r["dest"]})
+                continue
+            report["skipped"].append({"dest": r["dest"], "reason": "exists-no-update"})
+            continue
+
+        if dry_run:
+            report["cloned"].append({"dest": r["dest"], "url": url, "branch": branch})
+            continue
+
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        cmd = ["git", "clone", "--branch", branch]
+        if shallow:
+            cmd += ["--depth", "1", "--single-branch"]
+        cmd += [url, str(dest)]
+        result = _run(cmd)
+        if result.returncode != 0:
+            # retry without branch (default branch) then checkout
+            cmd2 = ["git", "clone"]
+            if shallow:
+                cmd2 += ["--depth", "1"]
+            cmd2 += [url, str(dest)]
+            result2 = _run(cmd2)
+            if result2.returncode != 0:
+                report["failed"].append({
+                    "dest": r["dest"],
+                    "url": url,
+                    "branch": branch,
+                    "stderr": (result.stderr or result2.stderr or "")[-500:],
+                })
+                continue
+            _run(["git", "-C", str(dest), "checkout", branch])
+        report["cloned"].append({"dest": r["dest"], "url": url, "branch": branch})
 
     return report

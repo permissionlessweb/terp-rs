@@ -138,12 +138,13 @@ branch = "cosmwasm3"
 
 [crates.clone-cw-multi-test]
 description = "Fork of cw-multi-test adapted for local execution with clone testing, dual storage, and on-chain state emulation"
-package = "cw-multi-test"
+# Actual [package].name in clone-cw-multi-test/Cargo.toml (not "cw-multi-test").
+package = "abstract-cw-multi-test"
 stable = "3.0.1"
 local = "clone-cw-multi-test"
 zk_local = "clone-cw-multi-test"
-dep_aliases = ["clone-cw-multi-test"]
-consumers = ["cw-orchestrator"]
+dep_aliases = ["clone-cw-multi-test", "cw-multi-test", "abstract-cw-multi-test"]
+consumers = ["cw-orchestrator", "dao-contracts"]
 
 [crates.clone-cw-multi-test.git]
 url = "https://github.com/permissionlessweb/cw-multi-test-fork"
