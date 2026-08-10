@@ -53,7 +53,7 @@ cat >"${REPORT}" <<EOF
 - \`scripts-ibc-preflight offline\`
 - \`scripts-ibc-offline\` (lib + ibc_unit + ibc_golden + rebuild-from-public)
 - \`scripts-ibc-validate\`
-- lib tests: terp-auth, terp-account, crosslink-light-client, cw721-nips, terp-rs
+- dense lib packs via `scripts/ci/dense-packs.sh core-libs` (multi-package cargo)
 
 ## Notes
 

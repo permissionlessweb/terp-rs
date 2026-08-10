@@ -35,6 +35,7 @@ use cw_orch::daemon::{
     CosmosOptions, DaemonBuilder, TxSender as _,
     queriers::{Ibc, Staking},
 };
+use cw_orch::environment::NetworkInfoOwned;
 use cw_orch::prelude::*;
 use ict_rs::prelude::*;
 

@@ -271,21 +271,38 @@ scripts-ibc-harness:
 # ---------------------------------------------------------------------------
 
 # Tier 0 — always-on offline gate
+# Offline IBC stays serial; internal libs via dense multi-package cargo (see scripts/ci/dense-packs.sh).
 ci-core: scripts-ibc-preflight scripts-ibc-offline scripts-ibc-validate
-    cargo test -p terp-auth --lib
-    cargo test -p terp-account --lib
-    cargo test -p crosslink-light-client --lib
-    cargo test -p cw721-nips --lib
-    cargo test -p terp-rs --lib
+    ./scripts/ci/dense-packs.sh core-libs
 
-# Tier 1 — contracts + full non-ignored terp-scripts (no Docker)
+# Tier 1 — contracts (dense multi-package) + full non-ignored terp-scripts (no Docker)
+# Host default CI_DENSE_MODE=all (one multi-p invocation). GHA uses matrix packs.
+# Optional: CI_DENSE_MODE=matrix CI_DENSE_PARALLEL=1 for isolated parallel packs on host.
 ci-extended:
     #!/usr/bin/env bash
     set -euo pipefail
-    for p in terp-ed25519 terp-passkey terp-vsck terp-eth terp-irl terp-recovery terp-authenticator-suite cw-ics08-wasm-crosslink; do
-      echo ">>> cargo test -p $p --lib"
-      cargo test -p "$p" --lib
-    done
+    ./scripts/ci/dense-packs.sh contracts-core
+    ./scripts/ci/dense-packs.sh contracts-wasm
+    cargo test -p terp-scripts --lib --tests
+
+# List dense pack membership (debug / docs)
+ci-dense-list:
+    ./scripts/ci/dense-packs.sh list
+
+# Host simulation of GHA dense matrix (serial packs, shared target/)
+ci-core-matrix:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    just scripts-ibc-preflight offline
+    just scripts-ibc-offline
+    just scripts-ibc-validate
+    CI_DENSE_MODE=matrix ./scripts/ci/dense-packs.sh core-libs
+
+ci-extended-matrix:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    CI_DENSE_MODE=matrix ./scripts/ci/dense-packs.sh contracts-core
+    ./scripts/ci/dense-packs.sh contracts-wasm
     cargo test -p terp-scripts --lib --tests
 
 # Tier 2 — expensive (Docker + workspace). Maintainer / nightly only.

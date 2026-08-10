@@ -1,17 +1,17 @@
 {
   "chains": [
-    "gitopia",
     "juno",
-    "atomone",
-    "evmos",
-    "secret",
-    "akash",
-    "terp",
     "omniflix",
+    "evmos",
+    "akash",
+    "secret",
+    "osmosis",
     "stargaze",
-    "osmosis"
+    "atomone",
+    "gitopia",
+    "terp"
   ],
-  "generated_at": "1784592955",
+  "generated_at": "1786160776",
   "generator": "terp-scripts/bin/terp-ibc rebuild-from-public",
   "invariant_findings": 0,
   "max_hops": 3,

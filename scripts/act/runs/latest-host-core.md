@@ -1,22 +1,11 @@
-# host ci-core — 20260721T001505Z
+# Host core CI result — 20260808T035956Z
 
 | Field | Value |
 |-------|--------|
-| result | **PASS** |
-| exit | 0 |
-| duration_s | 56 |
-| commit | `8f52a7f` (`8f52a7f172d77d3be90687e7aa2a2898cda8cd44`) |
-| cwd | `/Users/returniflost/abstract/terp-core/crates/terp-rs` |
+| date_utc | 20260808T035956Z |
 | command | `just ci-core` |
-
-## Recipe coverage
-
-- `scripts-ibc-preflight offline`
-- `scripts-ibc-offline` (lib + ibc_unit + ibc_golden + rebuild-from-public)
-- `scripts-ibc-validate`
-- lib tests: terp-auth, terp-account, crosslink-light-client, cw721-nips, terp-rs
-
-## Notes
-
-This is the **authoritative** local gate. act is optional YAML fidelity only
-(`just act-wire` / `just act-core`) and must always tear down containers.
+| duration_s | **29** |
+| result | **PASS** |
+| commit | `37ee97d` (`37ee97d4543db5a4204b85b3a49ac11c2e09ab59`) |
+| cold_first_green_s | 248 |
+| notes | Warm re-baseline after Cargo.lock 0.0.2 + monorepo patches (t_dd89f610) |

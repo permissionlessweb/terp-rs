@@ -1,5 +1,6 @@
 # Tier 1 — path / label gated. Contracts + more crates when those paths change.
-# Also runnable via workflow_dispatch (maintainer) or label `ci-extended`.
+# Dense packing: 3 balanced contract packs + independent scripts-integration;
+# optional zk heavy packs no longer wait on contracts-core (independent).
 name: CI Extended
 
 on:
@@ -12,6 +13,7 @@ on:
       - "Cargo.toml"
       - "Cargo.lock"
       - "justfile"
+      - "scripts/ci/**"
       - ".github/workflows/ci-extended.yml"
     types: [opened, synchronize, reopened, labeled, ready_for_review]
   push:
@@ -22,6 +24,7 @@ on:
       - "tests/**"
       - "Cargo.toml"
       - "Cargo.lock"
+      - "scripts/ci/**"
   workflow_dispatch:
     inputs:
       full_contracts:
@@ -77,12 +80,20 @@ jobs:
           echo "heavy_contracts=$heavy" >> "$GITHUB_OUTPUT"
           echo "decide: run=$run heavy_contracts=$heavy"
 
+  # Dense 3-pack matrix — multi-package cargo per cell (not 8 sparse jobs)
   contracts-core:
-    name: contracts (core authenticators)
+    name: contracts (${{ matrix.pack }})
     needs: should-run
     if: needs.should-run.outputs.run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - pack: contracts-a
+          - pack: contracts-b
+          - pack: contracts-c
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -92,40 +103,40 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: ". -> target"
-          shared-key: contracts-core
-      - name: Lib tests — authenticator-adjacent contracts
+          shared-key: contracts-${{ matrix.pack }}
+      - name: Dense pack lib tests
+        env:
+          CI_DENSE_PACK: ${{ matrix.pack }}
+          CI_DENSE_MODE: matrix
+        run: ./scripts/ci/dense-packs.sh pack "${CI_DENSE_PACK}"
+      - name: Wasm check (pack-local subset)
+        # Only packages that both need wasm and live in this pack (avoids re-checking all packs).
         run: |
           set -euo pipefail
-          # Workspace members that are usually unit-testable without Docker.
-          pkgs=(
-            terp-ed25519
-            terp-passkey
-            terp-vsck
-            terp-eth
-            terp-irl
-            terp-recovery
-            terp-authenticator-suite
-            cw-ics08-wasm-crosslink
-          )
-          for p in "${pkgs[@]}"; do
-            echo "::group::cargo test -p $p --lib"
-            cargo test -p "$p" --lib
-            echo "::endgroup::"
-          done
-      - name: Wasm check (selected contracts)
-        run: |
-          set -euo pipefail
-          # Compile-check for cosmwasm targets when the package supports it.
-          for p in terp-ed25519 terp-passkey terp-vsck cw-ics08-wasm-crosslink; do
-            echo "::group::wasm check $p"
-            cargo check -p "$p" --target wasm32-unknown-unknown --lib || \
-              cargo check -p "$p" --lib
-            echo "::endgroup::"
-          done
+          case "${{ matrix.pack }}" in
+            contracts-a)
+              for p in terp-ed25519 terp-passkey terp-vsck; do
+                echo "::group::wasm check $p"
+                cargo check -p "$p" --target wasm32-unknown-unknown --lib || cargo check -p "$p" --lib
+                echo "::endgroup::"
+              done
+              ;;
+            contracts-c)
+              for p in cw-ics08-wasm-crosslink; do
+                echo "::group::wasm check $p"
+                cargo check -p "$p" --target wasm32-unknown-unknown --lib || cargo check -p "$p" --lib
+                echo "::endgroup::"
+              done
+              ;;
+            *)
+              echo "no wasm subset for ${{ matrix.pack }}"
+              ;;
+          esac
 
+  # Independent of contracts-core — zk packs are not data-dependent on core contracts
   contracts-heavy:
     name: contracts (zk / optional)
-    needs: [should-run, contracts-core]
+    needs: [should-run]
     if: needs.should-run.outputs.run == 'true' && needs.should-run.outputs.heavy_contracts == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 90
@@ -138,20 +149,8 @@ jobs:
         with:
           workspaces: ". -> target"
           shared-key: contracts-heavy
-      - name: Optional zk-related packages
-        run: |
-          set -euo pipefail
-          # May be heavy or feature-gated; fail the job if they break.
-          pkgs=(
-            terp-zkjwt
-            terp-zkposiedon
-            terp-recovery-poseidon-demo
-          )
-          for p in "${pkgs[@]}"; do
-            echo "::group::cargo test -p $p --lib"
-            cargo test -p "$p" --lib
-            echo "::endgroup::"
-          done
+      - name: Optional zk-related packages (multi-package dense)
+        run: ./scripts/ci/dense-packs.sh contracts-heavy
 
   scripts-integration:
     name: terp-scripts non-ignored integration

@@ -82,3 +82,58 @@ terp-eth = { path = "contracts/smart-accounts/terp-eth" }
 terp-irl = { path = "contracts/smart-accounts/terp-irl" }
 terp-zkpallas = { path = "contracts/smart-accounts/terp-zkpallas" }
 cw-private-dex = { path = "contracts/revenue/private-dex" }
+
+# Monorepo path patches — force git/crates.io CosmWasm stack onto local forks.
+# Prevents re-resolve of abstract → cw-asset → permissionlessweb/cw-minus without cosmwasm-schema.
+
+[patch.crates-io]
+cosmwasm-core = { path = "../cosmwasm/packages/core" }
+cosmwasm-crypto = { path = "../cosmwasm/packages/crypto" }
+cosmwasm-derive = { path = "../cosmwasm/packages/derive" }
+cosmwasm-schema = { path = "../cosmwasm/packages/schema" }
+cosmwasm-schema-derive = { path = "../cosmwasm/packages/schema-derive" }
+cosmwasm-std = { path = "../cosmwasm/packages/std" }
+cw-schema = { path = "../cosmwasm/packages/cw-schema" }
+cw-schema-derive = { path = "../cosmwasm/packages/cw-schema-derive" }
+cw-storage-plus = { path = "../cw-storage-plus" }
+cw-utils = { path = "../cw-minus/packages/cw-utils" }
+cw2 = { path = "../cw-minus/packages/cw2" }
+cw-controllers = { path = "../cw-minus/packages/controllers" }
+
+[patch."https://github.com/permissionlessweb/cosmwasm"]
+cosmwasm-core = { path = "../cosmwasm/packages/core" }
+cosmwasm-crypto = { path = "../cosmwasm/packages/crypto" }
+cosmwasm-derive = { path = "../cosmwasm/packages/derive" }
+cosmwasm-schema = { path = "../cosmwasm/packages/schema" }
+cosmwasm-schema-derive = { path = "../cosmwasm/packages/schema-derive" }
+cosmwasm-std = { path = "../cosmwasm/packages/std" }
+cw-schema = { path = "../cosmwasm/packages/cw-schema" }
+cw-schema-derive = { path = "../cosmwasm/packages/cw-schema-derive" }
+
+[patch."https://github.com/permissionlessweb/cw-minus"]
+cw-controllers = { path = "../cw-minus/packages/controllers" }
+cw-utils = { path = "../cw-minus/packages/cw-utils" }
+cw2 = { path = "../cw-minus/packages/cw2" }
+
+[patch."https://github.com/permissionlessweb/cw-plus"]
+cw1 = { path = "../cw-plus/packages/cw1" }
+cw20 = { path = "../cw-plus/packages/cw20" }
+cw20-base = { path = "../cw-plus/contracts/cw20-base" }
+cw20-ics20 = { path = "../cw-plus/contracts/cw20-ics20" }
+cw3 = { path = "../cw-plus/packages/cw3" }
+cw4 = { path = "../cw-plus/packages/cw4" }
+
+[patch."https://github.com/permissionlessweb/cw-plus-plus"]
+cw-address-like = { path = "../cw-plus-plus/packages/address-like" }
+cw-ownable = { path = "../cw-plus-plus/packages/ownable" }
+cw-paginate = { path = "../cw-plus-plus/packages/paginate" }
+
+[patch."https://github.com/permissionlessweb/cw-asset"]
+cw-asset = { path = "../cw-asset" }
+
+[patch."https://github.com/permissionlessweb/cw-storage-plus"]
+cw-storage-plus = { path = "../cw-storage-plus" }
+
+[patch."https://github.com/permissionlessweb/cw-packages"]
+cw-clearable = { path = "../cw-packages/cw-clearable" }
+cw-blob = { path = "../cw-packages/contracts/cw-blob" }

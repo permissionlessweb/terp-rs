@@ -1,16 +1,16 @@
 {
   "metadata": {
     "chains": [
-      "gitopia",
       "juno",
-      "atomone",
-      "evmos",
-      "secret",
-      "akash",
-      "terp",
       "omniflix",
+      "evmos",
+      "akash",
+      "secret",
+      "osmosis",
       "stargaze",
-      "osmosis"
+      "atomone",
+      "gitopia",
+      "terp"
     ],
     "generated_at": "",
     "total_routes": 18

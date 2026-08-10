@@ -56,6 +56,22 @@ just act-teardown
 
 Details: `scripts/act/README.md`. Hermes profile: `ci-act-tester`.
 
+## Dense parallel packing
+
+Independent lib/contract packages run as **dense multi-package packs** (host:
+single multi-`-p` cargo; GHA: small matrix of packs), not one sparse job per
+crate. Offline IBC preflight→rebuild→validate stays **serial**.
+
+| Entry | Role |
+|-------|------|
+| `just ci-core` / `ci-extended` | Host dense packing (`CI_DENSE_MODE=all`) |
+| `just ci-dense-list` | Print pack membership |
+| `just ci-core-matrix` / `ci-extended-matrix` | Host simulation of GHA packs |
+| `scripts/ci/dense-packs.sh` | Pack definitions + runner |
+| `docs/ci/dense-parallel-packing.md` | Design: strategy, shards, serial exceptions |
+
+Env: `CI_DENSE_MODE`, `CI_DENSE_PARALLEL`, `CI_DENSE_PACK` — see design note.
+
 ## What is *not* in CI
 
 - Live mainnet `terp-ibc generate` (needs `MAIN_MNEMONIC` + gRPC) — use preflight + human/live mode only.
