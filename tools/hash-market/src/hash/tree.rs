@@ -36,12 +36,14 @@ pub fn build(entries: &[(String, u32)]) -> Result<(String, HashMap<String, (u32,
         bail!("entry list is empty");
     }
 
-    // Deduplicate by address while preserving order
+    // Deduplicate by address, then sort so leaf order (and thus the root)
+    // does not depend on caller HashMap / insertion order.
     let mut seen = std::collections::HashSet::new();
-    let entries: Vec<&(String, u32)> = entries
+    let mut entries: Vec<&(String, u32)> = entries
         .iter()
         .filter(|(a, _)| seen.insert(a.as_str()))
         .collect();
+    entries.sort_by(|a, b| a.0.cmp(&b.0));
 
     let leaves: Vec<[u8; 32]> = entries.iter().map(|(a, alloc)| leaf(a, *alloc)).collect();
     let (root, layers) = build_layers(leaves);

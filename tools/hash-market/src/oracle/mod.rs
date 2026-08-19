@@ -269,7 +269,8 @@ pub fn aggregate_bounds(
 
     let scale = 10f64.powi(decimals as i32);
     let mantissa = (value * scale).round() as i128;
-    let sources: Vec<String> = fresh.iter().map(|o| o.source.clone()).collect();
+    let mut sources: Vec<String> = fresh.iter().map(|o| o.source.clone()).collect();
+    sources.sort();
     let as_of = fresh.iter().map(|o| o.observed_at).max().unwrap_or(0);
 
     Ok(OracleBound {
