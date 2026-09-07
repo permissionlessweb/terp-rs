@@ -109,13 +109,7 @@ mod tests {
             vec![],
         );
         client_state.is_frozen = true;
-        let consensus_state = ConsensusState {
-            bft_height: 0,
-            pow_anchor_height: 0,
-            pow_anchor_hash: [0u8; 32],
-            timestamp: 0,
-            state_commitment: [0u8; 32],
-        };
+        let consensus_state = ConsensusState::v1(0, 0, [0u8; 32], 0, [0u8; 32]);
         let header = CrosslinkHeader {
             trusted_bft_height: 0,
             bft_block: BftBlock {
@@ -146,13 +140,7 @@ mod tests {
             [0u8; 32],
             vec![],
         );
-        let consensus_state = ConsensusState {
-            bft_height: 0,
-            pow_anchor_height: 0,
-            pow_anchor_hash: [0u8; 32],
-            timestamp: 0,
-            state_commitment: [0u8; 32],
-        };
+        let consensus_state = ConsensusState::v1(0, 0, [0u8; 32], 0, [0u8; 32]);
         let header = CrosslinkHeader {
             trusted_bft_height: 999,
             bft_block: BftBlock {
@@ -202,13 +190,7 @@ mod tests {
             [0u8; 32],
             vec![],
         );
-        let consensus_state = ConsensusState {
-            bft_height: 0,
-            pow_anchor_height: 0,
-            pow_anchor_hash: [0u8; 32],
-            timestamp: 0,
-            state_commitment: [0u8; 32],
-        };
+        let consensus_state = ConsensusState::v1(0, 0, [0u8; 32], 0, [0u8; 32]);
         let header = CrosslinkHeader {
             trusted_bft_height: 0,
             bft_block: BftBlock {

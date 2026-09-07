@@ -87,10 +87,18 @@ Each provider has:
 
 | Endpoint | Method | Purpose |
 |---|---|---|
-| `/health` | GET | Liveness + provider status summary |
-| `/providers` | GET | List all providers with status, last update time, foreign height |
+| `/health` | GET | Liveness + provider status + oracle bounds summary |
+| `/providers` | GET | List all providers with status, last update time, foreign height (under `/ve` when nested) |
+| `/oracle/bounds` | GET | Connect-style aggregated mid (`?market_id=ETH/USD`); `role=bound_only` |
+| `/oracle/ticks` | GET | Raw attributed source ticks (debug) |
 | `/extend-vote` | POST | Produce a signed vote extension for a chain |
 | `/verify-vote-extension` | POST | Verify a peer's signed extension |
+
+### Price bounds (Connect-style)
+
+Multi-source pricing aggregates **off-chain** in the sidecar (Skip Connect pattern): many HTTP tickers → median → **one mid per `market_id`**. See `oracle-connect-bounds.md`.
+
+Ticker URL bodies should look like `{"price":"3450.12"}` or `{"price":3450.12,"timestamp":…}`.
 
 ### `/extend-vote` request
 

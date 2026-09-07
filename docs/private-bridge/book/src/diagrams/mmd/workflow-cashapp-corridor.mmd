@@ -1,0 +1,45 @@
+sequenceDiagram
+    autonumber
+    participant U as User
+    participant UI as PrivateCorridor
+    participant HM as hash-market
+    participant R as btc-reporter
+    participant BTC as BTC
+    participant CH as cw-headstash
+    participant OR as oracle
+    participant Z as ZEC dest
+
+    Note over U,Z: Phase 0 Preauth before fund
+    U->>UI: ZEC dest plus rate policy
+    UI->>UI: Seal DepositIntentV0 domain_bind terp-cashapp-intent-v0
+    Note over UI: dest_owner_binding + min_out_value + expiry
+    UI->>U: Fresh P2WPKH QR and intent_id
+
+    Note over U,Z: Phase 1 Fund and observe
+    U->>BTC: Fund deposit address
+    UI->>HM: Open watch
+    R->>BTC: Index UTXO
+    R->>HM: Post observation
+    HM-->>UI: deposit_observed SSE
+    alt non-lab reverify fail
+        UI->>BTC: Reverify observation
+        UI--xUI: fail-closed stop no mint
+    else reverify OK or lab_simulated
+        UI->>BTC: Reverify when non-lab
+    end
+
+    Note over U,Z: Phase 2 Private mint
+    UI->>CH: BridgeMintNote path
+    alt double mint I4
+        CH-->>UI: REJECT IsBridgeMinted / AlreadyMinted
+    else first mint
+        CH-->>UI: SeamNoteOutV0 owner_binding
+    end
+
+    Note over U,Z: Phase 3 Oracle-bound swap
+    OR-->>UI: mid bounds only bound_only
+    alt I1 I2 I3 I6 reject
+        UI--xUI: intent_allows_swap fail-closed
+    else accept preauth dest
+        UI->>Z: Open only dest_owner_binding
+    end

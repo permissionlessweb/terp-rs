@@ -33,3 +33,16 @@ REPORT.md
 terp-api
 reviews
 *.env*
+# --- v0.0.2-dev hygiene ---
+.grok/
+node_modules/
+scripts/act/runs/
+scripts/act/runs/*_tmp/
+scripts/act/runs/*_ext_tmp/
+**/*.bak
+**/*.bak-*
+**/matrix-heal-report.json
+dep-scrape.json
+.dep-mode
+target/
+**/target/

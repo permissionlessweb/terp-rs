@@ -1,5 +1,8 @@
 # IBC Asset Routing Engine
 
+> **Agent entry:** `tests/agent/COMMANDS.md` · package `terp-scripts` · bin `ibc` · artifacts in repo-root `public/`.  
+> Offline: `just scripts-ibc-offline` / `just scripts-ibc-validate`. Live generate needs `MAIN_MNEMONIC` (preflight first).
+
 ## Overview
 
 The IBC Asset Routing Engine is a pre-mining system that computes all possible IBC denom hashes and trace paths for assets across interconnected chains. It builds a routing table from chain-registry asset lists and IBC connection data, producing lookup tables that power static websites, cross-chain dashboards, and IBC primitives.

@@ -1,25 +1,39 @@
-//! MinioIpfsClient — HashMerchantClient impl using local Kubo RPC + MinIO.
-//! TODOTODOTODO: this should accepts websocket or webhooks from minio server to partipate and stateful actions
-//! Uses the local IPFS node (127.0.0.1:5001) for CID operations.
-//! Roots are logged to stderr — MinIO integration for durable storage
-//! is available as a hook.
+//! MinioIpfsClient — HashMerchantClient impl: Kubo RPC + optional durable hooks.
+//!
+//! - **Kubo** (`127.0.0.1:5001` default): fetch/pin CIDs
+//! - **Durable root:** optional local dir write + optional dual-index register
+//!   toward hash-market distribution (`POST /content/register`)
+//! - Full MinIO SigV4 PUT remains available via oline webhook path; this client
+//!   focuses on content-plane compatibility without a second blob store.
+//!
+//! Content plane invariants: sha256 primary, IPFS secondary — see `content::cid`.
 
 use crate::client::nostr::{ClientError, ClientResult, HashMerchantRelayInfo, NegentropyFilter};
 use crate::client::{HashMerchantClient, RootConfirmation};
+use crate::content::{encode_for_chain, CidKind};
+use sha2::{Digest, Sha256};
+use std::path::PathBuf;
 
 /// Default Kubo RPC endpoint.
 const KUBO_API: &str = "http://127.0.0.1:5001";
 
-/// HashMerchantClient backed by a local IPFS node.
-///
-/// - `fetch_cid` / `pin_cid` use Kubo RPC at 127.0.0.1:5001
-/// - `on_root_confirmed` logs the root to stderr
-/// - `negentropy_sync` is a stub (requires a Nostr relay connection)
-/// - `discover_relays` is a stub (requires a Nostr relay connection)
+/// Optional durable + dual-index hooks for root confirmations.
+#[derive(Debug, Clone, Default)]
+pub struct MinioIpfsDurableConfig {
+    /// Write root JSON under this directory (e.g. shared volume / data).
+    pub local_dir: Option<PathBuf>,
+    /// hash-market base URL (e.g. `http://127.0.0.1:9090`) for dual-index register.
+    pub distribution_url: Option<String>,
+    /// Bearer or plane JWT for `POST /content/register`.
+    pub distribution_auth: Option<String>,
+}
+
+/// HashMerchantClient backed by a local IPFS node + optional durable hooks.
 #[derive(Debug, Clone)]
 pub struct MinioIpfsClient {
     kubo_api_url: String,
     http_client: reqwest::Client,
+    durable: MinioIpfsDurableConfig,
 }
 
 impl MinioIpfsClient {
@@ -27,6 +41,7 @@ impl MinioIpfsClient {
         Self {
             kubo_api_url: KUBO_API.to_string(),
             http_client: reqwest::Client::new(),
+            durable: MinioIpfsDurableConfig::default(),
         }
     }
 
@@ -34,7 +49,28 @@ impl MinioIpfsClient {
         Self {
             kubo_api_url: kubo_api_url.into(),
             http_client: reqwest::Client::new(),
+            durable: MinioIpfsDurableConfig::default(),
         }
+    }
+
+    pub fn with_durable(mut self, durable: MinioIpfsDurableConfig) -> Self {
+        self.durable = durable;
+        self
+    }
+
+    /// Serialize root confirmation to canonical JSON bytes (for sha256 / storage).
+    pub fn root_payload_bytes(confirmation: &RootConfirmation) -> Vec<u8> {
+        let payload = &confirmation.payload;
+        let body = serde_json::json!({
+            "type": "hashmerchant.root_confirmed",
+            "chain_uid": payload.chain_uid,
+            "algo": payload.algo,
+            "height": payload.height,
+            "attestation_count": payload.attestation_count,
+            "root": hex::encode(&payload.root),
+            "cid": confirmation.cid,
+        });
+        serde_json::to_vec(&body).unwrap_or_default()
     }
 }
 
@@ -57,9 +93,79 @@ impl HashMerchantClient for MinioIpfsClient {
             hex::encode(&payload.root).get(..16).unwrap_or("???"),
         );
 
-        // Pin the associated CID if provided
+        // Pin the associated CID if provided (IPFS secondary)
         if let Some(cid) = &confirmation.cid {
-            self.pin_cid(cid).await.ok();
+            if let Err(e) = self.pin_cid(cid).await {
+                eprintln!("[hashmerchant] pin_cid warning: {e}");
+            }
+        }
+
+        let bytes = Self::root_payload_bytes(&confirmation);
+        let sha = Sha256::digest(&bytes);
+        let sha_hex = hex::encode(sha);
+        // Canonical chain/storage form for this payload body
+        let _chain_cid = encode_for_chain(CidKind::BudSha256, &sha_hex).unwrap_or(sha_hex.clone());
+
+        // Durable local write (shared volume / ops)
+        if let Some(dir) = &self.durable.local_dir {
+            let sub = dir
+                .join("hashmerchant")
+                .join("roots")
+                .join(&payload.chain_uid)
+                .join(&payload.algo);
+            if let Err(e) = std::fs::create_dir_all(&sub) {
+                eprintln!("[hashmerchant] durable mkdir: {e}");
+            } else {
+                let path = sub.join(format!("{}.json", payload.height));
+                if let Err(e) = std::fs::write(&path, &bytes) {
+                    eprintln!("[hashmerchant] durable write {path:?}: {e}");
+                } else {
+                    eprintln!(
+                        "[hashmerchant] durable root → {} sha256={}",
+                        path.display(),
+                        &sha_hex[..16.min(sha_hex.len())]
+                    );
+                }
+            }
+        }
+
+        // Dual-index register on content plane (no blob body required)
+        if let Some(base) = &self.durable.distribution_url {
+            let url = format!(
+                "{}/content/register",
+                base.trim_end_matches('/')
+            );
+            let body = serde_json::json!({
+                "sha256": sha_hex,
+                "size": bytes.len(),
+                "content_type": "application/json",
+                "ipfs_cid": confirmation.cid,
+                "origin": "ingest",
+                "labels": ["hashmerchant", "root"],
+            });
+            let mut req = self.http_client.post(&url).json(&body);
+            if let Some(auth) = &self.durable.distribution_auth {
+                let h = if auth.starts_with("Bearer ") {
+                    auth.clone()
+                } else {
+                    format!("Bearer {auth}")
+                };
+                req = req.header("Authorization", h);
+            }
+            match req.send().await {
+                Ok(resp) if resp.status().is_success() => {
+                    eprintln!("[hashmerchant] dual-index register ok sha256={sha_hex}");
+                }
+                Ok(resp) => {
+                    eprintln!(
+                        "[hashmerchant] dual-index register HTTP {}",
+                        resp.status()
+                    );
+                }
+                Err(e) => {
+                    eprintln!("[hashmerchant] dual-index register failed: {e}");
+                }
+            }
         }
 
         Ok(())
@@ -70,8 +176,6 @@ impl HashMerchantClient for MinioIpfsClient {
         _relay: &str,
         filter: &NegentropyFilter,
     ) -> ClientResult<Vec<RootConfirmation>> {
-        // MinioIpfsClient doesn't connect to Nostr relays directly.
-        // Use NostrRelayClient for that. This returns empty.
         eprintln!(
             "[hashmerchant] negentropy_sync: not supported on MinioIpfsClient. \
              Use NostrRelayClient for chain={}",
@@ -81,11 +185,11 @@ impl HashMerchantClient for MinioIpfsClient {
     }
 
     async fn discover_relays(&self, _chain_uid: &str) -> ClientResult<Vec<HashMerchantRelayInfo>> {
-        // MinioIpfsClient doesn't query Nostr relays.
         Ok(vec![])
     }
 
     async fn fetch_cid(&self, cid: &str) -> ClientResult<Vec<u8>> {
+        // Support bud:sha256 and bare sha256 via content plane later; Kubo for IPFS
         let url = format!("{}/api/v0/cat?arg={cid}", self.kubo_api_url);
         let resp = self
             .http_client

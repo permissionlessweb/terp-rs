@@ -17,7 +17,7 @@
 ## Executive summary
 
 - Offline lib tests prove **self-consistency of derivation + synthetic graph invariants**, not that mainnet `public/` or live DenomTrace match prediction.
-- The **fat generator binary still owns the live path** and retains pre-fix `premine` (`hop_count: route.len()`, preferred = all hops preferred) while the lib fixed those bugs — green unit/golden is **orthogonal** to what `cargo run -p scripts --bin ibc` emits.
+- The **fat generator binary still owns the live path** and retains pre-fix `premine` (`hop_count: route.len()`, preferred = all hops preferred) while the lib fixed those bugs — green unit/golden is **orthogonal** to what `cargo run -p terp-scripts --bin terp-ibc` emits.
 - Fixture “observe” inverts `known_hashes` written by the same hash function — **compare_predict_observe cannot fail closed on path authenticity** for goldens.
 - Harness reimplements path geometry locally, never builds `PredictedWorld` / `check_invariants` / `ObserveBackend`, and the live Docker test is **unrun** in agent environments — authenticity success criteria remain unproven.
 - Ownership fences (A vs B vs O) deliberately deferred CLI thin-out, Cargo merge, generator wiring, and dual-sided client checks — those gaps are **structural**, not accidental.
@@ -308,7 +308,7 @@ See section below (same ordering).
 
 ## Open questions for the team
 
-1. When is Track O scheduled relative to any consumer release that still runs `cargo run -p scripts --bin ibc`?
+1. When is Track O scheduled relative to any consumer release that still runs `cargo run -p terp-scripts --bin terp-ibc`?
 2. Is preferred policy “prefer any ACTIVE direct transfer” or only “ACTIVE + preferred tag”? Product answer drives F5.
 3. Who owns weekly/nightly `--ignored` harness runs and image rebuilds (`local-zk` vs ghcr tag)?
 4. Should `public/` regeneration be blocked in CI until `check_invariants` is clean (policy), or only documented?

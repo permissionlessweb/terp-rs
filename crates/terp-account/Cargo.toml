@@ -1,0 +1,42 @@
+[package]
+name = "terp-account"
+description = "Terp account domain types + trait re-exports for smart-account authenticators"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+documentation = { workspace = true }
+authors = { workspace = true }
+rust-version = { workspace = true }
+
+[lib]
+crate-type = ["rlib"]
+
+[features]
+default = ["traits-only"]
+# Lightweight path for authenticator crates (no NFT marketplace surface)
+traits-only = []
+market-hooks = []
+manifold = []
+# Full NFT/account-token surface (requires cw721 stack)
+full = ["dep:cw721", "dep:cosmwasm-crypto", "dep:bech32", "dep:cw-ownable", "dep:cw-controllers"]
+abstract = ["full", "dep:abstract-std"]
+interface = ["dep:cw-orch"]
+
+[dependencies]
+cosmwasm-std = { workspace = true, features = ["std"] }
+cosmwasm-schema = { workspace = true }
+terp-auth = { workspace = true }
+sha2 = { workspace = true }
+serde = { workspace = true }
+
+# Optional heavy deps for full marketplace package
+cw-orch = { workspace = true, optional = true }
+cosmwasm-crypto = { workspace = true, optional = true }
+cw-ownable = { workspace = true, optional = true }
+abstract-std = { path = "../../../abstract/framework/packages/abstract-std", optional = true }
+cw721 = { path = "../../../cw-nfts/packages/cw721", optional = true }
+bech32 = { version = "0.11.0", default-features = false, features = ["alloc"], optional = true }
+cw-controllers = { workspace = true, optional = true }
+ripemd = { version = "0.1.3", default-features = false, optional = true }

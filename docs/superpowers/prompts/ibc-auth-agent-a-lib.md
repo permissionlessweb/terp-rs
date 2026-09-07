@@ -8,7 +8,7 @@ Read first (in order):
 
 ## Mission
 
-Implement **Track A**: extract and harden the pure IBC authenticity library under `tests/src/ibc/`, keep `scripts::ibc_core` working via re-exports, add unit + golden tests that prove hard invariants **without Docker**.
+Implement **Track A**: extract and harden the pure IBC authenticity library under `tests/src/ibc/`, keep `terp_scripts::ibc_core` working via re-exports, add unit + golden tests that prove hard invariants **without Docker**.
 
 ## Out of scope
 
@@ -38,7 +38,7 @@ tests/src/ibc/
 Move existing logic from `tests/src/ibc_core.rs` into hash/graph/routes. Then either:
 
 - turn `ibc_core.rs` into `pub use crate::ibc::{...};`, or  
-- keep types re-exported so `use scripts::ibc_core::compute_ibc_denom_hash` still works.
+- keep types re-exported so `use terp_scripts::ibc_core::compute_ibc_denom_hash` still works.
 
 Update `tests/src/lib.rs` with `pub mod ibc;` (and keep `pub mod ibc_core`).
 
@@ -77,10 +77,10 @@ pub fn compare_predict_observe(...) -> DiffReport; // can be thin if observe is 
 ## Verification (run these)
 
 ```sh
-cargo test -p scripts --lib
-cargo test -p scripts --test ibc_unit
-cargo test -p scripts --test ibc_golden
-cargo check -p scripts --bin ibc
+cargo test -p terp-scripts --lib
+cargo test -p terp-scripts --test ibc_unit
+cargo test -p terp-scripts --test ibc_golden
+cargo check -p terp-scripts --bin terp-ibc
 ```
 
 All must pass or you must explain exact failures + residual risk.

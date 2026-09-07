@@ -5,7 +5,7 @@ Generated: `2026-07-20T17:47:58.782601+00:00`
 Source of truth for **channels**: `public/ibc-data/*.json` (last live-ish snapshot on disk).
 Derivation rules: ACTIVE transfer only, **direct preferred single-hop** for known natives, honest `hop_count`.
 
-> Live `cargo run -p scripts --bin ibc -- generate` needs `MAIN_MNEMONIC` in the environment (cw-orch). This rebuild does not re-query mainnet.
+> Live `cargo run -p terp-scripts --bin terp-ibc -- generate` needs `MAIN_MNEMONIC` in the environment (cw-orch). This rebuild does not re-query mainnet.
 
 ## Terp preferred transfer channels
 

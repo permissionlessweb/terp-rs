@@ -4,7 +4,7 @@ Live Docker proof that **predicted** ICS-20 denom traces match **observed** bank
 
 Implementation: [`tests/tests/ibc_multihop_harness.rs`](../../tests/ibc_multihop_harness.rs)
 
-Uses `scripts::ibc::PredictedWorld` + `check_invariants` on the discovered line topology **before** transfers (same lib path as `ibc generate` / `ibc validate`).
+Uses `terp_scripts::ibc::PredictedWorld` + `check_invariants` on the discovered line topology **before** transfers (same lib path as `ibc generate` / `ibc validate`).
 
 ## Topology
 
@@ -53,7 +53,7 @@ On each chain a funded `user` key creates **4** denoms and mints balances:
 After each hop and at final destination:
 
 1. **Predict** `trace_path` from dest looking back (`transfer/{recv_ch}/…/{base}`).
-2. **Hash** with `scripts::ibc_core::compute_ibc_denom_hash` → `ibc/UPPER_SHA256`.
+2. **Hash** with `terp_scripts::ibc_core::compute_ibc_denom_hash` → `ibc/UPPER_SHA256`.
 3. **Observe** dest bank balance of that denom (`> 0` / exact transfer amount).
 4. **Observe** denom-trace path via `query ibc-transfer denom-trace`.
 5. **Diff** — any mismatch panics with:
@@ -94,7 +94,7 @@ docker pull ghcr.io/terpnetwork/terp-core:v5.2.0-zk-localterp
 
 ```sh
 # from terp-rs workspace root (package scripts lives at tests/)
-cargo test -p scripts --test ibc_multihop_harness -- --ignored --nocapture
+cargo test -p terp-scripts --test ibc_multihop_harness -- --ignored --nocapture
 ```
 
 Optional env:

@@ -1,0 +1,17 @@
+# hash-market as NFT whitelist + BUD host (NO vote extensions)
+# Use this for mint pages: eligible addresses fetch proof_hashes and bypass fees.
+
+bind = "0.0.0.0:9090"
+chain_id = "morocco-1"
+data_dir = "/var/lib/hash-market"
+
+# Critical: keep VE off for public mint hosting
+ve_enabled = false
+
+# signing_key not required when ve_enabled = false
+# (leave unset or omit)
+
+# Optional: browser CORS for terp.network mint pages
+cors_allow_origin = "*"
+
+# No [[providers]] needed in mint mode

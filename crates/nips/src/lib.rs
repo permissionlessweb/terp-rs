@@ -34,6 +34,8 @@ pub mod nips;
 pub mod buds;
 pub mod tags;
 pub mod types;
+/// DAO text-record / storage registration for mesh + NIP heuristics.
+pub mod dao_record;
 
 #[cfg(feature = "cw")]
 pub mod cw;
@@ -46,6 +48,11 @@ use schemars::JsonSchema;
 use sha2::Digest as _;
 pub use tags::TagBuilder;
 pub use types::*;
+pub use dao_record::{
+    place_bid_wasm_hint, purchase_wasm_hint, nip15_filter_heuristic, DaoRecordAction,
+    DaoRecordWasmHint, MeshDescriptorV1, MeshMarketplacePatch, Nip15PlaneMode, NipDaoPlane,
+    NipNamespacedRecord, NostrFilterHeuristic, WasmExecuteHint, DAO_MESH_RECORD_KEY,
+};
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 

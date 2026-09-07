@@ -243,6 +243,109 @@ gen-api-full:
 gen-all source="": (gen) (zod) (py-gen)
 
 # ---------------------------------------------------------------------------
+# scripts package (tests/) — IBC agent entrypoints
+# See tests/agent/COMMANDS.md for the full catalog.
+# ---------------------------------------------------------------------------
+
+# Offline: pure lib + unit/golden tests, then rebuild derived tables from public/ibc-data
+scripts-ibc-offline:
+    cargo test -p terp-scripts --lib --test ibc_unit --test ibc_golden
+    cargo run -p terp-scripts --bin terp-ibc -- rebuild-from-public --format json
+
+# Offline validate public/ against hard invariants (JSON RunReport)
+scripts-ibc-validate:
+    cargo run -p terp-scripts --bin terp-ibc -- validate --format json
+
+# Capability preflight.
+# Usage: just scripts-ibc-preflight
+#        just scripts-ibc-preflight live-query
+#        just scripts-ibc-preflight mode=live-tx
+scripts-ibc-preflight mode="offline":
+    cargo run -p terp-scripts --bin terp-ibc -- preflight --mode {{mode}} --format json
+# Docker multihop authenticity harness (ignored; needs Docker + images)
+scripts-ibc-harness:
+    cargo test -p terp-scripts --test ibc_multihop_harness -- --ignored --nocapture
+
+# ---------------------------------------------------------------------------
+# CI parity (see docs/ci.md and .github/workflows/ci-*.yml)
+# ---------------------------------------------------------------------------
+
+# Tier 0 — always-on offline gate
+# Offline IBC stays serial; internal libs via dense multi-package cargo (see scripts/ci/dense-packs.sh).
+ci-core: scripts-ibc-preflight scripts-ibc-offline scripts-ibc-validate
+    ./scripts/ci/dense-packs.sh core-libs
+
+# Tier 1 — contracts (dense multi-package) + full non-ignored terp-scripts (no Docker)
+# Host default CI_DENSE_MODE=all (one multi-p invocation). GHA uses matrix packs.
+# Optional: CI_DENSE_MODE=matrix CI_DENSE_PARALLEL=1 for isolated parallel packs on host.
+ci-extended:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    ./scripts/ci/dense-packs.sh contracts-core
+    ./scripts/ci/dense-packs.sh contracts-wasm
+    cargo test -p terp-scripts --lib --tests
+
+# List dense pack membership (debug / docs)
+ci-dense-list:
+    ./scripts/ci/dense-packs.sh list
+
+# Host simulation of GHA dense matrix (serial packs, shared target/)
+ci-core-matrix:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    just scripts-ibc-preflight offline
+    just scripts-ibc-offline
+    just scripts-ibc-validate
+    CI_DENSE_MODE=matrix ./scripts/ci/dense-packs.sh core-libs
+
+ci-extended-matrix:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    CI_DENSE_MODE=matrix ./scripts/ci/dense-packs.sh contracts-core
+    ./scripts/ci/dense-packs.sh contracts-wasm
+    cargo test -p terp-scripts --lib --tests
+
+# Tier 2 — expensive (Docker + workspace). Maintainer / nightly only.
+ci-heavy:
+    cargo check --workspace --tests
+    just scripts-ibc-harness
+
+# ---------------------------------------------------------------------------
+# Local CI exercise — host first, act optional, always teardown
+# See docs/ci.md and scripts/act/README.md
+# ---------------------------------------------------------------------------
+
+# Kill act containers/volumes (run when Desktop lags)
+act-teardown:
+    ./scripts/act/teardown.sh
+
+# Authoritative Tier 0 (no Docker) — timed, writes scripts/act/runs/latest-host-core.md
+act-host-core:
+    ./scripts/act/run-host-core.sh
+
+# Fast YAML wiring: act -l on ci-*.yml + teardown (no cargo under act)
+act-wire:
+    ./scripts/act/run-wire.sh
+
+# Full act Core jobs (expensive; prefer act-host-core + act-wire)
+act-core:
+    ./scripts/act/run-core.sh
+
+# Full act Extended jobs (prefer just ci-extended on host)
+act-extended:
+    ./scripts/act/run-extended.sh
+
+# Optimized daily loop: teardown → host core → wire → teardown
+act-exercise:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    ./scripts/act/teardown.sh
+    ./scripts/act/run-host-core.sh
+    ./scripts/act/run-wire.sh
+    ./scripts/act/teardown.sh
+    echo "act-exercise complete — see scripts/act/runs/latest-status.md"
+
+# ---------------------------------------------------------------------------
 # Standard cargo helpers (for convenience)
 # ---------------------------------------------------------------------------
 

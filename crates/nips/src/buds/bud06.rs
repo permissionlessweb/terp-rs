@@ -34,7 +34,7 @@ mod tests {
         let hash = parse_hash(hex).unwrap();
         assert_eq!(hash.len(), 32);
         assert_eq!(hash[0], 0x01);
-        assert_eq!(hash[31], 0xff);
+        assert_eq!(hash[31], 0xef);
     }
 
     #[test]

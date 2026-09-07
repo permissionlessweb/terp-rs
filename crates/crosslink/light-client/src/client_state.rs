@@ -41,6 +41,10 @@ pub struct ClientState {
     pub latest_finalized_pow_height: u32,
     /// Hash of the latest finalized PoW anchor block.
     pub latest_finalized_pow_hash: [u8; 32],
+    /// Shielded / header commitment of the latest finalized PoW block
+    /// (`PowHeader.commitment_bytes`). Bound to `latest_bft_height` +
+    /// `latest_finalized_pow_height`.
+    pub latest_shielded_commitment: [u8; 32],
     /// Current TFL finalizer roster.
     pub finalizer_roster: Vec<FinalizerEntry>,
     /// Whether the client has been frozen due to misbehaviour.
@@ -49,6 +53,9 @@ pub struct ClientState {
 
 impl ClientState {
     /// Create a new [`ClientState`] with initial values.
+    ///
+    /// Genesis typically passes zero `initial_pow_hash` / shielded commitment
+    /// until the first finalized header is applied.
     #[must_use]
     pub fn new(
         crosslink_params: ZcashCrosslinkParameters,
@@ -64,6 +71,7 @@ impl ClientState {
             latest_bft_height: initial_bft_height,
             latest_finalized_pow_height: initial_pow_height,
             latest_finalized_pow_hash: initial_pow_hash,
+            latest_shielded_commitment: [0u8; 32],
             finalizer_roster,
             is_frozen: false,
         }
@@ -93,6 +101,7 @@ impl ZcashSerialize for ClientState {
         writer.write_all(&self.latest_bft_height.to_le_bytes())?;
         writer.write_all(&self.latest_finalized_pow_height.to_le_bytes())?;
         writer.write_all(&self.latest_finalized_pow_hash)?;
+        writer.write_all(&self.latest_shielded_commitment)?;
         writer.write_u16::<LittleEndian>(self.finalizer_roster.len() as u16)?;
         for r in &self.finalizer_roster {
             writer.write_all(&r.public_key)?;
@@ -120,6 +129,8 @@ impl ZcashDeserialize for ClientState {
         let latest_finalized_pow_height = u32::from_le_bytes(four);
         let mut latest_finalized_pow_hash = [0u8; 32];
         reader.read_exact(&mut latest_finalized_pow_hash)?;
+        let mut latest_shielded_commitment = [0u8; 32];
+        reader.read_exact(&mut latest_shielded_commitment)?;
 
         let len = reader.read_u16::<LittleEndian>()?;
         let mut finalizer_roster: Vec<FinalizerEntry> = Vec::with_capacity(len.into());
@@ -141,6 +152,7 @@ impl ZcashDeserialize for ClientState {
             latest_bft_height,
             latest_finalized_pow_height,
             latest_finalized_pow_hash,
+            latest_shielded_commitment,
             finalizer_roster,
             is_frozen: is_frozen[0] != 0,
         })

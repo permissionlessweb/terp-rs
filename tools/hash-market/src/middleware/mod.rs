@@ -16,6 +16,10 @@
 //! because the client already hashed the message before signing.
 
 pub mod auth;
+pub mod notes_auth;
+
+pub use crate::config::NotesAuthConfig;
+pub use notes_auth::{AnyOfAuthVerifier, BearerTokenVerifier, SnapSecpVerifier};
 
 // use anyhow::Result;
 // use axum::{

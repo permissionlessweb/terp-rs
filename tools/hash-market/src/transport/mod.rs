@@ -5,6 +5,7 @@
 
 pub mod grpc;
 pub mod http_poll;
+pub mod static_lab;
 pub mod websocket;
 
 use crate::msg::VoteExtensionHashData;
@@ -22,6 +23,11 @@ pub enum TransportMode {
     },
     /// WebSocket subscription
     WebSocket { url: String },
+    /// Lab/e2e only: re-emit a fixed VoteExtensionHashData (no external feeder).
+    Static {
+        data: VoteExtensionHashData,
+        interval_secs: u64,
+    },
 }
 
 /// Start a transport listener, returning a receiver for incoming hash data.
@@ -41,6 +47,12 @@ pub fn start(
         }
         TransportMode::WebSocket { url } => {
             tokio::spawn(websocket::run(url, tx));
+        }
+        TransportMode::Static {
+            data,
+            interval_secs,
+        } => {
+            tokio::spawn(static_lab::run(data, interval_secs, tx));
         }
     }
 

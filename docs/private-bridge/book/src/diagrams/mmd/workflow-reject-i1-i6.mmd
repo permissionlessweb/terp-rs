@@ -1,0 +1,33 @@
+sequenceDiagram
+    autonumber
+    participant U as User
+    participant UI as PrivateCorridor
+    participant INT as DepositIntentV0
+    participant MS as CorridorMintedSet
+    participant CH as cw-headstash
+    participant OR as oracle
+
+    Note over U,OR: Fail-closed reject path I1–I6 (cashapp_zec_corridor)
+    Note over INT: Preauth seals domain_bind terp-cashapp-intent-v0 + dest_owner_binding
+
+    U->>UI: settle swap or open dest
+    UI->>INT: intent_allows_swap + mint gate
+
+    alt I3 IntentExpired
+        INT-->>UI: REJECT now ≥ expiry
+    else I1 DestBindingMismatch
+        INT-->>UI: REJECT actual_owner_binding ≠ dest_owner_binding
+    else I2 MinOut or SlipExceeded
+        INT-->>UI: REJECT out_value < min_out_value or mid slip floor
+    else I6 OracleMissing or OracleStale
+        OR-->>UI: REJECT mid missing or age > max_oracle_age_secs
+        Note over OR,UI: bound_only — no silent mint
+    else I4 AlreadyMinted
+        UI->>MS: authorize_mint(burn_id)
+        MS-->>UI: REJECT second mint same ν / intent
+    else I5 ACCEPT bound OK
+        UI->>MS: authorize_mint once
+        UI->>CH: BridgeMintNote
+        CH-->>UI: SeamNoteOutV0 owner_binding
+        OR--xCH: oracle_mint_forbidden never mints
+    end

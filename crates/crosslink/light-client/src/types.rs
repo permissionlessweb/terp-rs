@@ -43,6 +43,11 @@ pub trait ZcashSerialize: Sized {
         self.zcash_serialize(&mut data)?;
         Ok(data)
     }
+    fn zcash_serialize_to_cosmwasm(&self) -> Result<cosmwasm_std::Binary, std::io::Error> {
+        let mut data = Vec::new();
+        self.zcash_serialize(&mut data)?;
+        Ok(data.as_slice().into())
+    }
 }
 
 /// Zcash binary deserialization trait.
@@ -97,8 +102,14 @@ pub const PROTOTYPE_PARAMETERS: ZcashCrosslinkParameters = ZcashCrosslinkParamet
 
 /// A minimal PoW block header for the light client.
 ///
-/// This is a slimmed-down version of `zebra_chain::block::Header` containing
-/// only the fields needed for IBC verification.
+/// Slimmed from `zebra_chain::block::Header`. Carries identity + the opaque
+/// header commitment field used as the **v1 shielded-pool / auth anchor**.
+///
+/// `commitment_bytes` is the Zcash `nCommitment` / `hashBlockCommitments` field
+/// (interpretation is era-dependent — FinalSaplingRoot, ChainHistoryRoot, or
+/// NU5+ ChainHistoryBlockTxAuthCommitment binding history + `hashAuthDataRoot`).
+/// Full ZIP-222 application-state roots are **not** here; see
+/// [`crate::consensus_state::ConsensusState::app_state_commitment`] (IBC-v2).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PowHeader {
     /// The block hash (double-SHA256, 32 bytes).
@@ -107,6 +118,8 @@ pub struct PowHeader {
     pub timestamp: u64,
     /// The block height.
     pub height: u32,
+    /// Opaque Zcash header commitment (shielded-pool / auth / history anchor).
+    pub commitment_bytes: [u8; 32],
 }
 
 impl ZcashSerialize for PowHeader {
@@ -114,6 +127,7 @@ impl ZcashSerialize for PowHeader {
         writer.write_all(&self.hash)?;
         writer.write_all(&self.timestamp.to_le_bytes())?;
         writer.write_u32::<LittleEndian>(self.height)?;
+        writer.write_all(&self.commitment_bytes)?;
         Ok(())
     }
 }
@@ -124,10 +138,13 @@ impl ZcashDeserialize for PowHeader {
         reader.read_exact(&mut hash)?;
         let timestamp = reader.read_u64::<LittleEndian>()?;
         let height = reader.read_u32::<LittleEndian>()?;
+        let mut commitment_bytes = [0u8; 32];
+        reader.read_exact(&mut commitment_bytes)?;
         Ok(PowHeader {
             hash,
             timestamp,
             height,
+            commitment_bytes,
         })
     }
 }
@@ -242,31 +259,32 @@ impl FatPointerToBftBlock2 {
 
         let msg = &self.vote_for_block_without_finalizer_public_key[0..44];
 
-        // 1. Decode all public keys first
-        let pk_owned: Vec<Vec<u8>> = self
-            .signatures
-            .iter()
-            .map(|sig| {
-                if sig.vote_signature.len() != 64 {
-                    // We'll handle this below
-                    return Err(CrosslinkIBCError::InvalidFatPointer(
-                        "signature length".into(),
-                    ));
-                }
-                hex::decode(&sig.public_key).map_err(Into::into)
-            })
-            .collect::<Result<Vec<_>, _>>()?;
+        // Public keys are raw 32-byte Ed25519 keys (not hex-encoded strings).
+        for sig in &self.signatures {
+            if sig.vote_signature.len() != 64 {
+                return Err(CrosslinkIBCError::InvalidFatPointer(
+                    "signature length must be 64 bytes".into(),
+                ));
+            }
+            if sig.public_key == [0u8; 32] {
+                return Err(CrosslinkIBCError::InvalidFatPointer(
+                    "public key must not be all-zeros".into(),
+                ));
+            }
+        }
 
-        // 2. Build signature and pk slices
         let sigs: Vec<&[u8]> = self
             .signatures
             .iter()
             .map(|sig| sig.vote_signature.as_slice())
             .collect();
+        let pks: Vec<&[u8]> = self
+            .signatures
+            .iter()
+            .map(|sig| sig.public_key.as_slice())
+            .collect();
 
-        let pks: Vec<&[u8]> = pk_owned.iter().map(|pk| pk.as_slice()).collect();
-
-        api.ed25519_batch_verify(&vec![msg; pk_owned.len()], &sigs, &pks)
+        api.ed25519_batch_verify(&vec![msg; pks.len()], &sigs, &pks)
             .map_err(Into::into)
     }
 }
@@ -346,6 +364,7 @@ impl BftBlock {
             buf.extend_from_slice(&h.hash);
             buf.extend_from_slice(&h.timestamp.to_le_bytes());
             buf.extend_from_slice(&h.height.to_le_bytes());
+            buf.extend_from_slice(&h.commitment_bytes);
         }
         hasher.update(&buf);
         Blake3Hash(hasher.finalize().into())
@@ -383,6 +402,80 @@ impl ZcashDeserialize for BftBlock {
             previous_block_fat_ptr,
             finalization_candidate_height,
             headers,
+        })
+    }
+}
+
+// ─── IBC Any protobuf support ─────────────────────────────────────
+//
+// Mirrors the prost/ibc-proto pattern for constructing IBC messages.
+// Each Crosslink type defines its protobuf type URL and a JSON-serialized
+// value (CosmWasm 08-wasm uses JSON encoding inside Any).
+
+/// Protobuf type URL constants for Crosslink light client types.
+pub mod type_urls {
+    /// CrosslinkHeader (client update message payload).
+    pub const CROSSLINK_HEADER: &str = "/crosslink.lightclient.v1.CrosslinkHeader";
+    /// ClientState (wrapped in WasmClientState by ibc-go).
+    pub const CROSSLINK_CLIENT_STATE: &str = "/crosslink.lightclient.v1.ClientState";
+    /// ConsensusState (wrapped in WasmConsensusState by ibc-go).
+    pub const CROSSLINK_CONSENSUS_STATE: &str = "/crosslink.lightclient.v1.ConsensusState";
+}
+
+/// Converts a Crosslink type into its protobuf `Any` representation.
+///
+/// Produces the raw `(type_url, value)` components that any `Any` type
+/// (`prost::Any`, `tendermint_proto::Any`, `pbjson_types::Any`) can be
+/// constructed from. This avoids tying the trait to a specific protobuf
+/// library while keeping the type URL definitions centralized.
+pub trait ToIbcAny {
+    /// The protobuf type URL for this type (see `type_urls` module).
+    fn type_url() -> &'static str;
+    /// Serialize this value into the form used inside `Any.value`.
+    /// For 08-wasm light clients this is `serde_json::to_vec`.
+    fn to_any_value(&self) -> Result<Vec<u8>, crate::CrosslinkIBCError>;
+}
+
+// ─── Implementations ───────────────────────────────────────────────
+
+impl ToIbcAny for BftBlock {
+    fn type_url() -> &'static str {
+        type_urls::CROSSLINK_HEADER
+    }
+    fn to_any_value(&self) -> Result<Vec<u8>, crate::CrosslinkIBCError> {
+        serde_json::to_vec(self)
+            .map_err(|e| crate::CrosslinkIBCError::HeaderVerificationFailed(format!("serde: {e}")))
+    }
+}
+
+impl ToIbcAny for crate::header::CrosslinkHeader {
+    fn type_url() -> &'static str {
+        type_urls::CROSSLINK_HEADER
+    }
+    fn to_any_value(&self) -> Result<Vec<u8>, crate::CrosslinkIBCError> {
+        self.zcash_serialize_to_vec()
+            .map_err(|e| crate::CrosslinkIBCError::HeaderVerificationFailed(format!("serde: {e}")))
+    }
+}
+
+impl ToIbcAny for crate::client_state::ClientState {
+    fn type_url() -> &'static str {
+        type_urls::CROSSLINK_CLIENT_STATE
+    }
+    fn to_any_value(&self) -> Result<Vec<u8>, crate::CrosslinkIBCError> {
+        self.zcash_serialize_to_vec().map_err(|e| {
+            crate::CrosslinkIBCError::MembershipVerificationFailed(format!("serde: {e}"))
+        })
+    }
+}
+
+impl ToIbcAny for crate::consensus_state::ConsensusState {
+    fn type_url() -> &'static str {
+        type_urls::CROSSLINK_CONSENSUS_STATE
+    }
+    fn to_any_value(&self) -> Result<Vec<u8>, crate::CrosslinkIBCError> {
+        self.zcash_serialize_to_vec().map_err(|e| {
+            crate::CrosslinkIBCError::MembershipVerificationFailed(format!("serde: {e}"))
         })
     }
 }
@@ -442,10 +535,11 @@ mod tests {
             },
             finalization_candidate_height: 100,
             headers: vec![PowHeader {
-                hash: [0xcc; 32],
-                timestamp: 1_700_000_000,
-                height: 100,
-            }],
+                    hash: [0xcc; 32],
+                    timestamp: 1_700_000_000,
+                    height: 100,
+                    commitment_bytes: [0u8; 32],
+                }],
         };
         let mut buf = Vec::new();
         block.zcash_serialize(&mut buf).unwrap();
@@ -456,10 +550,11 @@ mod tests {
     #[test]
     fn test_pow_header_roundtrip() {
         let hdr = PowHeader {
-            hash: [0xdd; 32],
-            timestamp: 1_600_000_000,
-            height: 50,
-        };
+                    hash: [0xdd; 32],
+                    timestamp: 1_600_000_000,
+                    height: 50,
+                    commitment_bytes: [0u8; 32],
+                };
         let mut buf = Vec::new();
         hdr.zcash_serialize(&mut buf).unwrap();
         let decoded = PowHeader::zcash_deserialize(&buf[..]).unwrap();
@@ -515,10 +610,11 @@ mod tests {
             },
             finalization_candidate_height: 100,
             headers: vec![PowHeader {
-                hash: [0u8; 32],
-                timestamp: 1_700_000_000,
-                height: 100,
-            }],
+                    hash: [0u8; 32],
+                    timestamp: 1_700_000_000,
+                    height: 100,
+                    commitment_bytes: [0u8; 32],
+                }],
         };
 
         let zebra_hash = zebra_block.blake3_hash();
@@ -551,10 +647,11 @@ mod tests {
             previous_block_fat_ptr: our_fp,
             finalization_candidate_height: 100,
             headers: vec![PowHeader {
-                hash: [0xbb; 32],
-                timestamp: 1_700_000_000,
-                height: 100,
-            }],
+                    hash: [0xbb; 32],
+                    timestamp: 1_700_000_000,
+                    height: 100,
+                    commitment_bytes: [0u8; 32],
+                }],
         };
 
         let zebra_fp = ZebraFatPtr {
@@ -603,16 +700,19 @@ mod tests {
                     hash: [0xdd; 32],
                     timestamp: 1_700_000_000,
                     height: 98,
+                    commitment_bytes: [0u8; 32],
                 },
                 PowHeader {
                     hash: [0xee; 32],
                     timestamp: 1_700_000_001,
                     height: 99,
+                    commitment_bytes: [0u8; 32],
                 },
                 PowHeader {
                     hash: [0xff; 32],
                     timestamp: 1_700_000_002,
                     height: 100,
+                    commitment_bytes: [0u8; 32],
                 },
             ],
         };

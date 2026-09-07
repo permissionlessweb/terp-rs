@@ -53,7 +53,7 @@ pub struct ProviderKey {
 // AppState — shared across all handlers
 // ---------------------------------------------------------------------------
 
-/// Build the axum router.
+/// Build the axum router (mounted under `/ve` by the unified server).
 pub fn router(state: Arc<AppState>) -> Router {
     Router::new()
         .route("/health", get(health))
@@ -61,6 +61,17 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/vote-extension", get(vote_extension_get))
         .route("/extend-vote", post(extend_vote))
         .route("/verify-vote-extension", post(verify_vote_extension))
+        .with_state(state)
+}
+
+/// Root-level aliases so `HASHMERCHANT_SIDECAR_URL=http://host:9090` works
+/// without a `/ve` suffix (matches mock_runtime + module docs).
+pub fn root_aliases(state: Arc<AppState>) -> Router {
+    Router::new()
+        .route("/vote-extension", get(vote_extension_get))
+        .route("/extend-vote", post(extend_vote))
+        .route("/verify-vote-extension", post(verify_vote_extension))
+        .route("/providers", get(list_providers))
         .with_state(state)
 }
 
@@ -104,36 +115,64 @@ async fn vote_extension_get(
     Query(query): Query<VoteExtensionQuery>,
 ) -> Result<impl IntoResponse, StatusCode> {
     let store = state.provider_data.read().await;
+    // Env fixture lets two sidecars present the same set in opposite order
+    // without a foreign poller (2-val ict-rs VE determinism).
     if store.is_empty() {
+        if let Some((atts, root)) = crate::ve::attestations::env_attestation_payload() {
+            return Ok(Json(serde_json::json!({
+                "runtime_id": std::env::var("HASHMERCHANT_RUNTIME_ID").unwrap_or_else(|_| "env-fixture".into()),
+                "chain_uid": std::env::var("HASHMERCHANT_CHAIN_UID").unwrap_or_else(|_| "oracle-eth".into()),
+                "algo": std::env::var("HASHMERCHANT_ALGO").unwrap_or_else(|_| "sha256".into()),
+                "root": root,
+                "foreign_height": 42u64,
+                "foreign_block_time": 0i64,
+                "attestations": atts,
+                "present_attestations": atts,
+                "present_reversed": crate::ve::attestations::present_reversed(),
+            })));
+        }
         return Err(StatusCode::SERVICE_UNAVAILABLE);
     }
 
-    // Filter by chain_uid if provided
-    let entries: Vec<&ProviderData> = if let Some(cuid) = &query.chain_uid {
+    // Filter by chain_uid if provided. HashMap iteration is not stable —
+    // sort so every validator hitting the same store gets the same pick
+    // (newest received_at, then chain_uid, then algo).
+    let mut entries: Vec<(&ProviderKey, &ProviderData)> = if let Some(cuid) = &query.chain_uid {
         store
             .iter()
             .filter(|(k, _)| k.chain_uid == *cuid)
-            .map(|(_, v)| v)
             .collect()
     } else {
-        store.values().collect()
+        store.iter().collect()
     };
 
     if entries.is_empty() {
         return Err(StatusCode::NOT_FOUND);
     }
 
-    // Return the most recently updated entry among matching providers
-    let entry = entries
-        .into_iter()
-        .max_by_key(|e| e.received_at)
-        .ok_or(StatusCode::SERVICE_UNAVAILABLE)?;
+    entries.sort_by(|a, b| {
+        b.1.received_at
+            .cmp(&a.1.received_at)
+            .then_with(|| a.0.chain_uid.cmp(&b.0.chain_uid))
+            .then_with(|| a.0.algo.cmp(&b.0.algo))
+    });
+    let entry = entries[0].1;
     Ok(Json(serde_json::json!({
+        "runtime_id": entry.data.runtime_id,
         "chain_uid": entry.data.chain_uid,
         "algo": entry.data.algo,
-        "root": hex::encode(&entry.data.root),
+        "root": crate::ve::attestations::env_attestation_payload()
+            .map(|(_, r)| r)
+            .unwrap_or_else(|| hex::encode(&entry.data.root)),
         "foreign_height": entry.data.foreign_height,
         "foreign_block_time": entry.data.foreign_block_time,
+        "attestations": crate::ve::attestations::env_attestation_payload()
+            .map(|(a, _)| serde_json::to_value(a).unwrap_or(serde_json::json!([])))
+            .unwrap_or(serde_json::json!([])),
+        "present_attestations": crate::ve::attestations::env_attestation_payload()
+            .map(|(a, _)| serde_json::to_value(a).unwrap_or(serde_json::json!([])))
+            .unwrap_or(serde_json::json!([])),
+        "present_reversed": crate::ve::attestations::present_reversed(),
     })))
 }
 
@@ -196,8 +235,11 @@ async fn extend_vote(
         return Err(StatusCode::BAD_REQUEST);
     };
 
-    let signed = state
+    let handler = state
         .ve_handler
+        .as_ref()
+        .ok_or(StatusCode::SERVICE_UNAVAILABLE)?;
+    let signed = handler
         .sign_extension(&state.chain_id, req.height, &data.data)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
@@ -247,9 +289,11 @@ async fn verify_vote_extension(
             signature: hex::decode(&req.signature)?,
             public_key: hex::decode(&req.public_key)?,
         };
-        state
+        let handler = state
             .ve_handler
-            .verify_extension(&state.chain_id, req.height, &signed)?;
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("vote extensions disabled"))?;
+        handler.verify_extension(&state.chain_id, req.height, &signed)?;
         Ok(())
     })();
 

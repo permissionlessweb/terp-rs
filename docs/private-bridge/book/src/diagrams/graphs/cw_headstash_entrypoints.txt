@@ -1,0 +1,9 @@
+No entrypoints detected by trailmark entrypoints CLI for CosmWasm #[entry_point] macros.
+Manual entry surface (from source / graph focus):
+  - instantiate
+  - execute (routes ExecuteMsg incl. BridgeMintNote)
+  - query
+  - reply
+Bridge-related execute arms (lib.execute match → bridge::*):
+  UpdateReflection, SetReflectionSnapshot, RegisterAsset,
+  SetExternalAssetRegistry, SetBridgeCfg, BridgeMintNote

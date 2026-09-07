@@ -10,10 +10,14 @@ pub mod hash;
 pub mod normalize;
 pub mod observe;
 pub mod predict;
+pub mod publish;
 pub mod routes;
 pub mod schema;
 
 pub use diff::{DiffItem, DiffReport, DiffSeverity};
+pub use publish::{
+    default_public_dir, file_sha256, resolve_out_dir, AtomicPublisher,
+};
 pub use fixtures::{
     golden_chain_assets, golden_root, load_audited_known_hashes, load_expected_lookup,
     load_golden_ibc_data, load_json, load_known_hashes, load_synthetic_known_hashes,

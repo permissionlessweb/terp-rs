@@ -2,12 +2,12 @@
 
 Date: 2026-07-20  
 Status: approved  
-Package: `scripts` (`tests/` workspace)  
-Binary: `ibc` (`tests/bin/ibc_info.rs`)
+Package: `terp-scripts` (`tests/` workspace)  
+Binary: `terp-ibc` (`tests/bin/ibc_info.rs`)
 
 ## Problem
 
-The IBC data generation pipeline (`cargo run -p scripts --bin ibc`) produces chain-registry-shaped artifacts (`public/ibc-data/*.json`, `assetlist.json`, routing/lookup tables) but does not **prove** those artifacts match on-chain reality. Confidence today rests on schema shape and SHA-256 determinism, not channel-side correctness or DenomTrace/balance agreement.
+The IBC data generation pipeline (`cargo run -p terp-scripts --bin terp-ibc`) produces chain-registry-shaped artifacts (`public/ibc-data/*.json`, `assetlist.json`, routing/lookup tables) but does not **prove** those artifacts match on-chain reality. Confidence today rests on schema shape and SHA-256 determinism, not channel-side correctness or DenomTrace/balance agreement.
 
 Observed symptoms in current outputs:
 
@@ -21,7 +21,7 @@ Observed symptoms in current outputs:
 
 1. **One authenticity model** for offline (fixtures/mainnet snapshots) and online (Docker harness).
 2. **Predict → observe → diff** as the only way we claim data is correct.
-3. **Thin CLI + library**: pure derivation and validators live in `scripts::ibc`; binary is orchestration only.
+3. **Thin CLI + library**: pure derivation and validators live in `terp_scripts::ibc`; binary is orchestration only.
 4. **4-chain line multi-hop harness** with tokenfactory denoms proving predicted IBC denoms against real bank balances and denom traces.
 5. **Fail closed** on hard invariant violations during `generate` and tests.
 
@@ -88,7 +88,7 @@ Diff / Report
 
 ## Architecture
 
-### Module layout (package `scripts`)
+### Module layout (package `terp-scripts`)
 
 ```
 tests/
@@ -119,7 +119,7 @@ tests/
 
 Migration: fold `src/ibc_core.rs` and pure helpers/tests currently in `bin/ibc_info.rs` into `src/ibc/*`. Remove the large in-binary `#[cfg(test)]` module once integration tests own coverage.
 
-### CLI (`cargo run -p scripts --bin ibc -- <cmd>`)
+### CLI (`cargo run -p terp-scripts --bin terp-ibc -- <cmd>`)
 
 | Subcommand | Behavior |
 |------------|----------|
@@ -180,10 +180,10 @@ After scenarios: full `PredictedWorld` premine with `max_hops=3` over harness to
 
 ```sh
 # CI default (no Docker)
-cargo test -p scripts --test ibc_unit --test ibc_golden
+cargo test -p terp-scripts --test ibc_unit --test ibc_golden
 
 # Live authenticity proof
-cargo test -p scripts --test ibc_multihop_harness -- --ignored --nocapture
+cargo test -p terp-scripts --test ibc_multihop_harness -- --ignored --nocapture
 ```
 
 `ICT_MOCK=1` may smoke orchestration only; it does **not** satisfy authenticity success criteria.

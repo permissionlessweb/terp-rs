@@ -77,59 +77,97 @@ help:
 list:
     cargo run -- --steps list
 
-# ── Dep management ─────────────────────────────────────────────────────────
+# ── Dep management (stable Python control plane: _scripts/dep.py) ──────────
+# Rust `gen-tools deps` remains experimental; prefer these recipes.
+
+dep := "python3 _scripts/dep.py"
+
+# Show resolved monorepo root + policy
+deps-config:
+    {{dep}} config
+
+# Strict matrix integrity (exit 1 on errors) — run in CI
+deps-validate:
+    {{dep}} validate -v
+
+# Heal matrix local/zk_local paths (package-name checked, relative only)
+deps-heal:
+    {{dep}} heal -v
+
+deps-heal-dry-run:
+    {{dep}} heal --dry-run -v
 
 # Show current dependency status
 deps-status:
-    cargo run -- deps status
+    {{dep}} status
 
-# Switch all forked deps to a mode (stable|local|git|zk_local|zk_git|dev|zk_dev)
+# Switch forked deps (fail-closed if matrix dirty)
+# modes: stable|local|git|zk_local|zk_git|dev|zk_dev
 deps-switch mode="local":
-    cargo run -- deps switch {{mode}}
+    {{dep}} switch {{mode}}
 
-# Full scrape with diagnostics
-deps-scrape:
-    cargo run -- deps scrape
+deps-local:
+    {{dep}} switch local
 
-# Scrape with CI-style exit-on-warning
-deps-scrape-ci:
-    cargo run -- deps scrape --check
+deps-git:
+    {{dep}} switch git
 
-# Generate overview dashboard
-deps-overview:
-    cargo run -- deps overview
+deps-stable:
+    {{dep}} switch stable
 
-# Show topological dependency graph (DOT output)
-deps-graph:
-    cargo run -- deps graph
-
-# Show ordered push/update order
-deps-order:
-    cargo run -- deps graph --order
-
-# Capture current dep state as snapshot
-deps-snapshot:
-    cargo run -- deps snapshot
-
-# Capture snapshot + check for drift from matrix
-deps-snapshot-check:
-    cargo run -- deps snapshot --check
-
-# Freeze snapshot as new matrix baseline
-deps-baseline:
-    cargo run -- deps baseline
-
-# Preview baseline without writing
-deps-baseline-dry-run:
-    cargo run -- deps baseline --dry-run
-
-# Check workspace against baseline for drift
-deps-drift:
-    cargo run -- deps drift
+deps-dev:
+    {{dep}} switch dev
 
 # Dry-run switch (preview changes without writing)
 deps-switch-dry-run mode="local":
-    cargo run -- deps switch {{mode}} --dry-run
+    {{dep}} switch {{mode}} --dry-run
+
+# cargo metadata source verification after a mode is applied
+deps-verify mode="local":
+    {{dep}} verify --mode {{mode}}
+
+# Switch + verify (slow; uses cargo metadata)
+deps-switch-verify mode="local":
+    {{dep}} switch {{mode}} --verify
+
+# Full scrape with diagnostics (legacy script)
+deps-scrape:
+    python3 _scripts/dep-scrape.py
+
+# Scrape with CI-style exit-on-warning
+deps-scrape-ci:
+    python3 _scripts/dep-scrape.py --check
+
+# Generate overview dashboard
+deps-overview:
+    python3 _scripts/dep-overview.py
+
+# Show topological dependency graph (DOT output)
+deps-graph:
+    python3 _scripts/dep-graph.py
+
+# Show ordered push/update order
+deps-order:
+    python3 _scripts/dep-graph.py --order
+
+# Experimental Rust CLI (parity incomplete — prefer dep.py)
+deps-rust-status:
+    cargo run -- deps status
+
+deps-snapshot:
+    cargo run -- deps snapshot
+
+deps-snapshot-check:
+    cargo run -- deps snapshot --check
+
+deps-baseline:
+    cargo run -- deps baseline
+
+deps-baseline-dry-run:
+    cargo run -- deps baseline --dry-run
+
+deps-drift:
+    cargo run -- deps drift
 
 # ── Type generation pipeline (direct) ──────────────────────────────────────
 

@@ -1,53 +1,64 @@
+# Reference Akash SDL for hash-market-server.
+# Prefer o-line template: crates/o-line/templates/sdls/oline/hashmerchant.yml
+# (variable substitution, accept domains, SSH secret delivery).
+#
+# CRITICAL: Do NOT put signing_key in env. Use SSH_PUBKEY + post-deploy SFTP
+# (oline hashmerchant upload) or mount config.toml as a secret volume.
+
 version: "2.0"
 
 services:
-  merkle-server:
-    image: ghcr.io/terpnetwork/merkle-server:0.1.0
+  hash-market:
+    image: ghcr.io/terpnetwork/hash-market:latest
     expose:
-      - port: 80
+      - port: 9090
         as: 80
         to:
           - global: true
+        accept:
+          - hash.example.com
+      - port: 22
+        as: 22
+        to:
+          - global: true
     env:
-      # Required: 66-char hex compressed secp256k1 public key
-      # Generate with: merkle-server keygen
-      - "MERKLE_PUBLIC_KEY=<your_pubkey_here>"
-      # Required: your Cloudflare DNS hostname for this deployment
-      - "DOMAIN=merkle.example.com"
-      # Optional overrides
-      # - "MERKLE_DATA_DIR=/app/data"
-      # - "MERKLE_PORT=8765"
-      # - "MERKLE_TOLERANCE=300"
+      # Non-sensitive only
+      - SSH_PUBKEY=<your_ed25519_pubkey_here>
+      - SSH_P=22
+      - HM_CONFIG=/etc/hash-market/config.toml
+      - HM_DATA=/var/lib/hash-market
+      - HASHMERCHANT_DOMAIN=hash.example.com
+      - HASHMERCHANT_CHAIN_ID=morocco-1
     params:
       storage:
         data:
-          mount: /app/data
+          mount: /var/lib/hash-market
           readOnly: false
 
 profiles:
   compute:
-    merkle-server:
+    hash-market:
       resources:
         cpu:
-          units: 0.25
+          units: 1
         memory:
-          size: 256Mi
+          size: 1Gi
         storage:
-          - size: 512Mi
+          - size: 1Gi
           - name: data
-            size: 1Gi
+            size: 10Gi
             attributes:
               persistent: true
               class: beta2
   placement:
     akash:
       pricing:
-        merkle-server:
+        hash-market:
           denom: uakt
           amount: 1000
 
 deployment:
-  merkle-server:
+  hash-market:
     akash:
-      profile: merkle-server
+      profile: hash-market
       count: 1

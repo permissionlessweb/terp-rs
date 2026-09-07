@@ -1,0 +1,148 @@
+corridor_deposits.rs — Trailmark focus (isolated parse of hash-market module)
+
+summary: {'total_nodes': 121, 'functions': 14, 'classes': 0, 'proxies': 96, 'call_edges': 153, 'dependencies': ['serde', 'std'], 'entrypoints': 0}
+
+Source file: crates/terp-rs/tools/hash-market/src/corridor_deposits.rs
+Analyzed via temp crate /tmp/corridor_tm (single-file lib) so graph is not drowned by full hash-market.
+Product role: DepositNotifyHub watches + deposit.observed coordination (not mint authority).
+
+Complexity hotspots (top):
+  - src.lib:DepositNotifyHub.report_observation  name=report_observation  CC=10
+
+## focus: open_watch
+  callers (0):
+  callees (25):
+    -> src.lib:now_secs [function] cc=1
+    -> src.lib:validate_id [function] cc=3
+    -> proxy.unresolved:_btc_deposit_addr_and_domain_bind_required_.into [proxy] cc=None
+    -> proxy.unresolved:_client_proof_digest_required__UI_client_proof_.into [proxy] cc=None
+    -> proxy.unresolved:_dest_owner_binding_required__preauth_dest_.into [proxy] cc=None
+    -> proxy.unresolved:_webapp_.into [proxy] cc=None
+    -> proxy.unresolved:e.to_string [proxy] cc=None
+    -> proxy.unresolved:g.watches.insert [proxy] cc=None
+    -> proxy.unresolved:req.btc_deposit_addr.clone [proxy] cc=None
+    -> proxy.unresolved:req.btc_deposit_addr.is_empty [proxy] cc=None
+    -> proxy.unresolved:req.client_proof_digest.is_empty [proxy] cc=None
+    -> proxy.unresolved:req.dest_owner_binding.is_empty [proxy] cc=None
+    -> proxy.unresolved:req.domain_bind.is_empty [proxy] cc=None
+    -> proxy.unresolved:req.intent_id.clone [proxy] cc=None
+    -> proxy.unresolved:req.min_amount_sats.unwrap_or [proxy] cc=None
+    -> proxy.unresolved:req.ttl_secs.unwrap_or [proxy] cc=None
+    -> proxy.unresolved:req.ttl_secs.unwrap_or_86_400_.min [proxy] cc=None
+    -> proxy.unresolved:self.inner.write [proxy] cc=None
+    -> proxy.unresolved:self.inner.write_.map_err [proxy] cc=None
+    -> proxy.unresolved:self.publish [proxy] cc=None
+    -> proxy.unresolved:src.lib:Err [proxy] cc=None
+    -> proxy.unresolved:src.lib:Ok [proxy] cc=None
+    -> proxy.unresolved:watch.btc_deposit_addr.clone [proxy] cc=None
+    -> proxy.unresolved:watch.clone [proxy] cc=None
+    -> proxy.unresolved:watch.intent_id.clone [proxy] cc=None
+
+## focus: report_observation
+  callers (0):
+  callees (22):
+    -> src.lib:now_secs [function] cc=1
+    -> proxy.unresolved:_amount_sats_must_be___0__dust_rejected_.into [proxy] cc=None
+    -> proxy.unresolved:_btc_deposit_addr_does_not_match_open_watch_.into [proxy] cc=None
+    -> proxy.unresolved:_domain_bind_mismatch_.into [proxy] cc=None
+    -> proxy.unresolved:_no_watch_for_intent_id__open_from_webapp_first_.to_string [proxy] cc=None
+    -> proxy.unresolved:_txid_and_btc_deposit_addr_required_.into [proxy] cc=None
+    -> proxy.unresolved:_watch_expired_.into [proxy] cc=None
+    -> proxy.unresolved:e.to_string [proxy] cc=None
+    -> proxy.unresolved:g.observations_.insert [proxy] cc=None
+    -> proxy.unresolved:g_.watches_.get [proxy] cc=None
+    -> proxy.unresolved:g_.watches_.get_obs.intent_id__.ok_or_else [proxy] cc=None
+    -> proxy.unresolved:obs.btc_deposit_addr.is_empty [proxy] cc=None
+    -> proxy.unresolved:obs.clone [proxy] cc=None
+    -> proxy.unresolved:obs.intent_id.clone [proxy] cc=None
+    -> proxy.unresolved:obs.txid.is_empty [proxy] cc=None
+    -> proxy.unresolved:self.inner.write [proxy] cc=None
+    -> proxy.unresolved:self.inner.write_.map_err [proxy] cc=None
+    -> proxy.unresolved:self.publish [proxy] cc=None
+    -> proxy.unresolved:src.lib:Err [proxy] cc=None
+    -> proxy.unresolved:src.lib:Ok [proxy] cc=None
+    -> proxy.unresolved:src.lib:Some [proxy] cc=None
+    -> proxy.unresolved:watch.domain_bind.clone [proxy] cc=None
+
+## focus: put_automation
+  callers (0):
+  callees (17):
+    -> src.lib:now_secs [function] cc=1
+    -> src.lib:validate_id [function] cc=3
+    -> proxy.unresolved:_phase_required_.into [proxy] cc=None
+    -> proxy.unresolved:allowed.contains [proxy] cc=None
+    -> proxy.unresolved:e.to_string [proxy] cc=None
+    -> proxy.unresolved:g.automation.insert [proxy] cc=None
+    -> proxy.unresolved:intent_id.to_string [proxy] cc=None
+    -> proxy.unresolved:phase.is_empty [proxy] cc=None
+    -> proxy.unresolved:phase.to_string [proxy] cc=None
+    -> proxy.unresolved:req.mock_verify.unwrap_or [proxy] cc=None
+    -> proxy.unresolved:req.oracle_bound_only.unwrap_or [proxy] cc=None
+    -> proxy.unresolved:req.phase.trim [proxy] cc=None
+    -> proxy.unresolved:self.inner.write [proxy] cc=None
+    -> proxy.unresolved:self.inner.write_.map_err [proxy] cc=None
+    -> proxy.unresolved:src.lib:Err [proxy] cc=None
+    -> proxy.unresolved:src.lib:Ok [proxy] cc=None
+    -> proxy.unresolved:st.clone [proxy] cc=None
+
+## focus: get_status
+  callers (0):
+  callees (13):
+    -> src.lib:now_secs [function] cc=1
+    -> proxy.unresolved:_deposit_observed_.into [proxy] cc=None
+    -> proxy.unresolved:_expired_.into [proxy] cc=None
+    -> proxy.unresolved:_unknown_.into [proxy] cc=None
+    -> proxy.unresolved:_watching_.into [proxy] cc=None
+    -> proxy.unresolved:e.to_string [proxy] cc=None
+    -> proxy.unresolved:g.observations.get [proxy] cc=None
+    -> proxy.unresolved:g.observations.get_intent_id_.cloned [proxy] cc=None
+    -> proxy.unresolved:g.watches.get [proxy] cc=None
+    -> proxy.unresolved:g.watches.get_intent_id_.cloned [proxy] cc=None
+    -> proxy.unresolved:self.inner.read [proxy] cc=None
+    -> proxy.unresolved:self.inner.read_.map_err [proxy] cc=None
+    -> proxy.unresolved:src.lib:Ok [proxy] cc=None
+
+## focus: publish
+  callers (0):
+  callees (6):
+    -> proxy.unresolved:event.clone [proxy] cc=None
+    -> proxy.unresolved:g.subscribers.get_mut [proxy] cc=None
+    -> proxy.unresolved:self.inner.write [proxy] cc=None
+    -> proxy.unresolved:subs.retain [proxy] cc=None
+    -> proxy.unresolved:tx.send [proxy] cc=None
+    -> proxy.unresolved:tx.send_event.clone_.is_ok [proxy] cc=None
+
+## focus: validate_id
+  callers (3):
+    <- src.lib:DepositNotifyHub.get_automation [method]
+    <- src.lib:DepositNotifyHub.put_automation [method]
+    <- src.lib:DepositNotifyHub.open_watch [method]
+  callees (9):
+    -> proxy.unresolved:_intent_id_charset_.into [proxy] cc=None
+    -> proxy.unresolved:_invalid_intent_id_.into [proxy] cc=None
+    -> proxy.unresolved:c.is_ascii_alphanumeric [proxy] cc=None
+    -> proxy.unresolved:id.is_empty [proxy] cc=None
+    -> proxy.unresolved:id.len [proxy] cc=None
+    -> proxy.unresolved:id_.chars [proxy] cc=None
+    -> proxy.unresolved:id_.chars__.all [proxy] cc=None
+    -> proxy.unresolved:src.lib:Err [proxy] cc=None
+    -> proxy.unresolved:src.lib:Ok [proxy] cc=None
+
+## focus: subscribe
+  callers (0):
+  callees (14):
+    -> proxy.unresolved:_no_watch_for_intent_id_.into [proxy] cc=None
+    -> proxy.unresolved:e.to_string [proxy] cc=None
+    -> proxy.unresolved:g.observations.get [proxy] cc=None
+    -> proxy.unresolved:g.observations.get_intent_id_.cloned [proxy] cc=None
+    -> proxy.unresolved:g.subscribers_.entry [proxy] cc=None
+    -> proxy.unresolved:g.subscribers_.entry_intent_id.to_string__.or_default [proxy] cc=None
+    -> proxy.unresolved:g.subscribers_.entry_intent_id.to_string__.or_default__.push [proxy] cc=None
+    -> proxy.unresolved:g.watches.contains_key [proxy] cc=None
+    -> proxy.unresolved:intent_id.to_string [proxy] cc=None
+    -> proxy.unresolved:self.inner.write [proxy] cc=None
+    -> proxy.unresolved:self.inner.write_.map_err [proxy] cc=None
+    -> proxy.unresolved:src.lib:Err [proxy] cc=None
+    -> proxy.unresolved:src.lib:Ok [proxy] cc=None
+    -> proxy.unresolved:std::sync::mpsc::channel [proxy] cc=None
+

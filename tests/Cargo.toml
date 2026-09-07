@@ -1,7 +1,8 @@
 [package]
-name = "scripts"
-version = "0.1.0"
+name = "terp-scripts"
+version = "0.0.2"
 edition = "2024"
+description = "Terp Network orchestration, IBC data pipeline, and integration harness (path: tests/)"
 
 [[bin]]
 name = "delegations"
@@ -10,9 +11,17 @@ path = "bin/dels.rs"
 [[bin]]
 name = "e2e"
 path = "bin/e2e.rs"
+
+# Canonical IBC automation CLI (agent catalog / just recipes)
+[[bin]]
+name = "terp-ibc"
+path = "bin/ibc_info.rs"
+
+# Deprecated alias — prefer terp-ibc; remove after one release cycle
 [[bin]]
 name = "ibc"
 path = "bin/ibc_info.rs"
+
 [[bin]]
 name = "testnet"
 path = "bin/testnet.rs"
@@ -22,10 +31,11 @@ name = "create_val"
 path = "bin/create_val.rs"
 
 [features]
-default = ["docker", "nostr"]
+default = ["docker", "nostr", "hash-market"]
 docker = []
 nostr = []
 zk = ["cosmwasm-std/zk", "dep:zk-test-press"]
+# Content plane + calendar NIP-52 egress (Phase B)
 hash-market = ["dep:hash-market"]
 # Pulls billboards suite (terp721-account). Off by default so pure lib/tests compile.
 account = ["dep:terp-account-scripts"]
@@ -42,7 +52,7 @@ cw-orch = { path = "../../cw-orchestrator/cw-orch", features = ["daemon"] }
 cw-orch-interchain = { path = "../../cw-orchestrator/cw-orch-interchain", features = ["daemon"] }
 dotenv = "0.15"
 env_logger = "0.11"
-hash-market = { path = "../tools/hash-market", features = ["server", "client", "ve", "blossom"], optional = true }
+hash-market = { path = "../tools/hash-market", features = ["server", "client", "ve", "blossom", "nostr"], optional = true }
 hex = "0.4"
 zk-test-press = { path = "../../headstash/test-press", features = ["interface"], optional = true }
 ict-rs = { path = "../../ict-rs/ict-rs", features = ["docker", "terp", "testing", "nostr"] }

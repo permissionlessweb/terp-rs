@@ -1,7 +1,10 @@
 //! Diff report types for predict vs observe / invariant checks.
 
+use serde::{Deserialize, Serialize};
+
 /// Severity of a diff item.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum DiffSeverity {
     Error,
     Warn,
@@ -9,16 +12,17 @@ pub enum DiffSeverity {
 }
 
 /// One finding from validation or compare.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiffItem {
     pub severity: DiffSeverity,
     pub code: String,
     pub message: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
 }
 
 /// Collection of diff items with helpers for fail-closed behavior.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct DiffReport {
     pub items: Vec<DiffItem>,
 }
@@ -87,5 +91,15 @@ mod tests {
         r.push(DiffSeverity::Error, "e", "err");
         assert!(r.has_errors());
         assert_eq!(r.exit_code(), 1);
+    }
+
+    #[test]
+    fn serde_roundtrip() {
+        let mut r = DiffReport::new();
+        r.push_at(DiffSeverity::Error, "prefer_direct", "msg", "lookup/x");
+        let v = serde_json::to_value(&r).unwrap();
+        assert_eq!(v["items"][0]["severity"], "error");
+        let back: DiffReport = serde_json::from_value(v).unwrap();
+        assert_eq!(back.items[0].code, "prefer_direct");
     }
 }

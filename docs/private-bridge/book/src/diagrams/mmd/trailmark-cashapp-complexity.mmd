@@ -1,0 +1,11 @@
+flowchart TB
+    src_lib_OracleBoundPolicy_from_u8["from_u8 method CC=4"]:::low
+    src_lib_DepositIntentV0_new_preauth["new_preauth method CC=5"]:::medium
+    src_lib_DepositIntentV0_canonical_bytes_without_domain_bind["canonical_bytes_without_domain_bind method CC=3"]:::low
+    src_lib_DepositIntentV0_validate["validate method CC=6"]:::medium
+    src_lib_intent_allows_swap["intent_allows_swap function CC=16"]:::high
+    src_lib_CorridorMintedSet_insert["insert method CC=3"]:::low
+    src_lib_sim_deposit["sim_deposit function CC=6"]:::medium
+    classDef low fill:#d4edda,stroke:#28a745,color:#155724
+    classDef medium fill:#fff3cd,stroke:#e6a817,color:#856404
+    classDef high fill:#f8d7da,stroke:#dc3545,color:#721c24

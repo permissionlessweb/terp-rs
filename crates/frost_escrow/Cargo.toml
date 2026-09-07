@@ -1,0 +1,15 @@
+[package]
+name = "frost_escrow"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = ["frost"]
+frost = ["dep:frost-ed25519"]
+
+[dependencies]
+thiserror = "2"
+sha2 = "0.10"
+hex = "0.4"
+threshold_committee = { path = "../threshold_committee" }
+frost-ed25519 = { version = "2.1", optional = true }

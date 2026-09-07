@@ -7,50 +7,47 @@ Date: 2026-06-12
 ## What this workspace is
 
 `tests/` is the Terp Network integration, schema validation, and IBC asset derivation workspace.  
-Package name: `scripts` (in `Cargo.toml`).
+**Package name: `terp-scripts`** (in `Cargo.toml`). Path is `tests/`; package is not named “tests”.
+
+**Agents: read [`agent/COMMANDS.md`](agent/COMMANDS.md) first.** Prefer `just scripts-ibc-*` from the workspace root.
 
 ### Capabilities
 
-1. **IBC info derivation** — `bin/ibc_info.rs` connects to live chains (Terp mainnet + connected chains), queries IBC clients/connections/channels, and generates:
-   - Schema-compliant `ibc_data` JSON files (`public/{chain_1}-{chain_2}.json`)
-   - `assetlist.json` with native Terp assets + chain-registry base denoms + derived IBC assets
-   - `ibc_routing_table.json` — all possible multi-hop routes
-   - `ibc_lookup_table.json` — simplified denom→origin lookup
-   - All output validated against `asset_list.schema.json` and `ibc_data.schema.json`
-
-2. **Contract deployment** — `TerpNetworkSuite` composes cw-orch sub-suites (DAO, SVG, headstash, billboards, shitstraps) and deploys them on any Terp chain.
-
-3. **Sidecar lifecycle** — a fleet of off-chain services (hashmarket, merkle-server, indexer, MinIO, Nostr relay) that run alongside the chain during integration tests.
-
-4. **Multi-chain IBC authenticity harness** — `#[ignore]`d 4-chain line Docker test (`tests/tests/ibc_multihop_harness.rs`) that proves predicted IBC denoms against live bank balances and denom traces (see below).
+1. **IBC info derivation** — `bin/ibc_info.rs` (`cargo run -p terp-scripts --bin terp-ibc`):
+   - **Live** `generate` — query chains, write repo-root `public/` artifacts
+   - **Offline** `validate` / `compare` / `rebuild-from-public` / `preflight` — JSON `RunReport`, exit codes 0/1/2
+   - Artifacts: `public/ibc-data/*.json`, `assetlist.json`, routing + lookup tables
+2. **Contract deployment** — suite modules (feature-gated)
+3. **Sidecar lifecycle** — off-chain services for integration tests
+4. **Multi-chain IBC authenticity harness** — `#[ignore]`d 4-chain line Docker test (`tests/ibc_multihop_harness.rs`)
 
 ---
 
 ## Architecture
 
 ```
-tests/
+tests/                          # package: scripts
+├── agent/COMMANDS.md           # Agent catalog (load first)
 ├── src/
-│   ├── lib.rs                  # Public re-exports
-│   ├── environments/           # Test environment primitives (nostr, quickspawn)
-│   ├── ibc_core.rs             # Pure IBC derivation: denom hashes, channel graph, routing table
-│   └── suite/                  # SidecarFleet + TerpSidecar trait + contract deployment
+│   ├── lib.rs
+│   ├── report.rs               # RunReport (agent JSON)
+│   ├── environments/
+│   ├── ibc/                    # Pure authenticity lib (predict/observe/diff/publish)
+│   └── ibc_core.rs             # Legacy re-export surface
 ├── bin/
-│   ├── e2e.rs                  # Full integration test binary (Docker sidecars)
-│   ├── delegations.rs          # Delegation-specific test binary
-│   └── ibc_info.rs             # IBC info derivation pipeline (live chains → public/ JSON files)
+│   ├── ibc_info.rs             # bin: ibc — CLI contracts + live generate
+│   ├── e2e.rs
+│   └── …
 ├── tests/
-│   ├── nostr_orch_suite.rs     # Nostr relay integration tests
-│   └── ibc_info.rs             # Schema validation + derivation unit tests (11 tests)
-├── public/
-│   ├── asset_list.schema.json  # Chain-registry asset list schema
-│   ├── ibc_data.schema.json    # Chain-registry IBC data schema
-│   ├── assetlist.json          # Generated asset list output
-│   ├── state.json              # Chain state cache (used by ibc_info bin)
-│   ├── ibc_routing_table.json  # Premined multi-hop routing table
-│   └── ibc_lookup_table.json   # Simplified IBC denom lookup
+│   ├── ibc_unit.rs
+│   ├── ibc_golden.rs
+│   ├── ibc_multihop_harness.rs
+│   └── nostr_orch_suite.rs
+├── data/ibc/                   # golden / harness fixtures
 └── Cargo.toml
 ```
+
+Generated artifacts live at **repo-root** `public/` (not `tests/public/`).
 
 ---
 
@@ -125,17 +122,19 @@ sequenceDiagram
     Routing->>FS: Write ibc_lookup_table.json + ibc_routing_table.json
 ```
 
-This binary connects to live chain nodes (Terp mainnet, Osmosis, etc.), queries the IBC state, and produces schema-compliant output files:
-
-```
-cargo run --bin ibc
+```sh
+# Always -p terp-scripts; prefer just from workspace root
+cargo run -p terp-scripts --bin terp-ibc -- preflight --mode offline --format json
+cargo run -p terp-scripts --bin terp-ibc -- validate --format json
+cargo run -p terp-scripts --bin terp-ibc -- rebuild-from-public --format json
+cargo run -p terp-scripts --bin terp-ibc -- generate --mode live-query   # needs MAIN_MNEMONIC
 ```
 
 ### What it generates
 
 | File | Schema | Contents |
 |------|--------|----------|
-| `public/{a}-{b}.json` | `ibc_data.schema.json` | IBC channels, clients, connections per chain pair |
+| `public/ibc-data/{a}-{b}.json` | `ibc_data.schema.json` | IBC channels, clients, connections per chain pair |
 | `public/assetlist.json` | `asset_list.schema.json` | Native Terp assets + chain-registry base denoms + derived IBC assets |
 | `public/ibc_routing_table.json` | (internal) | All multi-hop routes from BFS graph traversal |
 | `public/ibc_lookup_table.json` | (simplified) | IBC denom → symbol/origin/trace lookup |
@@ -164,23 +163,16 @@ IBCAssetRoutingTable::premine(&graph, &assets, 4)   // all routes for all assets
 
 ---
 
-## Schema validation tests (11 tests)
+## Offline tests (no Docker)
 
-All synchronous, no Docker required. In `tests/tests/ibc_info.rs`:
+```sh
+cargo test -p terp-scripts --lib --test ibc_unit --test ibc_golden
+# or: just scripts-ibc-offline
+```
 
-| Test | What it validates |
-|------|-------------------|
-| `test_assetlist_schema_compliance` | Loads real `assetlist.json`, validates every asset against schema |
-| `test_ibc_data_schema_via_constructed_entry` | Constructed entry with `"ordering": "unordered"`, `$schema`, `chain_1`/`chain_2` validates clean |
-| `test_ibc_data_rejects_int_ordering` | Integer `1` for ordering correctly flagged as violation |
-| `test_ibc_data_rejects_missing_tags` | Missing `preferred` in tags correctly flagged |
-| `test_ibc_denom_computation_known_hashes` | SHA256 hashes match known AKT/ATONE values from assetlist |
-| `test_channel_graph_and_routing_with_real_ibc_data` | Full pipeline with real state.json data |
-| `test_routing_table_integrity` | Pre-computed table: 9 chains, 132 routes, hop count consistency |
-| `test_ibc_lookup_table_integrity` | All lookup entries have required fields |
-| `test_state_json_asset_structure` | Real state.json assets validated (6 entries, 0 violations) |
-| `test_asset_entry_validation_rejects_bad_data` | Validator catches 5 missing fields + 2 pattern violations |
-| `test_construct_ibc_data_and_run_derivation_pipeline` | End-to-end: construct → graph → routes → denoms → map |
+- `tests/ibc_unit.rs` — pure hash, normalize, prefer-direct, schema
+- `tests/ibc_golden.rs` — golden fixtures under `data/ibc/golden/`
+- There is **no** `tests/tests/ibc_info.rs` (removed / never shipped as claimed)
 
 ---
 
@@ -194,7 +186,7 @@ All synchronous, no Docker required. In `tests/tests/ibc_info.rs`:
 Topology: line **A—B—C—D** (`terp-a`…`terp-d`), Hermes links only on adjacent pairs, 16 tokenfactory denoms (4 per chain), scenarios 1–6 hop-by-hop ICS-20. Pass means **predict == denom_trace == bank balance denom**.
 
 ```sh
-cargo test -p scripts --test ibc_multihop_harness -- --ignored --nocapture
+cargo test -p terp-scripts --test ibc_multihop_harness -- --ignored --nocapture
 ```
 
 Requires Docker and a Terp image (default `terpnetwork/terp-core:local-zk`, overridable via `ICT_IMAGE_*` / `TERP_IMAGE_*`). There is no `tests/tests/ibc_info.rs` multichain test; offline schema/derivation coverage is separate from this harness.
@@ -219,27 +211,25 @@ docker pull ghcr.io/terpnetwork/terp-core:v5.2.0-zk-localterp
 ### IBC info pipeline (lib-backed)
 
 ```sh
-cargo run -p scripts --bin ibc -- generate   # default if no subcommand
-cargo run -p scripts --bin ibc -- validate --public-dir ../public
-cargo run -p scripts --bin ibc -- compare --public-dir ../public --strict
+just scripts-ibc-validate
+just scripts-ibc-offline
+cargo run -p terp-scripts --bin terp-ibc -- generate --mode live-query   # preflights MAIN_MNEMONIC
+cargo run -p terp-scripts --bin terp-ibc -- compare --format json --strict
 ```
 
-`generate` runs `scripts::ibc::check_invariants` and **fails closed** on hard errors. Writes `public/ibc_generation_meta.json`.
+`generate` / `rebuild-from-public` run `terp_scripts::ibc::check_invariants` and **fail closed** on hard errors. Offline rebuild uses atomic staging under `public/_staging/`.
 
 ### Offline IBC helpers / unit tests (no Docker)
 
 ```sh
-# Pure path prediction helpers in the multihop harness file (not ignored)
-cargo test -p scripts --test ibc_multihop_harness -- --nocapture
-
-# Lib pure derivation (ibc_core)
-cargo test -p scripts --lib ibc_core -- --nocapture
+cargo test -p terp-scripts --lib --test ibc_unit --test ibc_golden
+cargo test -p terp-scripts --test ibc_multihop_harness -- --nocapture   # non-ignored helpers only
 ```
 
 ### Live multi-hop authenticity (Docker, ignored)
 
 ```sh
-cargo test -p scripts --test ibc_multihop_harness -- --ignored --nocapture
+cargo test -p terp-scripts --test ibc_multihop_harness -- --ignored --nocapture
 ```
 
 ### Full integration e2e

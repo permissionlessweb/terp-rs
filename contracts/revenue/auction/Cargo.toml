@@ -1,0 +1,48 @@
+[package]
+name = "auction"
+version = "2.0.0"
+authors = ["apemon <apemon642002@hotmail.com>"]
+edition = "2021"
+
+exclude = [
+  # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
+  "contract.wasm",
+  "hash.txt",
+]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[profile.release]
+opt-level = 3
+debug = false
+rpath = false
+lto = true
+debug-assertions = false
+codegen-units = 1
+panic = 'abort'
+incremental = false
+overflow-checks = true
+
+[features]
+library = []
+
+[dependencies]
+cosmwasm-schema  = { workspace = true }
+cosmwasm-std = { workspace = true }
+cosmwasm-storage = { workspace = true }
+cw-utils = { workspace = true }
+cw721 = { workspace = true }
+cw2981-royalties  = { workspace = true }
+cw20 = { workspace = true }
+cw-asset = { workspace = true }
+cw-storage-plus = { workspace = true }
+thiserror =  { workspace = true }
+
+schemars        = { workspace = true }
+serde =  { workspace = true }
+
+[dev-dependencies]
+cw-multi-test    = { workspace = true }

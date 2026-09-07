@@ -1,0 +1,8 @@
+Nodes: 121
+  Functions: 14
+  Classes: 0
+  Proxies: 96
+Call edges: 153
+Dependencies: serde, std
+Entrypoints: 0
+Note: isolated parse of corridor_deposits.rs as lib for focused diagrams.

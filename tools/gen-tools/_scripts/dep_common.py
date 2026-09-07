@@ -1,13 +1,15 @@
 """
-Shared library for dependency tooling in the Abstract monorepo.
+Shared library for dependency tooling in the Terp / Abstract monorepo.
 
-Provides: constants, matrix loading, project discovery, dep extraction,
-TOML writing helpers, and data classes used by dep-scrape, dep-overview,
-and dep-switch.
+Provides: config + monorepo root resolution, matrix loading, project discovery,
+dep extraction, TOML writing helpers, strict matrix validation, heal, and
+cargo-metadata verification used by dep-scrape, dep-overview, and dep-switch.
 """
 
+import json
 import os
 import re
+import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -23,13 +25,13 @@ except ImportError:
         sys.exit(1)
 
 
-# ── Constants ────────────────────────────────────────────────────────────────
+# ── Constants / config ───────────────────────────────────────────────────────
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-MATRIX_PATH = REPO_ROOT / "_devops" / "dependency-matrix.toml"
-MIGRATION_PATH = REPO_ROOT / "_devops" / "migration-progress.yaml"
-DEVOPS_DIR = REPO_ROOT / "_devops"
-MODE_STATE_PATH = DEVOPS_DIR / ".dep-mode"
+# Tooling home: gen-tools/ (parent of _scripts/)
+TOOLING_ROOT = Path(__file__).resolve().parent.parent
+DEVOPS_DIR = TOOLING_ROOT / "_devops"
+CONFIG_PATH = DEVOPS_DIR / "dep-config.toml"
+MIGRATION_PATH = DEVOPS_DIR / "migration-progress.yaml"
 
 VALID_MODES = ("stable", "local", "git", "zk_local", "zk_git", "dev", "zk_dev")
 
@@ -39,7 +41,69 @@ DEV_MODE_MAP = {
     "zk_dev": ("zk_git", "zk_local", "zk_local"),
 }
 
-SKIP_DIRS = {".git", "target", "_devops", "_scripts", ".claude", "node_modules"}
+SKIP_DIRS = {
+    ".git", "target", "_devops", "_scripts", ".claude", "node_modules",
+    "__pycache__", "dist", "build",
+}
+
+
+def load_dep_config() -> dict:
+    """Load _devops/dep-config.toml. Missing file → defaults."""
+    defaults = {
+        "paths": {
+            "monorepo_root": "../../../..",
+            "matrix": "dependency-matrix.toml",
+            "mode_state": ".dep-mode",
+        },
+        "policy": {
+            "forbid_absolute_paths": True,
+            "strict_package_names": True,
+            "verify_after_switch": False,
+            "deprioritize_path_prefixes": {
+                "prefixes": ["vancw/", "masp/vendor/", "build/"],
+            },
+        },
+    }
+    if not CONFIG_PATH.exists():
+        return defaults
+    with open(CONFIG_PATH, "rb") as f:
+        data = tomllib.load(f)
+    # shallow merge
+    for section, vals in defaults.items():
+        if section not in data:
+            data[section] = vals
+        elif isinstance(vals, dict):
+            for k, v in vals.items():
+                data[section].setdefault(k, v)
+    return data
+
+
+def _resolve_monorepo_root(cfg: dict) -> Path:
+    """Resolve monorepo root from config, env, or fallbacks."""
+    env = os.environ.get("TERP_DEP_ROOT") or os.environ.get("DEP_MONOREPO_ROOT")
+    if env:
+        return Path(env).expanduser().resolve()
+
+    rel = cfg.get("paths", {}).get("monorepo_root", "../../../..")
+    root = (DEVOPS_DIR / rel).resolve()
+    if root.is_dir():
+        return root
+
+    # Fallbacks: walk up from tooling looking for cosmwasm/ or many Cargo workspaces
+    for candidate in (
+        TOOLING_ROOT.parent.parent.parent,  # crates/
+        TOOLING_ROOT.parent.parent.parent.parent,  # terp-core/
+    ):
+        if (candidate / "cosmwasm").is_dir() or (candidate / "cw-plus").is_dir():
+            return candidate.resolve()
+    return TOOLING_ROOT
+
+
+_DEP_CFG = load_dep_config()
+REPO_ROOT = _resolve_monorepo_root(_DEP_CFG)
+MATRIX_PATH = DEVOPS_DIR / _DEP_CFG.get("paths", {}).get("matrix", "dependency-matrix.toml")
+MODE_STATE_PATH = DEVOPS_DIR / _DEP_CFG.get("paths", {}).get("mode_state", ".dep-mode")
+DEP_POLICY = _DEP_CFG.get("policy", {})
 
 
 def save_active_mode(mode: str):
@@ -55,13 +119,45 @@ def load_active_mode() -> Optional[str]:
             return mode
     return None
 
-# Hardcoded workspace roots (fallback / filter)
+
+def normalize_matrix_local(local: str) -> Optional[str]:
+    """Normalize a matrix local path to monorepo-relative form, or None if empty/N/A."""
+    if not local or local == "N/A":
+        return None
+    local = local.strip()
+    if local.startswith("file://"):
+        local = local[len("file://"):]
+    # Absolute → try make relative to REPO_ROOT
+    p = Path(local)
+    if p.is_absolute():
+        try:
+            rel = p.resolve().relative_to(REPO_ROOT.resolve())
+            local = str(rel)
+        except ValueError:
+            return local  # outside monorepo — caller treats as invalid
+    local = local.lstrip("./")
+    # If path points at Cargo.toml, use parent package dir
+    if local.endswith("/Cargo.toml") or local.endswith("Cargo.toml"):
+        local = str(Path(local).parent)
+    # Collapse /./ segments
+    local = str(Path(local))
+    return local.replace("\\", "/")
+
+# Default workspace roots for switch when no --workspace filter is given.
+# Paths are relative to monorepo_root (terp-core/crates).
 KNOWN_WORKSPACE_ROOTS = [
     "abstract/framework/Cargo.toml",
     "abstract/modules/Cargo.toml",
     "abstract/integrations/Cargo.toml",
     "abstract/interchain/Cargo.toml",
     "cw-orchestrator/Cargo.toml",
+    "cw-plus/Cargo.toml",
+    "cw-minus/Cargo.toml",
+    "cosmwasm/Cargo.toml",
+    "dao-contracts/Cargo.toml",
+    "polytone/Cargo.toml",
+    "cw-multi-test-fork/Cargo.toml",
+    "clone-cw-multi-test/Cargo.toml",
 ]
 
 
@@ -128,9 +224,29 @@ class ProjectScanResult:
 # ── Matrix Functions ─────────────────────────────────────────────────────────
 
 def load_matrix() -> dict:
-    """Load the dependency matrix TOML. Returns the [crates] table."""
+    """Load the dependency matrix TOML. Returns the [crates] table.
+
+    Normalizes legacy top-level url/branch fields into nested git tables.
+    """
     with open(MATRIX_PATH, "rb") as f:
-        return tomllib.load(f).get("crates", {})
+        crates = tomllib.load(f).get("crates", {})
+    for _key, info in crates.items():
+        if not isinstance(info, dict):
+            continue
+        # Legacy: url/branch at crate top-level instead of [crates.x.git]
+        if info.get("url") and not isinstance(info.get("git"), dict):
+            gi = {"url": info.pop("url")}
+            if info.get("branch"):
+                gi["branch"] = info.pop("branch")
+            info["git"] = gi
+        elif isinstance(info.get("git"), dict):
+            info.pop("url", None)
+            # keep top-level branch only if git.branch missing
+            if info.get("branch") and not info["git"].get("branch"):
+                info["git"]["branch"] = info.pop("branch")
+            else:
+                info.pop("branch", None)
+    return crates
 
 
 def load_defaults() -> dict:
@@ -1502,12 +1618,19 @@ def validate_matrix_paths(matrix: dict, mode: str = None) -> list:
     Returns list of warning strings for missing paths."""
     warnings = []
     path_keys = _mode_path_keys(mode)
+    forbid_abs = DEP_POLICY.get("forbid_absolute_paths", True)
 
     for key, info in sorted(matrix.items()):
         for pk in path_keys:
             local = info.get(pk)
             if local and local != "N/A":
-                resolved = REPO_ROOT / local.lstrip("./")
+                if forbid_abs and (local.startswith("/") or local.startswith("file://")):
+                    warnings.append(
+                        f"[WARN] matrix '{key}': {pk} path is absolute '{local}'"
+                    )
+                    break
+                norm = normalize_matrix_local(local) or local
+                resolved = REPO_ROOT / norm.lstrip("./")
                 if not resolved.exists():
                     warnings.append(
                         f"[WARN] matrix '{key}': {pk} path '{local}' does not exist"
@@ -1587,3 +1710,964 @@ def validate_matrix_packages(matrix: dict, mode: str = None) -> list:
                     )
 
     return warnings
+
+
+# ── Strict matrix validation / package index / heal / verify ─────────────────
+
+@dataclass
+class MatrixIssue:
+    level: str  # "error" | "warn" | "info"
+    key: str
+    field: str
+    message: str
+
+    def format(self) -> str:
+        return f"[{self.level.upper()}] matrix '{self.key}': {self.field}: {self.message}"
+
+
+def build_package_index(root: Path = None, max_depth: int = 8) -> dict:
+    """Map package name -> list of monorepo-relative directory paths."""
+    root = root or REPO_ROOT
+    index = {}
+    root = root.resolve()
+
+    for dirpath, dirnames, filenames in os.walk(root):
+        # prune
+        dirnames[:] = [
+            d for d in dirnames
+            if d not in SKIP_DIRS and not d.startswith(".")
+        ]
+        rel_dir = Path(dirpath).relative_to(root)
+        if len(rel_dir.parts) > max_depth:
+            dirnames.clear()
+            continue
+        if "Cargo.toml" not in filenames:
+            continue
+        cargo = Path(dirpath) / "Cargo.toml"
+        try:
+            with open(cargo, "rb") as f:
+                data = tomllib.load(f)
+        except Exception:
+            continue
+        name = data.get("package", {}).get("name")
+        if not name:
+            continue
+        rel = str(rel_dir).replace("\\", "/")
+        if rel == ".":
+            rel = ""
+        index.setdefault(name, []).append(rel if rel else ".")
+    return index
+
+
+def _package_name_at(local_path: str) -> Optional[str]:
+    """Read [package].name at a monorepo-relative path, or None."""
+    norm = normalize_matrix_local(local_path)
+    if not norm:
+        return None
+    resolved = REPO_ROOT / norm
+    cargo = resolved / "Cargo.toml" if resolved.is_dir() else resolved
+    if not cargo.exists():
+        return None
+    try:
+        with open(cargo, "rb") as f:
+            data = tomllib.load(f)
+        return data.get("package", {}).get("name")
+    except Exception:
+        return None
+
+
+def _deprioritized(path: str) -> bool:
+    prefixes = (
+        DEP_POLICY.get("deprioritize_path_prefixes", {}) or {}
+    ).get("prefixes", ["vancw/", "masp/vendor/", "build/"])
+    return any(path.startswith(p) or f"/{p}" in f"/{path}" for p in prefixes)
+
+
+def pick_local_path(key: str, info: dict, pkg_index: dict) -> Optional[str]:
+    """Choose best monorepo-relative local path for a matrix crate."""
+    expected = info.get("package", key)
+    candidates = list(pkg_index.get(expected, []))
+
+    # Also try key if different
+    if key != expected:
+        for c in pkg_index.get(key, []):
+            if c not in candidates:
+                candidates.append(c)
+
+    if not candidates:
+        # Keep existing if it already has the right package name
+        for field in ("local", "zk_local"):
+            cur = info.get(field)
+            if not cur or cur == "N/A":
+                continue
+            norm = normalize_matrix_local(cur)
+            if not norm:
+                continue
+            actual = _package_name_at(norm)
+            if actual == expected:
+                return norm
+        return None
+
+    def score(path: str) -> tuple:
+        # lower is better
+        pen = 0
+        if _deprioritized(path):
+            pen += 100
+        # prefer paths that look like the matrix key / package
+        key_hit = key.replace("_", "-") in path or key in path
+        pkg_hit = expected.replace("_", "-") in path or expected in path
+        if not key_hit and not pkg_hit:
+            pen += 10
+        # prefer shorter
+        pen += path.count("/")
+        # prefer non-absolute-looking
+        return (pen, len(path), path)
+
+    # Prefer current local if still valid
+    for field in ("local", "zk_local"):
+        cur = info.get(field)
+        if not cur or cur == "N/A":
+            continue
+        norm = normalize_matrix_local(cur)
+        if norm and norm in candidates and _package_name_at(norm) == expected:
+            return norm
+        if norm and _package_name_at(norm) == expected and not Path(cur).is_absolute():
+            return norm
+
+    candidates.sort(key=score)
+    return candidates[0] if candidates else None
+
+
+def validate_matrix_strict(matrix: dict, mode: str = None) -> list:
+    """Hard validation of matrix integrity. Returns list[MatrixIssue].
+
+    Errors: absolute paths, missing paths, package name mismatches, virtual manifests.
+    """
+    issues = []
+    path_keys = _mode_path_keys(mode)
+    forbid_abs = DEP_POLICY.get("forbid_absolute_paths", True)
+    strict_pkg = DEP_POLICY.get("strict_package_names", True)
+
+    for key, info in sorted(matrix.items()):
+        if is_repo_only(info):
+            # repo_only still needs a resolvable local for graph/push, but not package match
+            for pk in path_keys:
+                local = info.get(pk)
+                if not local or local == "N/A":
+                    continue
+                if forbid_abs and (str(local).startswith("/") or str(local).startswith("file://")):
+                    issues.append(MatrixIssue("error", key, pk, f"absolute path '{local}'"))
+                else:
+                    norm = normalize_matrix_local(local)
+                    if norm and not (REPO_ROOT / norm).exists():
+                        issues.append(MatrixIssue("warn", key, pk, f"path '{local}' does not exist"))
+                break
+            continue
+
+        expected = info.get("package", key)
+        saw_path = False
+        for pk in path_keys:
+            local = info.get(pk)
+            if not local or local == "N/A":
+                continue
+            saw_path = True
+            raw = str(local)
+            if forbid_abs and (raw.startswith("/") or raw.startswith("file://")):
+                issues.append(MatrixIssue(
+                    "error", key, pk, f"absolute path forbidden: '{local}'"
+                ))
+                break
+
+            norm = normalize_matrix_local(local)
+            if not norm:
+                issues.append(MatrixIssue("error", key, pk, "empty after normalize"))
+                break
+
+            resolved = REPO_ROOT / norm
+            cargo = resolved / "Cargo.toml" if resolved.is_dir() else resolved
+            if not cargo.exists():
+                issues.append(MatrixIssue(
+                    "error", key, pk, f"path '{norm}' does not exist under {REPO_ROOT}"
+                ))
+                break
+
+            try:
+                with open(cargo, "rb") as f:
+                    data = tomllib.load(f)
+            except Exception as e:
+                issues.append(MatrixIssue("error", key, pk, f"unreadable Cargo.toml: {e}"))
+                break
+
+            if "package" not in data:
+                if "workspace" in data:
+                    issues.append(MatrixIssue(
+                        "error", key, pk,
+                        f"'{norm}' is a virtual workspace manifest, not a package"
+                    ))
+                else:
+                    issues.append(MatrixIssue(
+                        "error", key, pk, f"'{norm}' has no [package] table"
+                    ))
+                break
+
+            actual = data["package"].get("name")
+            if strict_pkg and actual and actual != expected:
+                issues.append(MatrixIssue(
+                    "error", key, pk,
+                    f"package name '{actual}' != expected '{expected}' (path '{norm}')"
+                ))
+            break
+
+        if not saw_path and not info.get("patch_only"):
+            # local optional for pure-git crates, warn only
+            if not info.get("git") and not info.get("stable"):
+                issues.append(MatrixIssue(
+                    "warn", key, "local", "no local/git/stable source configured"
+                ))
+
+    return issues
+
+
+def matrix_is_clean(matrix: dict, mode: str = None) -> tuple:
+    """Return (ok: bool, errors: list[str], warnings: list[str])."""
+    issues = validate_matrix_strict(matrix, mode=mode)
+    errors = [i.format() for i in issues if i.level == "error"]
+    warns = [i.format() for i in issues if i.level != "error"]
+    return (len(errors) == 0, errors, warns)
+
+
+def heal_matrix_locals(matrix: dict, dry_run: bool = False) -> dict:
+    """Heal local/zk_local paths in-memory. Returns report dict.
+
+    Does not write the matrix file — use write_healed_matrix for that.
+    """
+    pkg_index = build_package_index()
+    report = {
+        "repo_root": str(REPO_ROOT),
+        "packages_indexed": len(pkg_index),
+        "fixed": [],
+        "unchanged": [],
+        "unresolved": [],
+        "repo_only_normalized": [],
+    }
+
+    for key, info in sorted(matrix.items()):
+        if not isinstance(info, dict):
+            continue
+        expected = info.get("package", key)
+
+        for field in ("local", "zk_local"):
+            cur = info.get(field)
+            if cur is None or cur == "N/A":
+                continue
+
+            if is_repo_only(info):
+                norm = normalize_matrix_local(cur)
+                if norm and norm != cur:
+                    report["repo_only_normalized"].append(
+                        {"key": key, "field": field, "from": cur, "to": norm}
+                    )
+                    if not dry_run:
+                        info[field] = norm
+                continue
+
+            picked = pick_local_path(key, info, pkg_index)
+            norm_cur = normalize_matrix_local(cur)
+
+            if picked is None:
+                # try normalize-only if package already matches
+                if norm_cur and _package_name_at(norm_cur) == expected:
+                    if norm_cur != cur:
+                        report["fixed"].append(
+                            {"key": key, "field": field, "from": cur, "to": norm_cur, "reason": "normalize"}
+                        )
+                        if not dry_run:
+                            info[field] = norm_cur
+                    else:
+                        report["unchanged"].append({"key": key, "field": field, "path": cur})
+                elif norm_cur and (REPO_ROOT / norm_cur).exists():
+                    # Path exists but package name differs — adopt actual package name
+                    actual = _package_name_at(norm_cur)
+                    if actual:
+                        report["fixed"].append(
+                            {
+                                "key": key,
+                                "field": field,
+                                "from": cur,
+                                "to": norm_cur,
+                                "reason": "normalize+package",
+                                "package_from": expected,
+                                "package_to": actual,
+                            }
+                        )
+                        if not dry_run:
+                            info[field] = norm_cur
+                            if field == "local":
+                                # Only set package when matrix key is not the dep alias case
+                                if info.get("package", key) == expected:
+                                    info["package"] = actual
+                    else:
+                        # virtual manifest or unreadable
+                        report["unresolved"].append(
+                            {"key": key, "field": field, "current": cur, "expected_package": expected}
+                        )
+                else:
+                    report["unresolved"].append(
+                        {"key": key, "field": field, "current": cur, "expected_package": expected}
+                    )
+                continue
+
+            # For zk_local, only rewrite if broken; prefer keeping distinct zk path when valid
+            if field == "zk_local":
+                if norm_cur and _package_name_at(norm_cur) == expected and not str(cur).startswith("/"):
+                    if norm_cur != cur:
+                        report["fixed"].append(
+                            {"key": key, "field": field, "from": cur, "to": norm_cur, "reason": "normalize"}
+                        )
+                        if not dry_run:
+                            info[field] = norm_cur
+                    else:
+                        report["unchanged"].append({"key": key, "field": field, "path": cur})
+                    continue
+
+            if picked != cur:
+                report["fixed"].append(
+                    {
+                        "key": key,
+                        "field": field,
+                        "from": cur,
+                        "to": picked,
+                        "reason": "package-index",
+                        "package": expected,
+                    }
+                )
+                if not dry_run:
+                    info[field] = picked
+            else:
+                report["unchanged"].append({"key": key, "field": field, "path": cur})
+
+        # Ensure local is set when we found a package path and local was missing/N/A
+        if not is_repo_only(info):
+            local = info.get("local")
+            if not local or local == "N/A":
+                picked = pick_local_path(key, info, pkg_index)
+                if picked:
+                    report["fixed"].append(
+                        {
+                            "key": key,
+                            "field": "local",
+                            "from": local or "N/A",
+                            "to": picked,
+                            "reason": "fill-missing",
+                            "package": expected,
+                        }
+                    )
+                    if not dry_run:
+                        info["local"] = picked
+
+    return report
+
+
+def write_healed_matrix(matrix: dict, path: Path = None) -> Path:
+    """Rewrite dependency-matrix.toml from healed matrix dict.
+
+    Preserves a short header comment. Uses a deterministic TOML layout.
+    """
+    path = path or MATRIX_PATH
+    # Load defaults from existing file if present
+    defaults = {}
+    if path.exists():
+        with open(path, "rb") as f:
+            raw = tomllib.load(f)
+        defaults = raw.get("defaults", {})
+
+    lines = [
+        "# dependency-matrix.toml — source of truth for forked crate resolution",
+        "# Healed by dep tooling: paths are monorepo-relative to REPO_ROOT.",
+        "# Do not store absolute paths. Package names must match Cargo.toml [package].name.",
+        "",
+    ]
+
+    if defaults or True:
+        lines.append("[defaults]")
+        lines.append(f'git_branch = "{defaults.get("git_branch", "main")}"')
+        lines.append(f'zk_git_branch = "{defaults.get("zk_git_branch", "zk-mvp")}"')
+        lines.append("")
+
+    def _fmt_str_list(vals):
+        if not vals:
+            return "[]"
+        inner = ", ".join(f'"{v}"' for v in vals)
+        return f"[{inner}]"
+
+    def _write_git_table(crate_key: str, section: str, gi: dict):
+        if not isinstance(gi, dict):
+            return
+        lines.append(f"[crates.{crate_key}.{section}]")
+        if gi.get("url"):
+            lines.append(f'url = "{gi["url"]}"')
+        if gi.get("branch"):
+            lines.append(f'branch = "{gi["branch"]}"')
+        if gi.get("origin"):
+            lines.append(f'origin = "{gi["origin"]}"')
+        lines.append("")
+
+    for key in sorted(matrix.keys()):
+        info = matrix[key]
+        if not isinstance(info, dict):
+            continue
+        lines.append(f"[crates.{key}]")
+
+        # Scalar / simple fields in stable order
+        order = [
+            "description", "package", "stable", "local", "zk_local",
+            "repo_only", "patch_only",
+        ]
+        for field in order:
+            if field not in info:
+                continue
+            val = info[field]
+            if val is None:
+                continue
+            if isinstance(val, bool):
+                lines.append(f"{field} = {'true' if val else 'false'}")
+            elif isinstance(val, str):
+                # escape quotes
+                esc = val.replace("\\", "\\\\").replace('"', '\\"')
+                lines.append(f'{field} = "{esc}"')
+            else:
+                lines.append(f"{field} = {val}")
+
+        if info.get("dep_aliases"):
+            lines.append(f"dep_aliases = {_fmt_str_list(info['dep_aliases'])}")
+        if info.get("consumers"):
+            cons = info["consumers"]
+            if len(cons) <= 3:
+                lines.append(f"consumers = {_fmt_str_list(cons)}")
+            else:
+                lines.append("consumers = [")
+                for c in cons:
+                    lines.append(f'    "{c}",')
+                lines.append("]")
+        if info.get("required_default_features_off"):
+            lines.append(
+                f"required_default_features_off = {_fmt_str_list(info['required_default_features_off'])}"
+            )
+
+        lines.append("")
+
+        # git / zk_git tables
+        if isinstance(info.get("git"), dict):
+            _write_git_table(key, "git", info["git"])
+        if isinstance(info.get("zk_git"), dict):
+            _write_git_table(key, "zk_git", info["zk_git"])
+
+        # required_features nested table
+        req = info.get("required_features")
+        if isinstance(req, dict) and req:
+            lines.append(f"[crates.{key}.required_features]")
+            for consumer, feats in sorted(req.items()):
+                lines.append(f'"{consumer}" = {_fmt_str_list(feats)}')
+            lines.append("")
+
+        # features nested table (matrix feature hints)
+        feats = info.get("features")
+        if isinstance(feats, dict) and feats:
+            lines.append(f"[crates.{key}.features]")
+            for fname, flist in sorted(feats.items()):
+                if isinstance(flist, list):
+                    lines.append(f'"{fname}" = {_fmt_str_list(flist)}')
+            lines.append("")
+
+    path.write_text("\n".join(lines) + "\n")
+    return path
+
+
+def cargo_metadata(workspace_dir: Path, timeout: int = 180) -> Optional[dict]:
+    """Run cargo metadata in workspace_dir; return parsed JSON or None."""
+    try:
+        r = subprocess.run(
+            ["cargo", "metadata", "--format-version", "1", "--no-deps"],
+            cwd=str(workspace_dir),
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+        if r.returncode != 0:
+            # retry with deps (some old cargos) — still try full metadata
+            r = subprocess.run(
+                ["cargo", "metadata", "--format-version", "1"],
+                cwd=str(workspace_dir),
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+            )
+        if r.returncode != 0:
+            return None
+        return json.loads(r.stdout)
+    except Exception:
+        return None
+
+
+def _source_kind(source: Optional[str]) -> str:
+    if not source:
+        return "path"
+    if source.startswith("registry+"):
+        return "registry"
+    if source.startswith("git+"):
+        return "git"
+    return "other"
+
+
+def verify_workspace_resolution(
+    workspace_dir: Path,
+    matrix: dict,
+    mode: str,
+    defaults: dict = None,
+) -> list:
+    """Verify cargo metadata sources for matrix packages in one workspace.
+
+    Returns list of error strings (empty = ok). Uses --no-deps metadata for
+    packages that are members; for full resolution of deps, prefers full metadata.
+    """
+    defaults = defaults or {}
+    errors = []
+
+    # Full metadata so dependencies appear
+    try:
+        r = subprocess.run(
+            ["cargo", "metadata", "--format-version", "1"],
+            cwd=str(workspace_dir),
+            capture_output=True,
+            text=True,
+            timeout=300,
+        )
+    except Exception as e:
+        return [f"{workspace_dir}: cargo metadata failed: {e}"]
+
+    if r.returncode != 0:
+        err = (r.stderr or r.stdout or "").strip().split("\n")[-1]
+        return [f"{workspace_dir}: cargo metadata exit {r.returncode}: {err}"]
+
+    try:
+        meta = json.loads(r.stdout)
+    except json.JSONDecodeError as e:
+        return [f"{workspace_dir}: invalid metadata JSON: {e}"]
+
+    # package name -> list of packages
+    by_name = {}
+    for pkg in meta.get("packages", []):
+        by_name.setdefault(pkg["name"], []).append(pkg)
+
+    lookup = pkg_to_matrix(matrix)
+    known = matrix_pkg_names(matrix)
+
+    # Dual/multi-identity: same crate name from multiple sources (classic freeze/matrix drift).
+    # e.g. cosmwasm-std as path + git@freeze + git@mvp → type mismatches in dao-testing.
+    critical_unity = {
+        "cosmwasm-std",
+        "cosmwasm-schema",
+        "cosmwasm-core",
+        "cosmwasm-crypto",
+        "cw-schema",
+        "cw-storage-plus",
+        "cw-controllers",
+        "cw-utils",
+        "cw2",
+    }
+    for name, pkgs in sorted(by_name.items()):
+        if len(pkgs) <= 1:
+            continue
+        if name not in critical_unity and name not in known and name not in lookup:
+            continue
+        sources = sorted(
+            {(pkg.get("source") or f"path:{pkg.get('manifest_path', '')}") for pkg in pkgs}
+        )
+        if len(sources) > 1:
+            errors.append(
+                f"{workspace_dir.name}: DUAL-IDENTITY '{name}' has {len(sources)} sources "
+                f"(matrix mode drift — prefer `dep.py switch dev` or unify "
+                f"[patch.'git-url'] → single path tip): {sources[:4]}"
+            )
+
+    # Determine expected source kind for mode
+    is_dev = mode in DEV_MODE_MAP
+    if is_dev:
+        ws_mode, _patch_mode, _ = DEV_MODE_MAP[mode]
+        # overlay: path wins for resolved packages that are matrix-managed
+        expect_kind = "path"  # local patch should win
+    else:
+        ws_mode = mode
+        if mode in ("local", "zk_local"):
+            expect_kind = "path"
+        elif mode in ("git", "zk_git"):
+            expect_kind = "git"
+        elif mode == "stable":
+            expect_kind = "registry"
+        else:
+            expect_kind = None
+
+    # Only check packages that appear in this workspace's package set
+    for name, pkgs in sorted(by_name.items()):
+        if name not in known and name not in lookup:
+            continue
+        entry = lookup.get(name)
+        if not entry:
+            continue
+        key, info = entry
+        if is_repo_only(info):
+            continue
+
+        for pkg in pkgs:
+            kind = _source_kind(pkg.get("source"))
+            src = pkg.get("source") or pkg.get("manifest_path", "")
+
+            if expect_kind == "path":
+                if kind != "path":
+                    errors.append(
+                        f"{workspace_dir.name}: '{name}' expected path ({mode}), got {kind}: {src}"
+                    )
+                else:
+                    # manifest_path should live under matrix local
+                    local = info.get("zk_local") if mode in ("zk_local", "zk_dev") else info.get("local")
+                    if mode == "zk_dev":
+                        local = info.get("zk_local") or info.get("local")
+                    if mode == "dev":
+                        local = info.get("local")
+                    norm = normalize_matrix_local(local) if local and local != "N/A" else None
+                    if norm:
+                        expected_dir = str((REPO_ROOT / norm).resolve())
+                        manifest = str(Path(pkg["manifest_path"]).resolve().parent)
+                        if manifest != expected_dir and not manifest.startswith(expected_dir + os.sep):
+                            # allow if package path equals expected
+                            if Path(manifest) != Path(expected_dir):
+                                errors.append(
+                                    f"{workspace_dir.name}: '{name}' path '{manifest}' "
+                                    f"!= matrix '{expected_dir}'"
+                                )
+            elif expect_kind == "git":
+                if kind != "git":
+                    errors.append(
+                        f"{workspace_dir.name}: '{name}' expected git ({mode}), got {kind}: {src}"
+                    )
+                else:
+                    url, branch = resolve_git_source(info, ws_mode if ws_mode in ("git", "zk_git") else "git", defaults)
+                    if url and src and url.rstrip("/") not in src.replace(".git", ""):
+                        # soft: URL host/path should appear
+                        id_m = "/".join(url.rstrip("/").split("/")[-2:]).lower()
+                        if id_m not in src.lower():
+                            errors.append(
+                                f"{workspace_dir.name}: '{name}' git source '{src}' "
+                                f"does not match matrix url '{url}'"
+                            )
+            elif expect_kind == "registry":
+                if kind not in ("registry", "path"):
+                    # path can still appear for workspace members; only flag git
+                    if kind == "git":
+                        errors.append(
+                            f"{workspace_dir.name}: '{name}' expected registry ({mode}), got git: {src}"
+                        )
+
+            # Dual instances of same package name with different sources
+        if len(pkgs) > 1:
+            kinds = {_source_kind(p.get("source")) for p in pkgs}
+            if len(kinds) > 1:
+                errors.append(
+                    f"{workspace_dir.name}: '{name}' has dual instances: "
+                    + ", ".join(
+                        f"{_source_kind(p.get('source'))}:{p.get('source') or p.get('manifest_path')}"
+                        for p in pkgs
+                    )
+                )
+
+    return errors
+
+
+def verify_mode_resolution(
+    matrix: dict,
+    mode: str,
+    projects: list = None,
+    defaults: dict = None,
+    max_workspaces: int = 20,
+) -> dict:
+    """Verify resolution across workspace projects. Returns report dict."""
+    defaults = defaults or load_defaults()
+    if projects is None:
+        projects = discover_projects()
+
+    # Prefer real workspaces
+    workspaces = [p for p in projects if p.is_workspace]
+    if not workspaces:
+        workspaces = projects
+
+    report = {
+        "mode": mode,
+        "repo_root": str(REPO_ROOT),
+        "checked": [],
+        "errors": [],
+        "skipped": [],
+    }
+
+    for proj in workspaces[:max_workspaces]:
+        ws_dir = proj.cargo_toml.parent
+        # Skip if no Cargo.lock and never built — still try metadata
+        errs = verify_workspace_resolution(ws_dir, matrix, mode, defaults=defaults)
+        report["checked"].append(proj.rel_path)
+        report["errors"].extend(errs)
+
+    return report
+
+
+# ── Nix / monorepo bootstrap (complements dep-switch; does not replace it) ───
+
+NIX_DIR = DEVOPS_DIR / "nix"
+REPOS_JSON_PATH = NIX_DIR / "repos.json"
+
+
+def github_repo_name(url: str) -> str:
+    """Extract repo name from a git URL."""
+    u = url.rstrip("/")
+    if u.endswith(".git"):
+        u = u[:-4]
+    return u.split("/")[-1]
+
+
+def collect_bootstrap_repos(matrix: dict = None, defaults: dict = None) -> list:
+    """Collapse matrix crates into unique git clones for monorepo bootstrap.
+
+    Returns list of dicts:
+      {
+        id, url, branch, dest,  # dest = top-level dir under REPO_ROOT
+        package_paths,          # matrix local paths living inside dest
+        crate_keys,             # matrix keys covered
+        zk_branch,              # optional
+      }
+    """
+    from collections import Counter, defaultdict
+
+    matrix = matrix if matrix is not None else load_matrix()
+    defaults = defaults if defaults is not None else load_defaults()
+
+    # url -> accum
+    acc = defaultdict(lambda: {
+        "branches": Counter(),
+        "zk_branches": Counter(),
+        "tops": Counter(),
+        "package_paths": set(),
+        "keys": [],
+    })
+
+    for key, info in matrix.items():
+        if not isinstance(info, dict):
+            continue
+
+        url, branch = resolve_git_source(info, "git", defaults)
+        zk_url, zk_branch = resolve_git_source(info, "zk_git", defaults)
+
+        # Prefer primary git URL; zk may share same URL with different branch
+        primary = url or zk_url
+        if not primary or primary == "N/A":
+            continue
+
+        e = acc[primary]
+        e["keys"].append(key)
+        if branch:
+            e["branches"][branch] += 1
+        if zk_url == primary and zk_branch:
+            e["zk_branches"][zk_branch] += 1
+        elif zk_url and zk_url != primary:
+            # separate zk remote — rare; track as its own entry via recursion-like insert
+            ze = acc[zk_url]
+            ze["keys"].append(key + "#zk")
+            if zk_branch:
+                ze["branches"][zk_branch] += 1
+
+        for field in ("local", "zk_local"):
+            loc = info.get(field)
+            if not loc or loc == "N/A":
+                continue
+            norm = normalize_matrix_local(loc)
+            if not norm:
+                continue
+            e["package_paths"].add(norm)
+            top = norm.split("/")[0]
+            if top:
+                e["tops"][top] += 1
+
+    repos = []
+    for url, e in sorted(acc.items(), key=lambda kv: github_repo_name(kv[0]).lower()):
+        if e["branches"]:
+            branch = e["branches"].most_common(1)[0][0]
+        else:
+            branch = defaults.get("git_branch", "main")
+        zk_branch = None
+        if e["zk_branches"]:
+            zk_branch = e["zk_branches"].most_common(1)[0][0]
+
+        if e["tops"]:
+            dest = e["tops"].most_common(1)[0][0]
+        else:
+            dest = github_repo_name(url)
+
+        # Special cases: avoid collapsing unrelated tops
+        # If tops disagree heavily, prefer github name if present in tops
+        gname = github_repo_name(url)
+        if gname in e["tops"]:
+            dest = gname
+        # cw-multi-test-fork clones often map to clone-cw-multi-test or cw-multi-test-fork
+        if "cw-multi-test-fork" in url and "clone-cw-multi-test" in e["tops"]:
+            dest = "clone-cw-multi-test"
+        if "cw-multi-test-fork" in url and "cw-multi-test-fork" in e["tops"]:
+            dest = "cw-multi-test-fork"
+
+        repos.append({
+            "id": gname,
+            "url": url,
+            "branch": branch,
+            "zk_branch": zk_branch,
+            "dest": dest,
+            "package_paths": sorted(e["package_paths"]),
+            "crate_keys": sorted(set(e["keys"])),
+        })
+
+    # Dedup by dest: prefer more package_paths
+    by_dest = {}
+    for r in repos:
+        d = r["dest"]
+        if d not in by_dest or len(r["package_paths"]) > len(by_dest[d]["package_paths"]):
+            by_dest[d] = r
+    return sorted(by_dest.values(), key=lambda r: r["dest"])
+
+
+def export_nix_repos(path: Path = None, matrix: dict = None) -> Path:
+    """Write repos.json for Nix bootstrap + documentation."""
+    path = path or REPOS_JSON_PATH
+    path.parent.mkdir(parents=True, exist_ok=True)
+    repos = collect_bootstrap_repos(matrix=matrix)
+    payload = {
+        "schema_version": 1,
+        "description": (
+            "Unique git forks to clone under monorepo_root for first-time bootstrap. "
+            "Generated from dependency-matrix.toml — do not hand-edit; run dep.py nix-export."
+        ),
+        "monorepo_root_hint": "terp-core/crates (see dep-config.toml monorepo_root)",
+        "generated_by": "dep.py nix-export",
+        "repo_count": len(repos),
+        "repos": repos,
+    }
+    path.write_text(json.dumps(payload, indent=2) + "\n")
+    return path
+
+
+def bootstrap_status(repos: list = None) -> dict:
+    """Report which bootstrap dests exist under REPO_ROOT."""
+    repos = repos if repos is not None else collect_bootstrap_repos()
+    present = []
+    missing = []
+    for r in repos:
+        dest = REPO_ROOT / r["dest"]
+        git_ok = (dest / ".git").exists() or (dest / ".git").is_file()
+        if dest.is_dir() and (git_ok or any(dest.iterdir())):
+            present.append({**r, "path": str(dest), "has_git": git_ok})
+        else:
+            missing.append({**r, "path": str(dest)})
+    return {
+        "repo_root": str(REPO_ROOT),
+        "total": len(repos),
+        "present": present,
+        "missing": missing,
+    }
+
+
+def bootstrap_clone_repos(
+    repos: list = None,
+    *,
+    dry_run: bool = False,
+    shallow: bool = True,
+    update: bool = False,
+    only_missing: bool = True,
+    jobs: int = 1,
+) -> dict:
+    """Clone matrix forks into REPO_ROOT/<dest>.
+
+    Complements dep-switch: gets the *source trees* onto disk so path mode works.
+    Does not rewrite Cargo.toml (use dep.py switch for that).
+    """
+    repos = repos if repos is not None else collect_bootstrap_repos()
+    report = {
+        "repo_root": str(REPO_ROOT),
+        "cloned": [],
+        "skipped": [],
+        "updated": [],
+        "failed": [],
+        "dry_run": dry_run,
+    }
+
+    def _run(cmd, cwd=None):
+        return subprocess.run(
+            cmd, cwd=cwd, capture_output=True, text=True, timeout=600,
+        )
+
+    for r in repos:
+        dest = REPO_ROOT / r["dest"]
+        url = r["url"]
+        branch = r["branch"]
+
+        if dest.exists() and any(dest.iterdir()):
+            if only_missing and not update:
+                report["skipped"].append({"dest": r["dest"], "reason": "exists"})
+                continue
+            if update and (dest / ".git").exists():
+                if dry_run:
+                    report["updated"].append({"dest": r["dest"], "action": "fetch+checkout"})
+                    continue
+                # fetch branch tip
+                r1 = _run(["git", "-C", str(dest), "fetch", "origin", branch])
+                if r1.returncode != 0:
+                    report["failed"].append({
+                        "dest": r["dest"], "step": "fetch",
+                        "stderr": (r1.stderr or "")[-400:],
+                    })
+                    continue
+                r2 = _run(["git", "-C", str(dest), "checkout", branch])
+                r3 = _run(["git", "-C", str(dest), "pull", "--ff-only", "origin", branch])
+                if r2.returncode != 0 or r3.returncode != 0:
+                    report["failed"].append({
+                        "dest": r["dest"], "step": "checkout/pull",
+                        "stderr": ((r2.stderr or "") + (r3.stderr or ""))[-400:],
+                    })
+                else:
+                    report["updated"].append({"dest": r["dest"]})
+                continue
+            report["skipped"].append({"dest": r["dest"], "reason": "exists-no-update"})
+            continue
+
+        if dry_run:
+            report["cloned"].append({"dest": r["dest"], "url": url, "branch": branch})
+            continue
+
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        cmd = ["git", "clone", "--branch", branch]
+        if shallow:
+            cmd += ["--depth", "1", "--single-branch"]
+        cmd += [url, str(dest)]
+        result = _run(cmd)
+        if result.returncode != 0:
+            # retry without branch (default branch) then checkout
+            cmd2 = ["git", "clone"]
+            if shallow:
+                cmd2 += ["--depth", "1"]
+            cmd2 += [url, str(dest)]
+            result2 = _run(cmd2)
+            if result2.returncode != 0:
+                report["failed"].append({
+                    "dest": r["dest"],
+                    "url": url,
+                    "branch": branch,
+                    "stderr": (result.stderr or result2.stderr or "")[-500:],
+                })
+                continue
+            _run(["git", "-C", str(dest), "checkout", branch])
+        report["cloned"].append({"dest": r["dest"], "url": url, "branch": branch})
+
+    return report

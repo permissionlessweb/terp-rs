@@ -1,0 +1,84 @@
+flowchart TB
+    src_lib_sim_deposit["sim_deposit function CC=6"]
+    proxy_unresolved_intent_validate["intent.validate proxy"]
+    proxy_unresolved_src_lib_Err["src.lib:Err proxy"]
+    src_lib_derive_sim_burn_id["derive_sim_burn_id function CC=1"]
+    proxy_unresolved_btc_faucet_credits_push["btc_faucet.credits.push proxy"]
+    proxy_unresolved_intent_btc_deposit_addr_clone["intent.btc_deposit_addr.clone proxy"]
+    proxy_unresolved_src_lib_Ok["src.lib:Ok proxy"]
+    src_lib_intent_allows_swap["intent_allows_swap function CC=16"]
+    src_lib_CorridorMintedSet_authorize_mint["authorize_mint method CC=2"]
+    src_lib_DepositIntentV0_new_preauth["new_preauth method CC=5"]
+    src_lib_DepositIntentV0_validate["validate method CC=6"]
+    src_lib_DepositIntentV0_bind_deposit_id["bind_deposit_id method CC=2"]
+    src_lib_oracle_mint_forbidden["oracle_mint_forbidden function CC=1"]
+    src_lib_CorridorMintedSet_insert["insert method CC=3"]
+    proxy_unresolved_Sha256__new["Sha256::new proxy"]
+    proxy_unresolved_hasher_update["hasher.update proxy"]
+    proxy_unresolved_addr_as_bytes["addr.as_bytes proxy"]
+    proxy_unresolved_amount_to_le_bytes["amount.to_le_bytes proxy"]
+    proxy_unresolved_hasher_finalize["hasher.finalize proxy"]
+    proxy_unresolved_out_copy_from_slice["out.copy_from_slice proxy"]
+    src_lib_sim_deposit -.-> proxy_unresolved_intent_validate
+    src_lib_sim_deposit --> proxy_unresolved_src_lib_Err
+    src_lib_sim_deposit --> src_lib_derive_sim_burn_id
+    src_lib_sim_deposit -.-> proxy_unresolved_btc_faucet_credits_push
+    src_lib_sim_deposit -.-> proxy_unresolved_intent_btc_deposit_addr_clone
+    src_lib_sim_deposit --> proxy_unresolved_src_lib_Ok
+    src_lib_sim_deposit -.-> proxy_unresolved_intent_btc_deposit_addr_clone
+    src_lib_sim_deposit --> src_lib_derive_sim_burn_id
+    src_lib_sim_deposit --> proxy_unresolved_src_lib_Ok
+    src_lib_sim_deposit -.-> proxy_unresolved_intent_btc_deposit_addr_clone
+    src_lib_sim_deposit --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap -.-> proxy_unresolved_intent_validate
+    src_lib_CorridorMintedSet_authorize_mint -.-> proxy_unresolved_intent_validate
+    src_lib_sim_deposit -.-> proxy_unresolved_intent_validate
+    src_lib_DepositIntentV0_new_preauth --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_new_preauth --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_new_preauth --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_new_preauth --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_validate --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_validate --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_validate --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_validate --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_validate --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_bind_deposit_id --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_oracle_mint_forbidden --> proxy_unresolved_src_lib_Err
+    src_lib_CorridorMintedSet_insert --> proxy_unresolved_src_lib_Err
+    src_lib_CorridorMintedSet_insert --> proxy_unresolved_src_lib_Err
+    src_lib_CorridorMintedSet_authorize_mint --> proxy_unresolved_src_lib_Err
+    src_lib_sim_deposit --> proxy_unresolved_src_lib_Err
+    src_lib_sim_deposit --> proxy_unresolved_src_lib_Err
+    src_lib_derive_sim_burn_id -.-> proxy_unresolved_Sha256__new
+    src_lib_derive_sim_burn_id -.-> proxy_unresolved_hasher_update
+    src_lib_derive_sim_burn_id -.-> proxy_unresolved_hasher_update
+    src_lib_derive_sim_burn_id -.-> proxy_unresolved_hasher_update
+    src_lib_derive_sim_burn_id -.-> proxy_unresolved_addr_as_bytes
+    src_lib_derive_sim_burn_id -.-> proxy_unresolved_hasher_update
+    src_lib_derive_sim_burn_id -.-> proxy_unresolved_amount_to_le_bytes
+    src_lib_derive_sim_burn_id -.-> proxy_unresolved_hasher_update
+    src_lib_derive_sim_burn_id -.-> proxy_unresolved_hasher_finalize
+    src_lib_derive_sim_burn_id -.-> proxy_unresolved_out_copy_from_slice
+    src_lib_sim_deposit --> src_lib_derive_sim_burn_id
+    src_lib_sim_deposit --> src_lib_derive_sim_burn_id
+    src_lib_sim_deposit -.-> proxy_unresolved_btc_faucet_credits_push
+    src_lib_sim_deposit -.-> proxy_unresolved_intent_btc_deposit_addr_clone
+    src_lib_sim_deposit -.-> proxy_unresolved_intent_btc_deposit_addr_clone
+    src_lib_sim_deposit -.-> proxy_unresolved_intent_btc_deposit_addr_clone
+    src_lib_DepositIntentV0_new_preauth --> proxy_unresolved_src_lib_Ok
+    src_lib_DepositIntentV0_validate --> proxy_unresolved_src_lib_Ok
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Ok
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Ok
+    src_lib_CorridorMintedSet_insert --> proxy_unresolved_src_lib_Ok
+    src_lib_sim_deposit --> proxy_unresolved_src_lib_Ok
+    src_lib_sim_deposit --> proxy_unresolved_src_lib_Ok

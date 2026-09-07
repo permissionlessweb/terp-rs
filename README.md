@@ -4,86 +4,90 @@ Rust client library for Terp Network. Includes IBC asset derivation, CosmWasm co
 
 ---
 
+## Three layers (do not confuse)
+
+| Layer | Package / path | Role |
+|-------|----------------|------|
+| **SDK** | `terp-rs` (`crates/sdk`) | protos + clients |
+| **Scripts** | **`terp-scripts`** (`tests/`) | orchestration + bins + pure IBC lib |
+| **Harness** | `ict-rs` (sibling) | Docker multi-chain framework |
+
+Agents: always load **`tests/agent/COMMANDS.md`** first.
+
+---
+
 ## Workspace structure
 
 ```
 crates/terp-rs/
 ├── Cargo.toml                  # Workspace root
-├── src/                        # SDK — Cosmos SDK types, IBC proto (terp-rs crate)
-├── tests/                      # Test & orchestration suite (scripts crate)
-│   ├── src/
-│   │   ├── ibc_core.rs         # IBC derivation: denom hashes, channel graph, routing table
-│   │   ├── suite/              # SidecarFleet + TerpSidecar + contract deployment
-│   │   └── environments/       # Test env primitives (nostr, quickspawn)
-│   ├── bin/
-│   │   ├── ibc_info.rs         # IBC info pipeline — generates schema-compliant JSON output
-│   │   ├── e2e.rs              # Full integration test (Docker sidecars, multi-chain)
-│   │   └── delegations.rs      # Delegation-specific test binary
+├── crates/sdk/                 # terp-rs SDK crate
+├── public/                     # Generated IBC artifacts (repo root)
+│   ├── ibc-data/*.json
+│   ├── assetlist.json
+│   ├── ibc_routing_table.json
+│   └── ibc_lookup_table.json
+├── tests/                      # Package name: terp-scripts
+│   ├── agent/COMMANDS.md       # Agent catalog (start here)
+│   ├── src/ibc/                # Pure predict → observe → diff
+│   ├── src/report.rs           # RunReport (JSON automation)
+│   ├── bin/ibc_info.rs         # bin name: terp-ibc (alias: ibc)
 │   ├── tests/
-│   │   ├── ibc_info.rs         # 11 schema validation + derivation unit tests
-│   │   └── nostr_orch_suite.rs # Nostr relay integration tests
-│   ├── public/                 # Generated output + schemas
-│   │   ├── asset_list.schema.json
-│   │   ├── ibc_data.schema.json
-│   │   ├── assetlist.json      # Generated asset list
-│   │   ├── ibc_routing_table.json
-│   │   └── ibc_lookup_table.json
-│   └── README.md               # Full test suite documentation
-├── ict-rs/                     # IBC container toolkit — spawn real chain containers
-├── tools/                      # Hash-market server/client, merkle-server, etc.
-└── cw-orchestrator/            # Fork of cw-orch with Terp-specific patches
+│   │   ├── ibc_unit.rs
+│   │   ├── ibc_golden.rs
+│   │   └── ibc_multihop_harness.rs  # #[ignore], Docker
+│   └── README.md
+├── docs/superpowers/           # Specs / plans / agent prompts
+└── justfile                    # Proto gen + scripts-ibc-* + ci-* recipes
 ```
+
+CI is tiered (see [`docs/ci.md`](docs/ci.md)): **Core** on every PR, **Extended** on path/label, **Heavy** (Docker) only via maintainer dispatch / label `ci-heavy` / weekly schedule.
 
 ---
 
 ## Quick Start
 
-### IBC info derivation (live chain data → schema-compliant JSON)
+### Offline (no mainnet, preferred for agents)
 
 ```sh
-cd crates/terp-rs/tests
-cargo run --bin ibc
+cd crates/terp-rs
+just ci-core                  # same gate as GitHub CI Core
+just scripts-ibc-offline      # unit+golden + rebuild-from-public
+just scripts-ibc-validate     # JSON RunReport
+just scripts-ibc-preflight offline
 ```
 
-Produces `public/assetlist.json`, `public/{chain-pair}.json` (ibc_data), routing table, and lookup table — all validated against schemas.
-
-### Schema validation tests
+Equivalent cargo:
 
 ```sh
-cd crates/terp-rs/tests
-cargo test -p scripts --test ibc_info -- --skip test_multichain_ibc_info_routing --nocapture
+cargo test -p terp-scripts --lib --test ibc_unit --test ibc_golden
+cargo run -p terp-scripts --bin terp-ibc -- rebuild-from-public --format json
+cargo run -p terp-scripts --bin terp-ibc -- validate --format json
 ```
 
-11 tests covering schema compliance, IBC denom hash computation, channel graph routing, and asset validation.
-
-### Multi-chain IBC test (Docker)
+### Live generate (needs MAIN_MNEMONIC + gRPC)
 
 ```sh
-cd crates/terp-rs/tests
-cargo test --test ibc_info -- --nocapture --ignored
+cargo run -p terp-scripts --bin terp-ibc -- preflight --mode live-query --format json   # exit 2 if env missing
+cargo run -p terp-scripts --bin terp-ibc -- generate --mode live-query
+```
+
+### Docker multihop harness
+
+```sh
+just scripts-ibc-harness
+# or: cargo test -p terp-scripts --test ibc_multihop_harness -- --ignored --nocapture
 ```
 
 ---
 
-## IBC Asset Derivation Pipeline
+## IBC Asset Derivation
 
-The `ibc_info` binary connects to live Terp mainnet (and connected chains), queries IBC clients/connections/channels, and generates chain-registry-compliant output:
+- **Live:** `generate` queries chains, writes `public/`, fail-closed on hard invariants.
+- **Offline:** `rebuild-from-public` rebuilds routing/lookup from `public/ibc-data` (atomic staging).
+- **Lib:** `terp_scripts::ibc` — pure hash, graph, routes, predict, observe, diff (`DiffReport` / `RunReport`).
 
-1. **Query chains** — IBC client states, connections, channels via gRPC
-2. **Build ibc_data** — Schema-compliant entries per chain pair
-3. **Write JSON files** — `public/{chain_1}-{chain_2}.json` with `$schema` pointer
-4. **Build channel graph** — BFS traversal of IBC topology
-5. **Premine routing table** — All possible multi-hop routes for all assets
-6. **Derive IBC assets** — Denom hashes from trace paths, dedup against native assets
-7. **Write assetlist** — Schema-compliant `public/assetlist.json`
-
-Key design: the `ibc_core` module contains all derivation logic as pure functions (SHA256 denom hashing, BFS graph traversal, route computation), making them testable without chain access.
-
----
-
-## Core SDK types
-
-The `terp-rs` crate at `src/` provides Cosmos SDK protobuf types, IBC light client state decoding, and CosmWasm contract interfaces. Used by the test suite for on-chain data processing.
+Key design: pure derivation lives under `tests/src/ibc/`; the bin is orchestration + CLI contracts (`--format json`, preflight, atomic `--out`).
 
 ---
 
@@ -93,3 +97,4 @@ The `terp-rs` crate at `src/` provides Cosmos SDK protobuf types, IBC light clie
 - Wire blossom client traits for hashmerchant types (replaces manual URL format fetch keys)
 - Spawn anvil + wire full hashmerchant production workflow
 - Ensure relayer functionality: chain → argus → hash-merchant → nostr relay for dao-calendar events
+- P1: rename package `terp-scripts` → `terp-scripts`, bin `ibc` → `terp-ibc` (see agentic automation design)
