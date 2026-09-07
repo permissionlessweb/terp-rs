@@ -1,0 +1,21 @@
+{
+  "_doc": "Split audited (community/mainnet path pins) vs synthetic (unit-only). Never rewrite audited_mainnet without live DenomTrace attestation (height/RPC).",
+  "audited_mainnet": {
+    "transfer/channel-1/uakt": {
+      "ibc_denom": "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4",
+      "chain": "osmosis",
+      "note": "ICS-20 path hash for AKT on Osmosis (chain-registry / widely cited). Path hash is chain-independent; live DenomTrace on osmosis-1 should match path transfer/channel-1/uakt.",
+      "attestation": "community-known-path-hash; refresh with live query under audited_meta.json"
+    }
+  },
+  "synthetic": {
+    "transfer/channel-0/transfer/channel-1/uakt": {
+      "ibc_denom": "ibc/ADC63C00000CA75F909D2BE3ACB5A9980BED3A73B92746E0FCE6C67414055459",
+      "note": "Synthetic multi-hop vector for hop_count/hash tests only — not a mainnet claim"
+    },
+    "transfer/channel-0/factory/terp1abc/ta0": {
+      "ibc_denom": "ibc/15D14E3AB3A585A52EEBC60414C4559D5F70CB52B97841FF0B046E89C46F9F3A",
+      "note": "factory denom with slashes; hop_count=1 path for unit tests only"
+    }
+  }
+}

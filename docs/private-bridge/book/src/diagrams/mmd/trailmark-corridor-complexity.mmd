@@ -1,0 +1,12 @@
+flowchart TB
+    src_lib_DepositNotifyHub_open_watch["open_watch method CC=4"]:::low
+    src_lib_DepositNotifyHub_get_status["get_status method CC=5"]:::medium
+    src_lib_DepositNotifyHub_report_observation["report_observation method CC=10"]:::medium
+    src_lib_DepositNotifyHub_publish["publish method CC=4"]:::low
+    src_lib_DepositNotifyHub_put_automation["put_automation method CC=3"]:::low
+    src_lib_validate_id["validate_id function CC=3"]:::low
+    src_lib_DepositNotifyHub_open_watch --> src_lib_validate_id
+    src_lib_DepositNotifyHub_put_automation --> src_lib_validate_id
+    classDef low fill:#d4edda,stroke:#28a745,color:#155724
+    classDef medium fill:#fff3cd,stroke:#e6a817,color:#856404
+    classDef high fill:#f8d7da,stroke:#dc3545,color:#721c24

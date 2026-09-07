@@ -1,0 +1,22 @@
+flowchart TB
+    UI[PrivateCorridor UI]
+    DI[DepositIntentV0]
+    W[watches API]
+    REP[btc-reporter]
+    IDX[BTC index]
+    HS[cw-headstash]
+    SN[SeamNoteOutV0]
+    OR[oracle bounds]
+    SW[private swap]
+    ZK[ZEC dest]
+
+    UI --> DI
+    UI --> W
+    IDX --> REP
+    REP --> W
+    W --> UI
+    UI --> HS
+    HS --> SN
+    SN --> SW
+    OR -.-> SW
+    SW --> ZK

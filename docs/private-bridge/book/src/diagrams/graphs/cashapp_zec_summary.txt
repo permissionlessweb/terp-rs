@@ -1,0 +1,7 @@
+Nodes: 100
+  Functions: 28
+  Classes: 0
+  Proxies: 58
+Call edges: 139
+Dependencies: std, sha2
+Entrypoints: 0

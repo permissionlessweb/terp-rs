@@ -1,0 +1,7 @@
+Nodes: 2766
+  Functions: 444
+  Classes: 0
+  Proxies: 2131
+Call edges: 3948
+Dependencies: serde, std, oracle, corridor_deposits, client, ve, content, axum, cw721_nips, tokio, store, transport, anyhow, sha2, clap, hash_market, AddressFunding, serde_json, address, bitcoind_rpc, electrum, esplora, reporter, hashmerchant, minio_ipfs, fields, msg, EthClient, custody, calendar_egress, marketplace_egress, marketplace_ingress, commonware_abci, tendermint, tokio_util, base64, hmac, cid, auth, calendar
+Entrypoints: 4

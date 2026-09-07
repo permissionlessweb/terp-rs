@@ -1,0 +1,83 @@
+cashapp_zec_corridor — Trailmark focus call neighborhoods
+
+summary: {'total_nodes': 100, 'functions': 28, 'classes': 0, 'proxies': 58, 'call_edges': 139, 'dependencies': ['std', 'sha2'], 'entrypoints': 0}
+
+Target: docs/plans/spectrum/fixtures/cashapp_zec_corridor
+Language: rust
+Note: edges from Trailmark graph only.
+
+Complexity hotspots (top):
+  - src.lib:intent_allows_swap  name=intent_allows_swap  CC=16
+
+## focus: authorize_mint
+  callers (0):
+  callees (4):
+    -> src.lib:is_zero_hash [function] cc=1
+    -> proxy.unresolved:intent.validate [proxy] cc=None
+    -> proxy.unresolved:self.insert [proxy] cc=None
+    -> proxy.unresolved:src.lib:Err [proxy] cc=None
+
+## focus: intent_allows_swap
+  callers (0):
+  callees (6):
+    -> src.lib:apply_slip_ceiling [function] cc=1
+    -> src.lib:apply_slip_floor [function] cc=1
+    -> src.lib:expected_out_from_mid [function] cc=1
+    -> proxy.unresolved:intent.validate [proxy] cc=None
+    -> proxy.unresolved:src.lib:Err [proxy] cc=None
+    -> proxy.unresolved:src.lib:Ok [proxy] cc=None
+
+## focus: sim_deposit
+  callers (0):
+  callees (6):
+    -> src.lib:derive_sim_burn_id [function] cc=1
+    -> proxy.unresolved:btc_faucet.credits.push [proxy] cc=None
+    -> proxy.unresolved:intent.btc_deposit_addr.clone [proxy] cc=None
+    -> proxy.unresolved:intent.validate [proxy] cc=None
+    -> proxy.unresolved:src.lib:Err [proxy] cc=None
+    -> proxy.unresolved:src.lib:Ok [proxy] cc=None
+
+## focus: new_preauth
+  callers (0):
+  callees (10):
+    -> src.lib:is_zero_hash [function] cc=1
+    -> proxy.unresolved:fields.btc_deposit_addr.is_empty [proxy] cc=None
+    -> proxy.unresolved:fields.corridor_id.is_empty [proxy] cc=None
+    -> proxy.unresolved:fields.dest_chain_tag.is_empty [proxy] cc=None
+    -> proxy.unresolved:fields.dest_display_hint.take [proxy] cc=None
+    -> proxy.unresolved:fields.oracle_market_id.is_empty [proxy] cc=None
+    -> proxy.unresolved:fields.source_chain_tag.is_empty [proxy] cc=None
+    -> proxy.unresolved:intent.compute_domain_bind [proxy] cc=None
+    -> proxy.unresolved:src.lib:Err [proxy] cc=None
+    -> proxy.unresolved:src.lib:Ok [proxy] cc=None
+
+## focus: validate
+  callers (0):
+  callees (9):
+    -> src.lib:is_zero_hash [function] cc=1
+    -> proxy.unresolved:self.btc_deposit_addr.is_empty [proxy] cc=None
+    -> proxy.unresolved:self.compute_domain_bind [proxy] cc=None
+    -> proxy.unresolved:self.corridor_id.is_empty [proxy] cc=None
+    -> proxy.unresolved:self.dest_chain_tag.is_empty [proxy] cc=None
+    -> proxy.unresolved:self.oracle_market_id.is_empty [proxy] cc=None
+    -> proxy.unresolved:self.source_chain_tag.is_empty [proxy] cc=None
+    -> proxy.unresolved:src.lib:Err [proxy] cc=None
+    -> proxy.unresolved:src.lib:Ok [proxy] cc=None
+
+## focus: bind_deposit_id
+  callers (0):
+  callees (4):
+    -> src.lib:is_zero_hash [function] cc=1
+    -> proxy.unresolved:self.compute_domain_bind [proxy] cc=None
+    -> proxy.unresolved:self.validate [proxy] cc=None
+    -> proxy.unresolved:src.lib:Err [proxy] cc=None
+
+## focus: compute_domain_bind
+  callers (0):
+  callees (5):
+    -> proxy.unresolved:Sha256::new [proxy] cc=None
+    -> proxy.unresolved:hasher.finalize [proxy] cc=None
+    -> proxy.unresolved:hasher.update [proxy] cc=None
+    -> proxy.unresolved:out.copy_from_slice [proxy] cc=None
+    -> proxy.unresolved:self.canonical_bytes_without_domain_bind [proxy] cc=None
+

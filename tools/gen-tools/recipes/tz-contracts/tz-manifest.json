@@ -1,0 +1,55 @@
+{
+  "categories": [
+    "admin",
+    "cw",
+    "dao",
+    "execute",
+    "ibc",
+    "instantiate",
+    "query"
+  ],
+  "functions": [
+    {
+      "description": "Instantiate a CosmWasm contract with a code_id, label, and init msg",
+      "gateway_url": "http://localhost:3000/chat",
+      "name": "instantiate_contract",
+      "tags": [
+        "instantiate"
+      ],
+      "template_paths": {
+        "args_schema": "functions/instantiate_contract/args_schema.json",
+        "system": "functions/instantiate_contract/system.minijinja",
+        "user": "functions/instantiate_contract/user.minijinja"
+      }
+    },
+    {
+      "description": "Query a CosmWasm contract at a given address with a query message",
+      "gateway_url": "http://localhost:3000/chat",
+      "name": "query_contract",
+      "tags": [
+        "query"
+      ],
+      "template_paths": {
+        "args_schema": "functions/query_contract/args_schema.json",
+        "system": "functions/query_contract/system.minijinja",
+        "user": "functions/query_contract/user.minijinja"
+      }
+    }
+  ],
+  "functions_count": 2,
+  "generated_at": "02:14:01 UTC",
+  "generator": "gen-tools/tensorzero",
+  "model": {
+    "model_name": "gpt-4o",
+    "name": "cosmwasm-default",
+    "provider": "openai",
+    "routing": [
+      "default"
+    ]
+  },
+  "targets": [
+    "terpcli",
+    "terpd"
+  ],
+  "version": "1"
+}

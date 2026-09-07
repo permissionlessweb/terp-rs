@@ -1,0 +1,249 @@
+flowchart TB
+    bridge_authorize_bridge_mint_pure["authorize_bridge_mint_pure function CC=23"]
+    proxy_unresolved_snapshot_tip_ok["snapshot.tip_ok proxy"]
+    proxy_unresolved_bridge_Err["bridge:Err proxy"]
+    bridge_is_zero_hash["is_zero_hash function CC=1"]
+    bridge_require_hash32["require_hash32 function CC=2"]
+    proxy_unresolved_require_hash32_snapshot_pool_root___pool_root___map_err["require_hash32 snapshot.pool_root pool_root .map_err proxy"]
+    proxy_unresolved_require_hash32_claim_source_pool_root___source_pool_root___map_err["require_hash32 claim.source_pool_root source_pool_root .map_err proxy"]
+    proxy_unresolved_require_hash32_claim_tacit_asset_id___tacit_asset_id___map_err["require_hash32 claim.tacit_asset_id tacit_asset_id .map_err proxy"]
+    bridge_terp_asset_id_from_tacit["terp_asset_id_from_tacit function CC=1"]
+    proxy_unresolved_require_hash32_entry_asset_id___asset_id__map_err["require_hash32 entry.asset_id asset_id .map_err proxy"]
+    proxy_unresolved_require_hash32_claim_dest_domain___dest_domain__map_err["require_hash32 claim.dest_domain dest_domain .map_err proxy"]
+    proxy_unresolved_require_hash32_cfg_dest_domain___cfg_dest_domain___map_err["require_hash32 cfg.dest_domain cfg.dest_domain .map_err proxy"]
+    proxy_unresolved_require_hash32_claim_burn_dest_commitment___burn_dest_commitment___map_err["require_hash32 claim.burn_dest_commitment burn_dest_commitment .map_e..."]
+    proxy_unresolved_require_hash32_claim_nullifier___nullifier___map_err["require_hash32 claim.nullifier nullifier .map_err proxy"]
+    bridge_derive_claim_id_with_dest["derive_claim_id_with_dest function CC=1"]
+    proxy_unresolved_require_hash32_claim_src_chain_id___src_chain_id___map_err["require_hash32 claim.src_chain_id src_chain_id .map_err proxy"]
+    bridge_derive_domain_binding["derive_domain_binding function CC=1"]
+    proxy_unresolved_require_hash32_claim_cm_public___cm_public__map_err["require_hash32 claim.cm_public cm_public .map_err proxy"]
+    proxy_unresolved_require_hash32_b___rcm__map_err["require_hash32 b rcm .map_err proxy"]
+    proxy_unresolved_Binary__from["Binary::from proxy"]
+    proxy_unresolved_cm_public_to_vec["cm_public.to_vec proxy"]
+    proxy_unresolved_nu_to_vec["nu.to_vec proxy"]
+    proxy_unresolved_presented_claim_to_vec["presented_claim.to_vec proxy"]
+    bridge_hash_source_chain_tag["hash_source_chain_tag function CC=1"]
+    bridge_execute_bridge_mint_note["execute_bridge_mint_note function CC=2"]
+    bridge_mock_verify_bridge_proof["mock_verify_bridge_proof function CC=4"]
+    bridge_execute_register_asset["execute_register_asset function CC=2"]
+    proxy_unresolved_b_as_slice__iter__all["b.as_slice .iter .all proxy"]
+    bridge_ReflectionSnapshot_tip_ok["tip_ok method CC=1"]
+    bridge_NoteOutResult_is_dex_consumable["is_dex_consumable method CC=1"]
+    proxy_unresolved_StdError__msg["StdError::msg proxy"]
+    proxy_unresolved_out_copy_from_slice["out.copy_from_slice proxy"]
+    bridge_execute_set_bridge_cfg["execute_set_bridge_cfg function CC=1"]
+    bridge_query_is_bridge_minted["query_is_bridge_minted function CC=1"]
+    bridge_query_asset["query_asset function CC=1"]
+    proxy_unresolved_unit_scale_to_be_bytes["unit_scale.to_be_bytes proxy"]
+    proxy_unresolved_h_finalize["h.finalize proxy"]
+    bridge_happy_bridge_mint_world["happy_bridge_mint_world function CC=1"]
+    proxy_unresolved_consensus_height_to_be_bytes["consensus_height.to_be_bytes proxy"]
+    bridge_ensure_bridge_cfg["ensure_bridge_cfg function CC=2"]
+    bridge_execute_update_reflection["execute_update_reflection function CC=3"]
+    bridge_execute_set_reflection_snapshot["execute_set_reflection_snapshot function CC=1"]
+    bridge_execute_set_external_asset_registry["execute_set_external_asset_registry function CC=3"]
+    bridge_bin32["bin32 function CC=1"]
+    bridge_mock_bridge_proof_bytes["mock_bridge_proof_bytes function CC=1"]
+    bridge_hash32_label["hash32_label function CC=1"]
+    proxy_unresolved_BRIDGE_CFG__may_load_deps_storage___ok_or["BRIDGE_CFG .may_load deps.storage .ok_or proxy"]
+    bridge_bridge_claim_storage_key["bridge_claim_storage_key function CC=1"]
+    proxy_unresolved_BRIDGE_MINTED_may_load_deps_storage___mint_key__is_some["BRIDGE_MINTED.may_load deps.storage mint_key .is_some proxy"]
+    proxy_unresolved_ASSET_REGISTRY_may_load["ASSET_REGISTRY.may_load proxy"]
+    bridge_asset_id_key["asset_id_key function CC=1"]
+    proxy_unresolved_asset_as_ref["asset.as_ref proxy"]
+    proxy_unresolved_BRIDGE_MINTED_save["BRIDGE_MINTED.save proxy"]
+    proxy_unresolved_bridge_to_json_binary["bridge:to_json_binary proxy"]
+    proxy_unresolved_Response__new___add_attribute_action___bridge_mint_note___add_attribute_nullifier__hex__encode_nu___add_attribute_claim_key__mint_key___add_attribute_value__note_value_to_string___add_attribute_rcm_flag__note_rcm_flag_to_string___add_attribute_dex_consumable__note_is_dex_consumable__to_string___add_attribute["Response::new .add_attribute action bridge_mint_note .add_attribute n..."]
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_snapshot_tip_ok
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> bridge_is_zero_hash
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> bridge_is_zero_hash
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_require_hash32_snapshot_pool_root___pool_root___map_err
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_require_hash32_claim_source_pool_root___source_pool_root___map_err
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_require_hash32_claim_tacit_asset_id___tacit_asset_id___map_err
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> bridge_terp_asset_id_from_tacit
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_require_hash32_entry_asset_id___asset_id__map_err
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_require_hash32_claim_dest_domain___dest_domain__map_err
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_require_hash32_cfg_dest_domain___cfg_dest_domain___map_err
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_require_hash32_claim_burn_dest_commitment___burn_dest_commitment___map_err
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_require_hash32_claim_nullifier___nullifier___map_err
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> bridge_derive_claim_id_with_dest
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_require_hash32_claim_src_chain_id___src_chain_id___map_err
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> bridge_derive_domain_binding
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_require_hash32_claim_cm_public___cm_public__map_err
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> bridge_is_zero_hash
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_require_hash32_b___rcm__map_err
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_Binary__from
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_Binary__from
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_Binary__from
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_cm_public_to_vec
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_Binary__from
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_nu_to_vec
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_Binary__from
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_Binary__from
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_presented_claim_to_vec
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_Binary__from
+    bridge_authorize_bridge_mint_pure --> bridge_hash_source_chain_tag
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_Binary__from
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_Binary__from
+    bridge_execute_bridge_mint_note --> bridge_authorize_bridge_mint_pure
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_snapshot_tip_ok
+    bridge_require_hash32 --> proxy_unresolved_bridge_Err
+    bridge_mock_verify_bridge_proof --> proxy_unresolved_bridge_Err
+    bridge_mock_verify_bridge_proof --> proxy_unresolved_bridge_Err
+    bridge_mock_verify_bridge_proof --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_authorize_bridge_mint_pure --> proxy_unresolved_bridge_Err
+    bridge_execute_register_asset --> proxy_unresolved_bridge_Err
+    bridge_is_zero_hash -.-> proxy_unresolved_b_as_slice__iter__all
+    bridge_ReflectionSnapshot_tip_ok --> bridge_is_zero_hash
+    bridge_NoteOutResult_is_dex_consumable --> bridge_is_zero_hash
+    bridge_NoteOutResult_is_dex_consumable --> bridge_is_zero_hash
+    bridge_authorize_bridge_mint_pure --> bridge_is_zero_hash
+    bridge_authorize_bridge_mint_pure --> bridge_is_zero_hash
+    bridge_authorize_bridge_mint_pure --> bridge_is_zero_hash
+    bridge_require_hash32 --> proxy_unresolved_bridge_Err
+    bridge_require_hash32 -.-> proxy_unresolved_StdError__msg
+    bridge_require_hash32 -.-> proxy_unresolved_out_copy_from_slice
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure --> bridge_require_hash32
+    bridge_execute_register_asset --> bridge_require_hash32
+    bridge_execute_set_bridge_cfg --> bridge_require_hash32
+    bridge_execute_bridge_mint_note --> bridge_require_hash32
+    bridge_execute_bridge_mint_note --> bridge_require_hash32
+    bridge_query_is_bridge_minted --> bridge_require_hash32
+    bridge_query_asset --> bridge_require_hash32
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_require_hash32_snapshot_pool_root___pool_root___map_err
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_require_hash32_claim_source_pool_root___source_pool_root___map_err
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_require_hash32_claim_tacit_asset_id___tacit_asset_id___map_err
+    bridge_terp_asset_id_from_tacit -.-> proxy_unresolved_unit_scale_to_be_bytes
+    bridge_terp_asset_id_from_tacit -.-> proxy_unresolved_h_finalize
+    bridge_terp_asset_id_from_tacit -.-> proxy_unresolved_out_copy_from_slice
+    bridge_authorize_bridge_mint_pure --> bridge_terp_asset_id_from_tacit
+    bridge_execute_bridge_mint_note --> bridge_terp_asset_id_from_tacit
+    bridge_happy_bridge_mint_world --> bridge_terp_asset_id_from_tacit
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_require_hash32_entry_asset_id___asset_id__map_err
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_require_hash32_claim_dest_domain___dest_domain__map_err
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_require_hash32_cfg_dest_domain___cfg_dest_domain___map_err
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_require_hash32_claim_burn_dest_commitment___burn_dest_commitment___map_err
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_require_hash32_claim_nullifier___nullifier___map_err
+    bridge_derive_claim_id_with_dest -.-> proxy_unresolved_h_finalize
+    bridge_derive_claim_id_with_dest -.-> proxy_unresolved_out_copy_from_slice
+    bridge_authorize_bridge_mint_pure --> bridge_derive_claim_id_with_dest
+    bridge_happy_bridge_mint_world --> bridge_derive_claim_id_with_dest
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_require_hash32_claim_src_chain_id___src_chain_id___map_err
+    bridge_derive_domain_binding -.-> proxy_unresolved_consensus_height_to_be_bytes
+    bridge_derive_domain_binding -.-> proxy_unresolved_h_finalize
+    bridge_derive_domain_binding -.-> proxy_unresolved_out_copy_from_slice
+    bridge_authorize_bridge_mint_pure --> bridge_derive_domain_binding
+    bridge_happy_bridge_mint_world --> bridge_derive_domain_binding
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_require_hash32_claim_cm_public___cm_public__map_err
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_require_hash32_b___rcm__map_err
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_Binary__from
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_Binary__from
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_Binary__from
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_Binary__from
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_Binary__from
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_Binary__from
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_Binary__from
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_Binary__from
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_Binary__from
+    bridge_execute_register_asset -.-> proxy_unresolved_Binary__from
+    bridge_bin32 -.-> proxy_unresolved_Binary__from
+    bridge_mock_bridge_proof_bytes -.-> proxy_unresolved_Binary__from
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_cm_public_to_vec
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_nu_to_vec
+    bridge_authorize_bridge_mint_pure -.-> proxy_unresolved_presented_claim_to_vec
+    bridge_hash_source_chain_tag --> bridge_hash32_label
+    bridge_authorize_bridge_mint_pure --> bridge_hash_source_chain_tag
+    bridge_execute_bridge_mint_note -.-> proxy_unresolved_BRIDGE_CFG__may_load_deps_storage___ok_or
+    bridge_execute_bridge_mint_note --> bridge_require_hash32
+    bridge_execute_bridge_mint_note --> bridge_bridge_claim_storage_key
+    bridge_execute_bridge_mint_note -.-> proxy_unresolved_BRIDGE_MINTED_may_load_deps_storage___mint_key__is_some
+    bridge_execute_bridge_mint_note --> bridge_require_hash32
+    bridge_execute_bridge_mint_note --> bridge_terp_asset_id_from_tacit
+    bridge_execute_bridge_mint_note -.-> proxy_unresolved_ASSET_REGISTRY_may_load
+    bridge_execute_bridge_mint_note --> bridge_asset_id_key
+    bridge_execute_bridge_mint_note -.-> proxy_unresolved_ASSET_REGISTRY_may_load
+    bridge_execute_bridge_mint_note --> bridge_asset_id_key
+    bridge_execute_bridge_mint_note --> bridge_authorize_bridge_mint_pure
+    bridge_execute_bridge_mint_note -.-> proxy_unresolved_asset_as_ref
+    bridge_execute_bridge_mint_note --> bridge_mock_verify_bridge_proof
+    bridge_execute_bridge_mint_note -.-> proxy_unresolved_BRIDGE_MINTED_save
+    bridge_execute_bridge_mint_note --> proxy_unresolved_bridge_to_json_binary
+    bridge_execute_bridge_mint_note -.-> proxy_unresolved_Response__new___add_attribute_action___bridge_mint_note___add_attribute_nullifier__hex__encode_nu___add_attribute_claim_key__mint_key___add_attribute_value__note_value_to_string___add_attribute_rcm_flag__note_rcm_flag_to_string___add_attribute_dex_consumable__note_is_dex_consumable__to_string___add_attribute
+%% reduced from 102 nodes to 65 for render
+%% pruned 65->55 nodes for mmdc

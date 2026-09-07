@@ -1,0 +1,271 @@
+---
+title: Custody
+description: How validators sign vote extensions — from plaintext keys to remote KMS
+---
+
+# Custody
+
+The sidecar needs a private key to sign vote extensions. The `Custody` trait abstracts where that key lives so you can start with a plaintext file and move to hardware security without changing any other code.
+
+## The trait
+
+```rust
+#[async_trait]
+pub trait Custody: Send + Sync {
+    async fn sign(&self, msg: &[u8]) -> Result<Vec<u8>>;
+    fn public_key(&self) -> &[u8];
+    fn label(&self) -> &str;
+}
+```
+
+Three methods. `sign` is async because remote backends need network I/O. `public_key` returns the compressed public key bytes. `label` is for logs.
+
+A blanket impl on `Box<dyn Custody>` means you can pass custody around as a trait object without wrapper types:
+
+```rust
+let custody: Box<dyn Custody> = Box::new(LocalSecp256k1::from_hex("abcd...")?);
+let handler = VoteExtensionHandler::new(custody);
+```
+
+## What gets signed
+
+Vote extensions are domain-separated to prevent replay across chains or heights:
+
+```
+digest = SHA256("terp/hashmerchant/ve/v1" || chain_id || height_be8 || extension_bytes)
+```
+
+The custody backend signs this digest. It never sees raw chain data — only a 32-byte hash.
+
+## Tier 1: Local key (development)
+
+**Security:** Key is plaintext in a config file. Anyone with file access can sign.
+
+**When to use:** Local development, testnets, single-operator validators where the machine is already trusted.
+
+### Secp256k1
+
+```toml
+# config.toml
+signing_key = "a]1b2c3d4..."  # 32-byte hex
+```
+
+```rust
+use hash_market::custody::local::LocalSecp256k1;
+
+let custody = LocalSecp256k1::from_hex(&config.signing_key)?;
+// or generate a throwaway key for testing:
+let custody = LocalSecp256k1::generate();
+```
+
+Produces 64-byte compact ECDSA signatures (r || s) over secp256k1.
+
+### Ed25519
+
+```rust
+use hash_market::custody::local::LocalEd25519;
+
+let custody = LocalEd25519::from_hex("seed_hex...")?;
+// or:
+let custody = LocalEd25519::generate();
+```
+
+Produces 64-byte Ed25519 signatures. Use this if your validator infrastructure already uses Ed25519 keys.
+
+### Key generation
+
+```bash
+# Secp256k1
+openssl rand -hex 32
+
+# Ed25519 (same format — 32-byte seed)
+openssl rand -hex 32
+```
+
+## Tier 2: TKMS (production)
+
+**Security:** Key lives in a separate process (or separate machine). The sidecar never holds the private key. The KMS process can run in a TEE, HSM, or hardened environment.
+
+**When to use:** Mainnet validators, shared infrastructure, any setup where key compromise would be costly.
+
+### How it works
+
+```
+hash-market-server              TKMS process
+┌──────────────┐    TCP/JSON    ┌──────────────┐
+│ TkmsCustody  │───────────────►│ KMS daemon   │
+│  .sign(msg)  │  len-prefixed  │ holds privkey│
+│              │◄───────────────│ signs + reply│
+└──────────────┘                └──────────────┘
+```
+
+On startup, the sidecar connects to the TKMS address and fetches the public key. Each `sign` call opens a TCP connection, sends a length-prefixed JSON request, and reads the response.
+
+### Wire protocol
+
+Request (sidecar → KMS):
+
+```
+[4 bytes: big-endian payload length][JSON payload]
+```
+
+```json
+{ "method": "sign", "payload": "abcdef..." }
+```
+
+`payload` is the hex-encoded 32-byte digest to sign.
+
+Response (KMS → sidecar):
+
+```
+[4 bytes: big-endian payload length][JSON payload]
+```
+
+```json
+{ "signature": "deadbeef...", "error": null }
+```
+
+`signature` is the hex-encoded compact signature (64 bytes for secp256k1, 64 bytes for ed25519).
+
+### Public key fetch
+
+On connect, the sidecar sends `{ "method": "public_key", "payload": "" }` and expects:
+
+```json
+{ "public_key": "02abc...", "error": null }
+```
+
+### Usage
+
+```rust
+use hash_market::custody::tkms::TkmsCustody;
+
+let custody = TkmsCustody::connect("127.0.0.1:26658").await?;
+println!("KMS pubkey: {}", hex::encode(custody.public_key()));
+```
+
+### Implementing a TKMS-compatible server
+
+Any process that speaks the wire protocol above works. Minimal Python example:
+
+```python
+import json, struct, hashlib
+from ecdsa import SigningKey, SECP256k1
+
+sk = SigningKey.from_string(bytes.fromhex(PRIVKEY_HEX), curve=SECP256k1)
+
+def handle(conn):
+    # Read request
+    length = struct.unpack(">I", conn.recv(4))[0]
+    req = json.loads(conn.recv(length))
+
+    if req["method"] == "public_key":
+        pk = sk.get_verifying_key().to_string("compressed").hex()
+        resp = {"public_key": pk, "error": None}
+    elif req["method"] == "sign":
+        msg = bytes.fromhex(req["payload"])
+        sig = sk.sign_deterministic(msg, hashfunc=hashlib.sha256)
+        resp = {"signature": sig.hex(), "error": None}
+    else:
+        resp = {"error": f"unknown method: {req['method']}"}
+
+    out = json.dumps(resp).encode()
+    conn.sendall(struct.pack(">I", len(out)) + out)
+```
+
+## Tier 3: Custom backend
+
+Implement the `Custody` trait for your own infrastructure. Common examples:
+
+### Cloud KMS (AWS / GCP / Azure)
+
+```rust
+pub struct AwsKmsCustody {
+    client: aws_sdk_kms::Client,
+    key_id: String,
+    pk_bytes: Vec<u8>,
+}
+
+#[async_trait]
+impl Custody for AwsKmsCustody {
+    async fn sign(&self, msg: &[u8]) -> Result<Vec<u8>> {
+        let resp = self.client.sign()
+            .key_id(&self.key_id)
+            .message(Blob::new(msg))
+            .message_type(MessageType::Digest)
+            .signing_algorithm(SigningAlgorithmSpec::EcdsaSha256)
+            .send()
+            .await?;
+        // AWS returns DER-encoded — convert to compact (r || s)
+        Ok(der_to_compact(&resp.signature.unwrap().into_inner()))
+    }
+
+    fn public_key(&self) -> &[u8] { &self.pk_bytes }
+    fn label(&self) -> &str { "aws-kms" }
+}
+```
+
+### Hardware HSM (PKCS#11)
+
+```rust
+pub struct Pkcs11Custody {
+    session: pkcs11::Session,
+    key_handle: ObjectHandle,
+    pk_bytes: Vec<u8>,
+}
+
+#[async_trait]
+impl Custody for Pkcs11Custody {
+    async fn sign(&self, msg: &[u8]) -> Result<Vec<u8>> {
+        // PKCS#11 is sync — wrap in spawn_blocking
+        let session = self.session.clone();
+        let handle = self.key_handle;
+        let msg = msg.to_vec();
+        tokio::task::spawn_blocking(move || {
+            session.sign(&Mechanism::Ecdsa, handle, &msg)
+        }).await?
+    }
+
+    fn public_key(&self) -> &[u8] { &self.pk_bytes }
+    fn label(&self) -> &str { "pkcs11-hsm" }
+}
+```
+
+### Multi-sig threshold
+
+```rust
+pub struct ThresholdCustody {
+    /// Connect to N signers, collect t-of-n partial signatures
+    signers: Vec<String>,
+    threshold: usize,
+    pk_bytes: Vec<u8>,
+}
+```
+
+## Choosing a backend
+
+| Backend | Key location | Compromise blast radius | Ops complexity | Use when |
+|---|---|---|---|---|
+| `LocalSecp256k1` | Config file on disk | Full — anyone with file access | None | Devnet, testing |
+| `LocalEd25519` | Config file on disk | Full | None | Devnet with ed25519 infra |
+| `TkmsCustody` | Separate process/machine | Contained to KMS host | Moderate — run KMS daemon | Mainnet, shared infra |
+| Cloud KMS | AWS/GCP/Azure managed | Contained to IAM policy | Low — managed service | Cloud validators |
+| PKCS#11 HSM | Hardware device | Hardware-bound | High — physical device | High-security validators |
+| Threshold | Distributed across N parties | Requires t-of-n compromise | High — coordination | Multi-party validation |
+
+## Wiring it up
+
+The server binary constructs custody at startup and passes it to `VoteExtensionHandler`:
+
+```rust
+// src/bin/server.rs (simplified)
+let custody: Box<dyn Custody> = match config.custody_mode.as_str() {
+    "local" => Box::new(LocalSecp256k1::from_hex(&config.signing_key)?),
+    "tkms"  => Box::new(TkmsCustody::connect(&config.tkms_address).await?),
+    _       => anyhow::bail!("unknown custody mode"),
+};
+
+let handler = VoteExtensionHandler::new(custody);
+```
+
+Everything downstream — signing, verification, the HTTP endpoints — is custody-agnostic. Swap the backend, nothing else changes.

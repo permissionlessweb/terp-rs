@@ -1,0 +1,1395 @@
+{
+  "120u-1": {
+    "code_ids": {},
+    "default": {}
+  },
+  "archway-1": {
+    "code_ids": {},
+    "default": {}
+  },
+  "bitsong-2b": {
+    "code_ids": {
+      "cw:blob": 73
+    },
+    "default": {}
+  },
+  "elgafar-1": {
+    "code_ids": {
+      "cw-infuser": 4959
+    },
+    "default": {
+      "cw-infuser": "stars1vstfr0qrfyd3ac92cstxh9lvq40npc8pzaqylktu9fkvafkh5gls8xsfsm"
+    }
+  },
+  "juno-1": {
+    "code_ids": {
+      "cw420": 4933,
+      "cw_ave": 4931,
+      "cw_ave_factory": 4932
+    },
+    "default": {
+      "cw_ave_factory": "juno15qs9qs0pmcs2h74s04pnr2rtc8lpmagnsfrnjxzn5jmgjl83g5qsdl4kly"
+    }
+  },
+  "morocco-1": {
+    "assets": {
+      "": [
+        {
+          "_source_chain": "osmosis",
+          "base": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+          "coingecko_id": "spice-2",
+          "denom_units": [
+            {
+              "denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+              "exponent": 0
+            },
+            {
+              "denom": "Spice",
+              "exponent": 6
+            }
+          ],
+          "description": "The Spice memecoin",
+          "display": "Spice",
+          "images": [
+            {
+              "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/spice.png"
+            }
+          ],
+          "keywords": [
+            "meme"
+          ],
+          "logo_URIs": {
+            "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/spice.png"
+          },
+          "name": "Spice",
+          "socials": {
+            "x": "https://x.com/spiceoncosmos"
+          },
+          "symbol": "SPICE",
+          "type_asset": "sdk.coin"
+        },
+        {
+          "base": "ibc/2E4CF68617591638A6CBD7DA3E8CAF8C9C0B34AAB4878775A0B16ADDC56E4389",
+          "coingecko_id": "akash-network",
+          "denom_units": [
+            {
+              "aliases": [
+                "uakt"
+              ],
+              "denom": "ibc/2E4CF68617591638A6CBD7DA3E8CAF8C9C0B34AAB4878775A0B16ADDC56E4389",
+              "exponent": 0
+            },
+            {
+              "denom": "akt",
+              "exponent": 6
+            }
+          ],
+          "description": "Akash Token (AKT) is the Akash Network's native utility token, used as the primary means to govern, secure the blockchain, incentivize participants, and provide a default mechanism to store and exchange value.",
+          "display": "akt",
+          "images": [
+            {
+              "image_sync": {
+                "base_denom": "uakt",
+                "chain_name": "akash"
+              },
+              "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/akash/images/akt.png",
+              "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/akash/images/akt.svg"
+            }
+          ],
+          "logo_URIs": {
+            "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/akash/images/akt.png",
+            "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/akash/images/akt.svg"
+          },
+          "name": "Akash",
+          "symbol": "AKT",
+          "traces": [
+            {
+              "chain": {
+                "channel_id": "channel-1",
+                "path": "transfer/channel-1/uakt"
+              },
+              "counterparty": {
+                "base_denom": "uakt",
+                "chain_name": "akash",
+                "channel_id": "channel-9"
+              },
+              "type": "ibc"
+            }
+          ],
+          "type_asset": "ics20"
+        },
+        {
+          "address": "osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743",
+          "base": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
+          "coingecko_id": "wrapped-bitcoin",
+          "denom_units": [
+            {
+              "aliases": [
+                "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"
+              ],
+              "denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
+              "exponent": 0
+            },
+            {
+              "denom": "wbtc",
+              "exponent": 8
+            }
+          ],
+          "description": "Wrapped Bitcoin (WBTC) is an ERC20 token backed 1:1 with Bitcoin. Completely transparent. 100% verifiable. Community led.",
+          "display": "wbtc",
+          "name": "Wrapped Bitcoin",
+          "symbol": "WBTC",
+          "traces": [
+            {
+              "counterparty": {
+                "base_denom": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+                "chain_name": "ethereum"
+              },
+              "provider": "BitGo, Kyber, and Ren",
+              "type": "additional-mintage"
+            }
+          ],
+          "type_asset": "sdk.coin"
+        },
+        {
+          "base": "ibc/AF34593540E81B06145CD80BDBB2149BE068A9B495086284DFD0FB3017AB5254",
+          "coingecko_id": "atomone",
+          "denom_units": [
+            {
+              "aliases": [
+                "uatone"
+              ],
+              "denom": "ibc/AF34593540E81B06145CD80BDBB2149BE068A9B495086284DFD0FB3017AB5254",
+              "exponent": 0
+            },
+            {
+              "denom": "atone",
+              "exponent": 6
+            }
+          ],
+          "description": "The native staking and governance token of AtomOne",
+          "display": "atone",
+          "images": [
+            {
+              "image_sync": {
+                "base_denom": "uatone",
+                "chain_name": "atomone"
+              },
+              "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/atomone/images/atone.png",
+              "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/atomone/images/atone.svg"
+            }
+          ],
+          "logo_URIs": {
+            "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/atomone/images/atone.png",
+            "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/atomone/images/atone.svg"
+          },
+          "name": "AtomOne",
+          "symbol": "ATONE",
+          "traces": [
+            {
+              "chain": {
+                "channel_id": "channel-94814",
+                "path": "transfer/channel-94814/uatone"
+              },
+              "counterparty": {
+                "base_denom": "uatone",
+                "chain_name": "atomone",
+                "channel_id": "channel-2"
+              },
+              "type": "ibc"
+            }
+          ],
+          "type_asset": "ics20"
+        },
+        {
+          "base": "ibc/ADD33E9703A911023E73181FCA39B022094A1832F0C2311152A927E580E28B5F",
+          "coingecko_id": "spice-2",
+          "denom_units": [
+            {
+              "aliases": [
+                "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+              ],
+              "denom": "ibc/ADD33E9703A911023E73181FCA39B022094A1832F0C2311152A927E580E28B5F",
+              "exponent": 0
+            },
+            {
+              "denom": "Spice",
+              "exponent": 6
+            }
+          ],
+          "description": "The Spice memecoin",
+          "display": "Spice",
+          "images": [
+            {
+              "image_sync": {
+                "base_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+                "chain_name": "osmosis"
+              },
+              "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice.png",
+              "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice.svg"
+            }
+          ],
+          "logo_URIs": {
+            "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice.png",
+            "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice.svg"
+          },
+          "name": "Spice",
+          "symbol": "SPICE",
+          "traces": [
+            {
+              "chain": {
+                "channel_id": "",
+                "path": "transfer/channel-1/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+              },
+              "counterparty": {
+                "base_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+                "chain_name": "osmosis",
+                "channel_id": ""
+              },
+              "type": "ibc"
+            }
+          ],
+          "type_asset": "sdk.coin"
+        },
+        {
+          "base": "ibc/406AE2A657026B1ABB7994D28E3CBE699C526D0418FD4A3ACAAC0BC26D2B54EC",
+          "denom_units": [
+            {
+              "aliases": [
+                "upenumbra"
+              ],
+              "denom": "ibc/406AE2A657026B1ABB7994D28E3CBE699C526D0418FD4A3ACAAC0BC26D2B54EC",
+              "exponent": 0
+            },
+            {
+              "denom": "penumbra",
+              "exponent": 6
+            }
+          ],
+          "description": "The native token of Penumbra.",
+          "display": "penumbra",
+          "images": [
+            {
+              "image_sync": {
+                "base_denom": "upenumbra",
+                "chain_name": "penumbra"
+              },
+              "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/penumbra/images/penumbra.png",
+              "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/penumbra/images/penumbra.svg"
+            }
+          ],
+          "logo_URIs": {
+            "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/penumbra/images/penumbra.png",
+            "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/penumbra/images/penumbra.svg"
+          },
+          "name": "Penumbra",
+          "symbol": "UM",
+          "traces": [
+            {
+              "chain": {
+                "channel_id": "channel-79703",
+                "path": "transfer/channel-79703/upenumbra"
+              },
+              "counterparty": {
+                "base_denom": "upenumbra",
+                "chain_name": "penumbra",
+                "channel_id": "channel-4"
+              },
+              "type": "ibc"
+            }
+          ],
+          "type_asset": "ics20"
+        },
+        {
+          "base": "ibc/E6A14427945A957F30D05A686EC4C70420F778EB94999F0A1C2B9F420ACB9AE1",
+          "denom_units": [
+            {
+              "aliases": [
+                "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF"
+              ],
+              "denom": "ibc/E6A14427945A957F30D05A686EC4C70420F778EB94999F0A1C2B9F420ACB9AE1",
+              "exponent": 0
+            },
+            {
+              "denom": "eth",
+              "exponent": 18
+            }
+          ],
+          "description": "Ether via Eureka",
+          "display": "eth",
+          "images": [
+            {
+              "image_sync": {
+                "base_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
+                "chain_name": "cosmoshub"
+              },
+              "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/cosmoshub/images/ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF.png",
+              "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/cosmoshub/images/ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF.svg"
+            }
+          ],
+          "logo_URIs": {
+            "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/cosmoshub/images/ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF.png",
+            "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/cosmoshub/images/ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF.svg"
+          },
+          "name": "Ethereum",
+          "symbol": "ETH",
+          "traces": [
+            {
+              "chain": {
+                "channel_id": "channel-0",
+                "path": "transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+              },
+              "counterparty": {
+                "base_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
+                "chain_name": "cosmoshub",
+                "channel_id": "channel-141"
+              },
+              "type": "ibc"
+            }
+          ],
+          "type_asset": "ics20"
+        }
+      ]
+    },
+    "code_ids": {
+      "abstract:account": 68,
+      "abstract:ans-host": 65,
+      "abstract:ibc-client": 69,
+      "abstract:ibc-host": 70,
+      "abstract:module-factory": 67,
+      "abstract:registry": 66,
+      "btsg_ft_factory": 40,
+      "crates.io:terp721-account": 48,
+      "crates.io:terp721-account-manifold": 49,
+      "cw-infuser": 52,
+      "cw-shitstrap": 54,
+      "cw-shitstrap-factory": 55,
+      "cw-svg-minter": 51,
+      "cw1_whitelist": 63,
+      "cw20_external_rewards": 35,
+      "cw20_reward_distributor": 36,
+      "cw20_stake": 34,
+      "cw4_group": 61,
+      "cw721_roles": 45,
+      "cw721_svg": 50,
+      "cw:blob": 64,
+      "cw_admin_factory": 39,
+      "cw_funds_distributor": 37,
+      "cw_payroll": 41,
+      "cw_tokenfactory": 43,
+      "cw_tokenswap": 42,
+      "cw_vesting": 44,
+      "dao-calendar": 32,
+      "dao_dao_core": 23,
+      "dao_pre_propose_approval_single": 28,
+      "dao_pre_propose_approver": 29,
+      "dao_pre_propose_multiple": 30,
+      "dao_pre_propose_single": 31,
+      "dao_proposal_condorcet": 26,
+      "dao_proposal_multiple": 25,
+      "dao_proposal_single": 24,
+      "dao_proposal_sudo": 27,
+      "dao_rewards_distributor": 38,
+      "dao_vote_delegation": 62,
+      "gauge-adapter": 47,
+      "gauge-orchestrator": 46,
+      "voting_cw20_staked": 57,
+      "voting_cw4": 56,
+      "voting_cw721_roles": 58,
+      "voting_cw721_staked": 59,
+      "voting_token_staked": 60,
+      "whitelist-mtree": 53
+    },
+    "default": {
+      "abstract:account-local-0": "terp1dn68205qvzcrxcnquzch0dnnde38eu34lkxan9343a364vjl32dq6gzacv",
+      "abstract:account-local-1": "terp1c5flt5g73adhflruwrzj6rj6a98fk6zdgy7hqnh3pdl7wux8g3wsn8knx7",
+      "abstract:ans-host": "terp133wf9rysrrwkgga3jxzadnpaky6e8tq0x70gwemzvlvz2k36mq5qy4kur5",
+      "abstract:ibc-client": "terp13ct8hfvuxwfulygcjx9xtvhsxd5kjt7qgqhlkqvt5d0khfxnwefsrphmeu",
+      "abstract:ibc-host": "terp13rzt9anw8qmf5kqu3ucccuz6ryrg0ca73r3wp0yespr90wmhe4ms86j4qn",
+      "abstract:module-factory": "terp1lujfwru7t0vuzugqr4s6kt7syyvf4q8d7njym7a2le64p0z4h00s7rxtez",
+      "abstract:registry": "terp1qyl8de7th7n0cjk5zv5tfqq7hcat2pnqxvlqar9h3ek0qsx2h4rseqd03d",
+      "crates.io:terp721-account": "terp143r4y9wn3g06j5z425cunfc6g3fz9gsedptgrxc8w6ktvflpe45s94903c",
+      "crates.io:terp721-account-manifold": "terp1qavmkqwn0qzu5m06a4ryyj5drtc0ujfm4j276axzcfxkglueqgms79cypw",
+      "cw_admin_factory": "terp1405rgu0e4rrzkwpvscl5xc8ypf6edseyjxljft4jp7qxrchqlnws28au53"
+    },
+    "ibc_data": {
+      "": {
+        "akash": {
+          "$schema": "../ibc_data.schema.json",
+          "chain_1": {
+            "chain_id": "morocco-1",
+            "chain_name": "akash",
+            "client_id": "07-tendermint-32",
+            "connection_id": "connection-11"
+          },
+          "chain_2": {
+            "chain_id": "akashnet-2",
+            "chain_name": "terp",
+            "client_id": "07-tendermint-210",
+            "connection_id": "connection-207"
+          },
+          "channels": [
+            {
+              "chain_1": {
+                "channel_id": "channel-6",
+                "port_id": "transfer"
+              },
+              "chain_2": {
+                "channel_id": "channel-115",
+                "port_id": "transfer"
+              },
+              "ordering": 1,
+              "tags": {
+                "status": "ACTIVE"
+              },
+              "version": "ics20-1"
+            },
+            {
+              "chain_1": {
+                "channel_id": "channel-9",
+                "port_id": "transfer"
+              },
+              "chain_2": {
+                "channel_id": "channel-139",
+                "port_id": "transfer"
+              },
+              "ordering": 1,
+              "tags": {
+                "status": "ACTIVE"
+              },
+              "version": "ics20-1"
+            }
+          ]
+        },
+        "atomone": {
+          "$schema": "../ibc_data.schema.json",
+          "chain_1": {
+            "chain_id": "morocco-1",
+            "chain_name": "atomone",
+            "client_id": "07-tendermint-34",
+            "connection_id": "connection-12"
+          },
+          "chain_2": {
+            "chain_id": "atomone-1",
+            "chain_name": "terp",
+            "client_id": "07-tendermint-46",
+            "connection_id": "connection-42"
+          },
+          "channels": [
+            {
+              "chain_1": {
+                "channel_id": "channel-10",
+                "port_id": "transfer"
+              },
+              "chain_2": {
+                "channel_id": "channel-13",
+                "port_id": "transfer"
+              },
+              "ordering": 1,
+              "tags": {
+                "status": "ACTIVE"
+              },
+              "version": "ics20-1"
+            }
+          ]
+        },
+        "evmos": {
+          "$schema": "../ibc_data.schema.json",
+          "chain_1": {
+            "chain_id": "morocco-1",
+            "chain_name": "evmos",
+            "client_id": "07-tendermint-23",
+            "connection_id": "connection-7"
+          },
+          "chain_2": {
+            "chain_id": "evmos_9001-2",
+            "chain_name": "terp",
+            "client_id": "07-tendermint-124",
+            "connection_id": "connection-79"
+          },
+          "channels": [
+            {
+              "chain_1": {
+                "channel_id": "channel-5",
+                "port_id": "transfer"
+              },
+              "chain_2": {
+                "channel_id": "channel-101",
+                "port_id": "transfer"
+              },
+              "ordering": 1,
+              "tags": {
+                "status": "ACTIVE"
+              },
+              "version": "ics20-1"
+            }
+          ]
+        },
+        "gitopia": {
+          "$schema": "../ibc_data.schema.json",
+          "chain_1": {
+            "chain_id": "morocco-1",
+            "chain_name": "gitopia",
+            "client_id": "07-tendermint-16",
+            "connection_id": "connection-5"
+          },
+          "chain_2": {
+            "chain_id": "gitopia",
+            "chain_name": "terp",
+            "client_id": "07-tendermint-33",
+            "connection_id": "connection-38"
+          },
+          "channels": [
+            {
+              "chain_1": {
+                "channel_id": "channel-4",
+                "port_id": "transfer"
+              },
+              "chain_2": {
+                "channel_id": "channel-1",
+                "port_id": "transfer"
+              },
+              "ordering": 1,
+              "tags": {
+                "status": "ACTIVE"
+              },
+              "version": "ics20-1"
+            }
+          ]
+        },
+        "juno": {
+          "$schema": "../ibc_data.schema.json",
+          "chain_1": {
+            "chain_id": "morocco-1",
+            "chain_name": "juno",
+            "client_id": "07-tendermint-2",
+            "connection_id": "connection-1"
+          },
+          "chain_2": {
+            "chain_id": "juno-1",
+            "chain_name": "terp",
+            "client_id": "07-tendermint-486",
+            "connection_id": "connection-487"
+          },
+          "channels": [
+            {
+              "chain_1": {
+                "channel_id": "channel-0",
+                "port_id": "transfer"
+              },
+              "chain_2": {
+                "channel_id": "channel-393",
+                "port_id": "transfer"
+              },
+              "ordering": 1,
+              "tags": {
+                "status": "ACTIVE"
+              },
+              "version": "ics20-1"
+            }
+          ]
+        },
+        "omniflix": {
+          "$schema": "../ibc_data.schema.json",
+          "chain_1": {
+            "chain_id": "morocco-1",
+            "chain_name": "omniflix",
+            "client_id": "07-tendermint-15",
+            "connection_id": "connection-4"
+          },
+          "chain_2": {
+            "chain_id": "omniflixhub-1",
+            "chain_name": "terp",
+            "client_id": "07-tendermint-50",
+            "connection_id": "connection-44"
+          },
+          "channels": [
+            {
+              "chain_1": {
+                "channel_id": "channel-3",
+                "port_id": "transfer"
+              },
+              "chain_2": {
+                "channel_id": "channel-33",
+                "port_id": "transfer"
+              },
+              "ordering": 1,
+              "tags": {
+                "status": "ACTIVE"
+              },
+              "version": "ics20-1"
+            }
+          ]
+        },
+        "osmosis": {
+          "$schema": "../ibc_data.schema.json",
+          "chain_1": {
+            "chain_id": "morocco-1",
+            "chain_name": "osmosis",
+            "client_id": "07-tendermint-33",
+            "connection_id": "connection-13"
+          },
+          "chain_2": {
+            "chain_id": "osmosis-1",
+            "chain_name": "terp",
+            "client_id": "07-tendermint-3708",
+            "connection_id": "connection-11060"
+          },
+          "channels": [
+            {
+              "chain_1": {
+                "channel_id": "channel-1",
+                "port_id": "transfer"
+              },
+              "chain_2": {
+                "channel_id": "channel-6738",
+                "port_id": "transfer"
+              },
+              "ordering": 1,
+              "tags": {
+                "status": "ACTIVE"
+              },
+              "version": "ics20-1"
+            },
+            {
+              "chain_1": {
+                "channel_id": "channel-11",
+                "port_id": "transfer"
+              },
+              "chain_2": {
+                "channel_id": "channel-110258",
+                "port_id": "transfer"
+              },
+              "ordering": 1,
+              "tags": {
+                "status": "ACTIVE"
+              },
+              "version": "ics20-1"
+            }
+          ]
+        },
+        "secret": {
+          "$schema": "../ibc_data.schema.json",
+          "chain_1": {
+            "chain_id": "morocco-1",
+            "chain_name": "secret",
+            "client_id": "07-tendermint-31",
+            "connection_id": "connection-10"
+          },
+          "chain_2": {
+            "chain_id": "secret-4",
+            "chain_name": "terp",
+            "client_id": "07-tendermint-211",
+            "connection_id": "connection-202"
+          },
+          "channels": [
+            {
+              "chain_1": {
+                "channel_id": "channel-7",
+                "port_id": "transfer"
+              },
+              "chain_2": {
+                "channel_id": "channel-100",
+                "port_id": "transfer"
+              },
+              "ordering": 1,
+              "tags": {
+                "status": "ACTIVE"
+              },
+              "version": "ics20-1"
+            },
+            {
+              "chain_1": {
+                "channel_id": "channel-8",
+                "port_id": "transfer"
+              },
+              "chain_2": {
+                "channel_id": "channel-165",
+                "port_id": "transfer"
+              },
+              "ordering": 1,
+              "tags": {
+                "status": "ACTIVE"
+              },
+              "version": "ics20-1"
+            }
+          ]
+        },
+        "stargaze": {
+          "$schema": "../ibc_data.schema.json",
+          "chain_1": {
+            "chain_id": "morocco-1",
+            "chain_name": "stargaze",
+            "client_id": "07-tendermint-13",
+            "connection_id": "connection-3"
+          },
+          "chain_2": {
+            "chain_id": "stargaze-1",
+            "chain_name": "terp",
+            "client_id": "07-tendermint-317",
+            "connection_id": "connection-255"
+          },
+          "channels": [
+            {
+              "chain_1": {
+                "channel_id": "channel-2",
+                "port_id": "transfer"
+              },
+              "chain_2": {
+                "channel_id": "channel-235",
+                "port_id": "transfer"
+              },
+              "ordering": 1,
+              "tags": {
+                "status": "ACTIVE"
+              },
+              "version": "ics20-1"
+            }
+          ]
+        }
+      },
+      "akash": {
+        "$schema": "../ibc_data.schema.json",
+        "chain_1": {
+          "chain_id": "akashnet-2",
+          "chain_name": "akash",
+          "client_id": "07-tendermint-210",
+          "connection_id": "connection-207"
+        },
+        "chain_2": {
+          "chain_id": "morocco-1",
+          "chain_name": "terp",
+          "client_id": "07-tendermint-32",
+          "connection_id": "connection-11"
+        },
+        "channels": [
+          {
+            "chain_1": {
+              "channel_id": "channel-115",
+              "port_id": "transfer"
+            },
+            "chain_2": {
+              "channel_id": "channel-6",
+              "port_id": "transfer"
+            },
+            "ordering": "unordered",
+            "tags": {
+              "preferred": true,
+              "status": "ACTIVE"
+            },
+            "version": "ics20-1"
+          },
+          {
+            "chain_1": {
+              "channel_id": "channel-139",
+              "port_id": "transfer"
+            },
+            "chain_2": {
+              "channel_id": "channel-9",
+              "port_id": "transfer"
+            },
+            "ordering": "unordered",
+            "tags": {
+              "preferred": false,
+              "status": "ACTIVE"
+            },
+            "version": "ics20-1"
+          }
+        ]
+      },
+      "atomone": {
+        "$schema": "../ibc_data.schema.json",
+        "chain_1": {
+          "chain_id": "atomone-1",
+          "chain_name": "atomone",
+          "client_id": "07-tendermint-46",
+          "connection_id": "connection-42"
+        },
+        "chain_2": {
+          "chain_id": "morocco-1",
+          "chain_name": "terp",
+          "client_id": "07-tendermint-34",
+          "connection_id": "connection-12"
+        },
+        "channels": [
+          {
+            "chain_1": {
+              "channel_id": "channel-13",
+              "port_id": "transfer"
+            },
+            "chain_2": {
+              "channel_id": "channel-10",
+              "port_id": "transfer"
+            },
+            "ordering": "unordered",
+            "tags": {
+              "preferred": true,
+              "status": "ACTIVE"
+            },
+            "version": "ics20-1"
+          }
+        ]
+      },
+      "evmos": {
+        "$schema": "../ibc_data.schema.json",
+        "chain_1": {
+          "chain_id": "evmos_9001-2",
+          "chain_name": "evmos",
+          "client_id": "07-tendermint-124",
+          "connection_id": "connection-79"
+        },
+        "chain_2": {
+          "chain_id": "morocco-1",
+          "chain_name": "terp",
+          "client_id": "07-tendermint-23",
+          "connection_id": "connection-7"
+        },
+        "channels": [
+          {
+            "chain_1": {
+              "channel_id": "channel-101",
+              "port_id": "transfer"
+            },
+            "chain_2": {
+              "channel_id": "channel-5",
+              "port_id": "transfer"
+            },
+            "ordering": "unordered",
+            "tags": {
+              "preferred": true,
+              "status": "ACTIVE"
+            },
+            "version": "ics20-1"
+          }
+        ]
+      },
+      "gitopia": {
+        "$schema": "../ibc_data.schema.json",
+        "chain_1": {
+          "chain_id": "gitopia",
+          "chain_name": "gitopia",
+          "client_id": "07-tendermint-33",
+          "connection_id": "connection-38"
+        },
+        "chain_2": {
+          "chain_id": "morocco-1",
+          "chain_name": "terp",
+          "client_id": "07-tendermint-16",
+          "connection_id": "connection-5"
+        },
+        "channels": [
+          {
+            "chain_1": {
+              "channel_id": "channel-1",
+              "port_id": "transfer"
+            },
+            "chain_2": {
+              "channel_id": "channel-4",
+              "port_id": "transfer"
+            },
+            "ordering": "unordered",
+            "tags": {
+              "preferred": true,
+              "status": "ACTIVE"
+            },
+            "version": "ics20-1"
+          }
+        ]
+      },
+      "juno": {
+        "$schema": "../ibc_data.schema.json",
+        "chain_1": {
+          "chain_id": "juno-1",
+          "chain_name": "juno",
+          "client_id": "07-tendermint-486",
+          "connection_id": "connection-487"
+        },
+        "chain_2": {
+          "chain_id": "morocco-1",
+          "chain_name": "terp",
+          "client_id": "07-tendermint-2",
+          "connection_id": "connection-1"
+        },
+        "channels": [
+          {
+            "chain_1": {
+              "channel_id": "channel-393",
+              "port_id": "transfer"
+            },
+            "chain_2": {
+              "channel_id": "channel-0",
+              "port_id": "transfer"
+            },
+            "ordering": "unordered",
+            "tags": {
+              "preferred": true,
+              "status": "ACTIVE"
+            },
+            "version": "ics20-1"
+          }
+        ]
+      },
+      "omniflix": {
+        "$schema": "../ibc_data.schema.json",
+        "chain_1": {
+          "chain_id": "omniflixhub-1",
+          "chain_name": "omniflix",
+          "client_id": "07-tendermint-50",
+          "connection_id": "connection-44"
+        },
+        "chain_2": {
+          "chain_id": "morocco-1",
+          "chain_name": "terp",
+          "client_id": "07-tendermint-15",
+          "connection_id": "connection-4"
+        },
+        "channels": [
+          {
+            "chain_1": {
+              "channel_id": "channel-33",
+              "port_id": "transfer"
+            },
+            "chain_2": {
+              "channel_id": "channel-3",
+              "port_id": "transfer"
+            },
+            "ordering": "unordered",
+            "tags": {
+              "preferred": true,
+              "status": "ACTIVE"
+            },
+            "version": "ics20-1"
+          }
+        ]
+      },
+      "osmosis": {
+        "$schema": "../ibc_data.schema.json",
+        "chain_1": {
+          "chain_id": "osmosis-1",
+          "chain_name": "osmosis",
+          "client_id": "07-tendermint-3708",
+          "connection_id": "connection-11060"
+        },
+        "chain_2": {
+          "chain_id": "morocco-1",
+          "chain_name": "terp",
+          "client_id": "07-tendermint-33",
+          "connection_id": "connection-13"
+        },
+        "channels": [
+          {
+            "chain_1": {
+              "channel_id": "channel-6738",
+              "port_id": "transfer"
+            },
+            "chain_2": {
+              "channel_id": "channel-1",
+              "port_id": "transfer"
+            },
+            "ordering": "unordered",
+            "tags": {
+              "preferred": true,
+              "status": "ACTIVE"
+            },
+            "version": "ics20-1"
+          },
+          {
+            "chain_1": {
+              "channel_id": "channel-110258",
+              "port_id": "transfer"
+            },
+            "chain_2": {
+              "channel_id": "channel-11",
+              "port_id": "transfer"
+            },
+            "ordering": "unordered",
+            "tags": {
+              "preferred": false,
+              "status": "ACTIVE"
+            },
+            "version": "ics20-1"
+          }
+        ]
+      },
+      "secret": {
+        "$schema": "../ibc_data.schema.json",
+        "chain_1": {
+          "chain_id": "secret-4",
+          "chain_name": "secret",
+          "client_id": "07-tendermint-211",
+          "connection_id": "connection-202"
+        },
+        "chain_2": {
+          "chain_id": "morocco-1",
+          "chain_name": "terp",
+          "client_id": "07-tendermint-31",
+          "connection_id": "connection-10"
+        },
+        "channels": [
+          {
+            "chain_1": {
+              "channel_id": "channel-100",
+              "port_id": "transfer"
+            },
+            "chain_2": {
+              "channel_id": "channel-7",
+              "port_id": "transfer"
+            },
+            "ordering": "unordered",
+            "tags": {
+              "preferred": true,
+              "status": "ACTIVE"
+            },
+            "version": "ics20-1"
+          },
+          {
+            "chain_1": {
+              "channel_id": "channel-165",
+              "port_id": "transfer"
+            },
+            "chain_2": {
+              "channel_id": "channel-8",
+              "port_id": "transfer"
+            },
+            "ordering": "unordered",
+            "tags": {
+              "preferred": false,
+              "status": "ACTIVE"
+            },
+            "version": "ics20-1"
+          }
+        ]
+      },
+      "stargaze": {
+        "$schema": "../ibc_data.schema.json",
+        "chain_1": {
+          "chain_id": "stargaze-1",
+          "chain_name": "stargaze",
+          "client_id": "07-tendermint-317",
+          "connection_id": "connection-255"
+        },
+        "chain_2": {
+          "chain_id": "morocco-1",
+          "chain_name": "terp",
+          "client_id": "07-tendermint-13",
+          "connection_id": "connection-3"
+        },
+        "channels": [
+          {
+            "chain_1": {
+              "channel_id": "channel-235",
+              "port_id": "transfer"
+            },
+            "chain_2": {
+              "channel_id": "channel-2",
+              "port_id": "transfer"
+            },
+            "ordering": "unordered",
+            "tags": {
+              "preferred": true,
+              "status": "ACTIVE"
+            },
+            "version": "ics20-1"
+          }
+        ]
+      }
+    }
+  },
+  "osmosis-1": {
+    "assets": [
+      {
+        "base": "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4",
+        "coingecko_id": "akash-network",
+        "denom_units": [
+          {
+            "aliases": [
+              "uakt"
+            ],
+            "denom": "ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4",
+            "exponent": 0
+          },
+          {
+            "denom": "akt",
+            "exponent": 6
+          }
+        ],
+        "description": "Akash Token (AKT) is the Akash Network's native utility token, used as the primary means to govern, secure the blockchain, incentivize participants, and provide a default mechanism to store and exchange value.",
+        "display": "akt",
+        "images": [
+          {
+            "image_sync": {
+              "base_denom": "uakt",
+              "chain_name": "akash"
+            },
+            "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/akash/images/akt.png",
+            "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/akash/images/akt.svg"
+          }
+        ],
+        "logo_URIs": {
+          "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/akash/images/akt.png",
+          "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/akash/images/akt.svg"
+        },
+        "name": "Akash",
+        "symbol": "AKT",
+        "traces": [
+          {
+            "chain": {
+              "channel_id": "channel-1",
+              "path": "transfer/channel-1/uakt"
+            },
+            "counterparty": {
+              "base_denom": "uakt",
+              "chain_name": "akash",
+              "channel_id": "channel-9"
+            },
+            "type": "ibc"
+          }
+        ],
+        "type_asset": "ics20"
+      },
+      {
+        "address": "osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743",
+        "base": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
+        "coingecko_id": "wrapped-bitcoin",
+        "denom_units": [
+          {
+            "aliases": [
+              "wbtc-satoshi"
+            ],
+            "denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
+            "exponent": 0
+          },
+          {
+            "denom": "wbtc",
+            "exponent": 8
+          }
+        ],
+        "description": "Wrapped Bitcoin (WBTC) is an ERC20 token backed 1:1 with Bitcoin. Completely transparent. 100% verifiable. Community led.",
+        "display": "wbtc",
+        "images": [
+          {
+            "image_sync": {
+              "base_denom": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+              "chain_name": "ethereum"
+            },
+            "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/ethereum/images/wbtc.png",
+            "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/ethereum/images/wbtc.svg"
+          }
+        ],
+        "logo_URIs": {
+          "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/ethereum/images/wbtc.png",
+          "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/ethereum/images/wbtc.svg"
+        },
+        "name": "Wrapped Bitcoin",
+        "symbol": "WBTC",
+        "traces": [
+          {
+            "counterparty": {
+              "base_denom": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+              "chain_name": "ethereum"
+            },
+            "provider": "BitGo, Kyber, and Ren",
+            "type": "additional-mintage"
+          }
+        ],
+        "type_asset": "sdk.coin"
+      },
+      {
+        "base": "ibc/BC26A7A805ECD6822719472BCB7842A48EF09DF206182F8F259B2593EB5D23FB",
+        "coingecko_id": "atomone",
+        "denom_units": [
+          {
+            "aliases": [
+              "uatone"
+            ],
+            "denom": "ibc/BC26A7A805ECD6822719472BCB7842A48EF09DF206182F8F259B2593EB5D23FB",
+            "exponent": 0
+          },
+          {
+            "denom": "atone",
+            "exponent": 6
+          }
+        ],
+        "description": "The native staking and governance token of AtomOne",
+        "display": "atone",
+        "extended_description": "AtomOne is a community-driven fork of the Cosmos Hub, originating from concerns raised around Cosmos Hub Proposal 82 and Proposal 848. AtomOne aims to provide a security-conscious, constitutionally governed, streamlined IBC/ICS hub, preserving the foundational ethos of the Cosmos Hub.",
+        "images": [
+          {
+            "image_sync": {
+              "base_denom": "uatone",
+              "chain_name": "atomone"
+            },
+            "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/atomone/images/atomone.png",
+            "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/atomone/images/atomone.svg"
+          }
+        ],
+        "logo_URIs": {
+          "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/atomone/images/atomone.png",
+          "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/atomone/images/atomone.svg"
+        },
+        "name": "AtomOne",
+        "socials": {
+          "website": "https://atom.one",
+          "x": "https://x.com/_atomone"
+        },
+        "symbol": "ATONE",
+        "traces": [
+          {
+            "chain": {
+              "channel_id": "channel-94814",
+              "path": "transfer/channel-94814/uatone"
+            },
+            "counterparty": {
+              "base_denom": "uatone",
+              "chain_name": "atomone",
+              "channel_id": "channel-2"
+            },
+            "type": "ibc"
+          }
+        ],
+        "type_asset": "ics20"
+      },
+      {
+        "base": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+        "coingecko_id": "spice-2",
+        "denom_units": [
+          {
+            "denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+            "exponent": 0
+          },
+          {
+            "denom": "Spice",
+            "exponent": 6
+          }
+        ],
+        "description": "The Spice memecoin",
+        "display": "Spice",
+        "images": [
+          {
+            "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/spice.png"
+          }
+        ],
+        "keywords": [
+          "meme"
+        ],
+        "logo_URIs": {
+          "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/images/spice.png"
+        },
+        "name": "Spice",
+        "socials": {
+          "x": "https://x.com/spiceoncosmos"
+        },
+        "symbol": "SPICE",
+        "type_asset": "sdk.coin"
+      },
+      {
+        "base": "ibc/0FA9232B262B89E77D1335D54FB1E1F506A92A7E4B51524B400DC69C68D28372",
+        "denom_units": [
+          {
+            "aliases": [
+              "upenumbra"
+            ],
+            "denom": "ibc/0FA9232B262B89E77D1335D54FB1E1F506A92A7E4B51524B400DC69C68D28372",
+            "exponent": 0
+          },
+          {
+            "denom": "penumbra",
+            "exponent": 6
+          }
+        ],
+        "description": "The native token of Penumbra.",
+        "display": "penumbra",
+        "images": [
+          {
+            "image_sync": {
+              "base_denom": "upenumbra",
+              "chain_name": "penumbra"
+            },
+            "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/penumbra/images/um.png",
+            "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/penumbra/images/um.svg",
+            "theme": {
+              "circle": true
+            }
+          }
+        ],
+        "logo_URIs": {
+          "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/penumbra/images/um.png",
+          "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/penumbra/images/um.svg"
+        },
+        "name": "Penumbra",
+        "symbol": "UM",
+        "traces": [
+          {
+            "chain": {
+              "channel_id": "channel-79703",
+              "path": "transfer/channel-79703/upenumbra"
+            },
+            "counterparty": {
+              "base_denom": "upenumbra",
+              "chain_name": "penumbra",
+              "channel_id": "channel-4"
+            },
+            "type": "ibc"
+          }
+        ],
+        "type_asset": "ics20"
+      },
+      {
+        "base": "ibc/20850C646CDDDC2270E9BBDB08558B5FEE57B647EC6827F41096AABFD8A0471B",
+        "denom_units": [
+          {
+            "denom": "ibc/20850C646CDDDC2270E9BBDB08558B5FEE57B647EC6827F41096AABFD8A0471B",
+            "exponent": 0
+          },
+          {
+            "denom": "eth",
+            "exponent": 18
+          }
+        ],
+        "description": "Ether via Eureka",
+        "display": "eth",
+        "images": [
+          {
+            "image_sync": {
+              "base_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
+              "chain_name": "cosmoshub"
+            },
+            "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/ethereum/images/eth-white.png",
+            "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/ethereum/images/eth-white.svg"
+          }
+        ],
+        "logo_URIs": {
+          "png": "https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/ethereum/images/eth-white.png",
+          "svg": "https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/ethereum/images/eth-white.svg"
+        },
+        "name": "Ethereum",
+        "symbol": "ETH",
+        "traces": [
+          {
+            "chain": {
+              "channel_id": "channel-0",
+              "path": "transfer/channel-0/transfer/08-wasm-1369/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+            },
+            "counterparty": {
+              "base_denom": "ibc/C0B53D3D23827AE38058BED0BDCD554229278AF530A8D265FCF6DFF7C4B2ADFF",
+              "chain_name": "cosmoshub",
+              "channel_id": "channel-141"
+            },
+            "type": "ibc"
+          }
+        ],
+        "type_asset": "ics20"
+      }
+    ],
+    "code_ids": {},
+    "default": {}
+  },
+  "sub-1": {
+    "code_ids": {},
+    "default": {}
+  },
+  "xion-testnet-1": {
+    "code_ids": {},
+    "default": {}
+  }
+}

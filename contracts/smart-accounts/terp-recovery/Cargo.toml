@@ -1,0 +1,40 @@
+[package]
+name = "terp-recovery"
+description = "Break-glass recovery authenticator with pluggable rehash algorithms"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+documentation = { workspace = true }
+authors = { workspace = true }
+rust-version = { workspace = true }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = []
+library = []
+
+[dependencies]
+cosmwasm-std = { workspace = true, features = ["std"] }
+cosmwasm-schema = { workspace = true }
+cw2 = { workspace = true }
+cw-storage-plus = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+terp-auth = { workspace = true }
+terp-account = { workspace = true }
+sha2 = { workspace = true }
+sha3 = "0.10"
+blake2 = "0.10"
+hex = { workspace = true, features = ["alloc"] }
+# Pure-Rust Poseidon-Pallas for break-glass rehash (no CosmWasm host Poseidon yet).
+# Path relative to this package → monorepo crates/zcash/halo2.
+halo2_poseidon = { path = "../../../../zcash/halo2/halo2_poseidon" }
+pasta_curves = "0.5"
+ff = { version = "0.13", default-features = false }
+
+[dev-dependencies]
+hex = { workspace = true, features = ["std"] }

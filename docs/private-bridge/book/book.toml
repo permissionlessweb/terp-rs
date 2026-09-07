@@ -1,0 +1,32 @@
+[book]
+authors = ["Terp Network / Private Bridge"]
+language = "en"
+src = "src"
+title = "Private Bridge — Spectrum Library Book"
+description = "Unified mdBook for Cash App → Private Bridge → ZEC: product SPECs, pure seams, contracts, harness, observe, UI, Zakura — libraries by category with live README includes (no copy-paste redundancy)."
+
+[rust]
+edition = "2021"
+
+[build]
+create-missing = false
+# Generated stubs (optional); primary sync is mdbook {{#include}} of source READMEs
+extra-watch-dirs = [
+  "../",
+  "../../../crates/headstash",
+  "../../../crates/ict-rs",
+  "../../../crates/terp-rs/tools/hash-market",
+  "../../../crates/o-line/plays/private-bridge-corridor",
+  "../../../crates/cosmwasm",
+  "../../../websites/dao-dao-ui/packages/stateful/modules/modules/PrivateCorridor",
+]
+
+[output.html]
+git-repository-url = "https://github.com/terpnetwork/terp-core"
+site-url = "/private-bridge/"
+default-theme = "navy"
+preferred-dark-theme = "navy"
+fold.enable = true
+fold.level = 1
+
+[preprocessor.links]

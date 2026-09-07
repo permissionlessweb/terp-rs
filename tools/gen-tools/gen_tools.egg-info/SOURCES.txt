@@ -1,9 +1,0 @@
-setup.py
-gen_tools/__init__.py
-gen_tools/cli.py
-gen_tools.egg-info/PKG-INFO
-gen_tools.egg-info/SOURCES.txt
-gen_tools.egg-info/dependency_links.txt
-gen_tools.egg-info/entry_points.txt
-gen_tools.egg-info/requires.txt
-gen_tools.egg-info/top_level.txt

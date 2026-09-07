@@ -1,0 +1,22 @@
+flowchart TB
+    lib_execute["execute function CC=11"]
+    proxy_unresolved_crate__headstash__process_headstash["crate::headstash::process_headstash proxy"]
+    proxy_unresolved_crate__headstash__register_eligibility_root["crate::headstash::register_eligibility_root proxy"]
+    lib_execute_mint["execute_mint function CC=2"]
+    lib_execute_burn["execute_burn function CC=2"]
+    proxy_unresolved_bridge__execute_update_reflection["bridge::execute_update_reflection proxy"]
+    proxy_unresolved_bridge__execute_set_reflection_snapshot["bridge::execute_set_reflection_snapshot proxy"]
+    proxy_unresolved_bridge__execute_register_asset["bridge::execute_register_asset proxy"]
+    proxy_unresolved_bridge__execute_set_external_asset_registry["bridge::execute_set_external_asset_registry proxy"]
+    proxy_unresolved_bridge__execute_set_bridge_cfg["bridge::execute_set_bridge_cfg proxy"]
+    proxy_unresolved_bridge__execute_bridge_mint_note["bridge::execute_bridge_mint_note proxy"]
+    lib_execute -.-> proxy_unresolved_crate__headstash__process_headstash
+    lib_execute -.-> proxy_unresolved_crate__headstash__register_eligibility_root
+    lib_execute --> lib_execute_mint
+    lib_execute --> lib_execute_burn
+    lib_execute -.-> proxy_unresolved_bridge__execute_update_reflection
+    lib_execute -.-> proxy_unresolved_bridge__execute_set_reflection_snapshot
+    lib_execute -.-> proxy_unresolved_bridge__execute_register_asset
+    lib_execute -.-> proxy_unresolved_bridge__execute_set_external_asset_registry
+    lib_execute -.-> proxy_unresolved_bridge__execute_set_bridge_cfg
+    lib_execute -.-> proxy_unresolved_bridge__execute_bridge_mint_note

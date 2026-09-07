@@ -1,0 +1,130 @@
+flowchart TB
+    src_lib["src.lib module"]
+    src_lib_CorridorError["CorridorError enum"]
+    src_lib_OracleBoundPolicy["OracleBoundPolicy enum"]
+    src_lib_OracleBoundPolicy_from_u8["from_u8 method CC=4"]
+    src_lib_OracleBoundPolicy_as_u8["as_u8 method CC=1"]
+    src_lib_OracleMid["OracleMid struct"]
+    src_lib_SwapCheckCtx["SwapCheckCtx struct"]
+    src_lib_SwapCheckCtx_default["default method CC=1"]
+    src_lib_DepositIntentV0["DepositIntentV0 struct"]
+    src_lib_DepositIntentV0_new_preauth["new_preauth method CC=5"]
+    src_lib_DepositIntentV0_canonical_bytes_without_domain_bind["canonical_bytes_without_domain_bind method CC=3"]
+    src_lib_DepositIntentV0_compute_domain_bind["compute_domain_bind method CC=1"]
+    src_lib_DepositIntentV0_validate["validate method CC=6"]
+    src_lib_DepositIntentV0_bind_deposit_id["bind_deposit_id method CC=2"]
+    src_lib_DepositIntentFields["DepositIntentFields struct"]
+    src_lib_intent_allows_swap["intent_allows_swap function CC=16"]
+    src_lib_expected_out_from_mid["expected_out_from_mid function CC=1"]
+    src_lib_apply_slip_floor["apply_slip_floor function CC=1"]
+    src_lib_apply_slip_ceiling["apply_slip_ceiling function CC=1"]
+    src_lib_oracle_mint_forbidden["oracle_mint_forbidden function CC=1"]
+    src_lib_CorridorMintedSet["CorridorMintedSet struct"]
+    src_lib_CorridorMintedSet_new["new method CC=1"]
+    src_lib_CorridorMintedSet_contains["contains method CC=1"]
+    src_lib_CorridorMintedSet_insert["insert method CC=3"]
+    src_lib_CorridorMintedSet_authorize_mint["authorize_mint method CC=2"]
+    src_lib_SimFaucet["SimFaucet struct"]
+    src_lib_SimCredit["SimCredit struct"]
+    src_lib_LcHandle["LcHandle struct"]
+    src_lib_LcMode["LcMode enum"]
+    src_lib_CorridorAssetBackend["CorridorAssetBackend enum"]
+    src_lib_CorridorAssetBackend_simulated["simulated method CC=1"]
+    src_lib_CorridorAssetBackend_lc_mock["lc_mock method CC=1"]
+    src_lib_CorridorAssetBackend_lc_live_stub["lc_live_stub method CC=1"]
+    src_lib_CorridorAssetBackend_is_simulated["is_simulated method CC=1"]
+    src_lib_DepositObservation["DepositObservation struct"]
+    src_lib_sim_deposit["sim_deposit function CC=6"]
+    src_lib_derive_sim_burn_id["derive_sim_burn_id function CC=1"]
+    src_lib_write_str["write_str function CC=1"]
+    src_lib_is_zero_hash["is_zero_hash function CC=1"]
+    src_lib_hash_tag["hash_tag function CC=1"]
+    src_lib_fresh_btc_deposit_addr["fresh_btc_deposit_addr function CC=1"]
+    src_lib_hex_prefix["hex_prefix function CC=1"]
+    proxy_unresolved_src_lib_Some["src.lib:Some proxy"]
+    proxy_unresolved_src_lib_Err["src.lib:Err proxy"]
+    proxy_unresolved_fields_corridor_id_is_empty["fields.corridor_id.is_empty proxy"]
+    proxy_unresolved_fields_source_chain_tag_is_empty["fields.source_chain_tag.is_empty proxy"]
+    proxy_unresolved_fields_dest_chain_tag_is_empty["fields.dest_chain_tag.is_empty proxy"]
+    proxy_unresolved_fields_btc_deposit_addr_is_empty["fields.btc_deposit_addr.is_empty proxy"]
+    proxy_unresolved_fields_oracle_market_id_is_empty["fields.oracle_market_id.is_empty proxy"]
+    proxy_unresolved_fields_dest_display_hint_take["fields.dest_display_hint.take proxy"]
+    proxy_unresolved_intent_compute_domain_bind["intent.compute_domain_bind proxy"]
+    proxy_unresolved_src_lib_Ok["src.lib:Ok proxy"]
+    proxy_unresolved_Vec__with_capacity["Vec::with_capacity proxy"]
+    proxy_unresolved_out_push["out.push proxy"]
+    proxy_unresolved_out_extend_from_slice["out.extend_from_slice proxy"]
+    src_lib_OracleBoundPolicy_from_u8 --> proxy_unresolved_src_lib_Some
+    src_lib_OracleBoundPolicy_from_u8 --> proxy_unresolved_src_lib_Some
+    src_lib_DepositIntentV0_new_preauth --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_new_preauth --> src_lib_is_zero_hash
+    src_lib_DepositIntentV0_new_preauth --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_new_preauth -.-> proxy_unresolved_fields_corridor_id_is_empty
+    src_lib_DepositIntentV0_new_preauth -.-> proxy_unresolved_fields_source_chain_tag_is_empty
+    src_lib_DepositIntentV0_new_preauth -.-> proxy_unresolved_fields_dest_chain_tag_is_empty
+    src_lib_DepositIntentV0_new_preauth -.-> proxy_unresolved_fields_btc_deposit_addr_is_empty
+    src_lib_DepositIntentV0_new_preauth -.-> proxy_unresolved_fields_oracle_market_id_is_empty
+    src_lib_DepositIntentV0_new_preauth --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_new_preauth --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_new_preauth -.-> proxy_unresolved_fields_dest_display_hint_take
+    src_lib_DepositIntentV0_new_preauth -.-> proxy_unresolved_intent_compute_domain_bind
+    src_lib_DepositIntentV0_new_preauth --> proxy_unresolved_src_lib_Ok
+    src_lib_DepositIntentV0_canonical_bytes_without_domain_bind -.-> proxy_unresolved_Vec__with_capacity
+    src_lib_DepositIntentV0_canonical_bytes_without_domain_bind -.-> proxy_unresolved_out_push
+    src_lib_DepositIntentV0_canonical_bytes_without_domain_bind --> src_lib_write_str
+    src_lib_DepositIntentV0_canonical_bytes_without_domain_bind --> src_lib_write_str
+    src_lib_DepositIntentV0_canonical_bytes_without_domain_bind --> src_lib_write_str
+    src_lib_DepositIntentV0_canonical_bytes_without_domain_bind --> src_lib_write_str
+    src_lib_DepositIntentV0_canonical_bytes_without_domain_bind -.-> proxy_unresolved_out_extend_from_slice
+    src_lib_DepositIntentV0_canonical_bytes_without_domain_bind -.-> proxy_unresolved_out_extend_from_slice
+    src_lib_DepositIntentV0_canonical_bytes_without_domain_bind -.-> proxy_unresolved_out_push
+    src_lib_DepositIntentV0_canonical_bytes_without_domain_bind --> src_lib_write_str
+    src_lib_DepositIntentV0_canonical_bytes_without_domain_bind -.-> proxy_unresolved_out_push
+    src_lib_DepositIntentV0_canonical_bytes_without_domain_bind -.-> proxy_unresolved_out_extend_from_slice
+    src_lib_DepositIntentV0_canonical_bytes_without_domain_bind -.-> proxy_unresolved_out_extend_from_slice
+    src_lib_DepositIntentV0_canonical_bytes_without_domain_bind -.-> proxy_unresolved_out_extend_from_slice
+    src_lib_DepositIntentV0_canonical_bytes_without_domain_bind -.-> proxy_unresolved_out_extend_from_slice
+    src_lib_DepositIntentV0_canonical_bytes_without_domain_bind --> src_lib_write_str
+    src_lib_DepositIntentV0_canonical_bytes_without_domain_bind -.-> proxy_unresolved_out_push
+    src_lib_DepositIntentV0_canonical_bytes_without_domain_bind -.-> proxy_unresolved_out_extend_from_slice
+    src_lib_DepositIntentV0_canonical_bytes_without_domain_bind -.-> proxy_unresolved_out_extend_from_slice
+    src_lib_DepositIntentV0_validate --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_validate --> src_lib_is_zero_hash
+    src_lib_DepositIntentV0_validate --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_validate --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_validate --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_validate --> proxy_unresolved_src_lib_Err
+    src_lib_DepositIntentV0_validate --> proxy_unresolved_src_lib_Ok
+    src_lib_DepositIntentV0_bind_deposit_id --> src_lib_is_zero_hash
+    src_lib_DepositIntentV0_bind_deposit_id --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Ok
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> src_lib_expected_out_from_mid
+    src_lib_intent_allows_swap --> src_lib_apply_slip_floor
+    src_lib_intent_allows_swap --> src_lib_apply_slip_ceiling
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Err
+    src_lib_intent_allows_swap --> proxy_unresolved_src_lib_Ok
+    src_lib_oracle_mint_forbidden --> proxy_unresolved_src_lib_Err
+    src_lib_CorridorMintedSet_insert --> src_lib_is_zero_hash
+    src_lib_CorridorMintedSet_insert --> proxy_unresolved_src_lib_Err
+    src_lib_CorridorMintedSet_insert --> proxy_unresolved_src_lib_Err
+    src_lib_CorridorMintedSet_insert --> proxy_unresolved_src_lib_Ok
+    src_lib_CorridorMintedSet_authorize_mint --> src_lib_is_zero_hash
+    src_lib_CorridorMintedSet_authorize_mint --> proxy_unresolved_src_lib_Err
+    src_lib_sim_deposit --> proxy_unresolved_src_lib_Err
+    src_lib_sim_deposit --> src_lib_derive_sim_burn_id
+    src_lib_sim_deposit --> proxy_unresolved_src_lib_Ok
+    src_lib_sim_deposit --> src_lib_derive_sim_burn_id
+    src_lib_sim_deposit --> proxy_unresolved_src_lib_Ok
+    src_lib_sim_deposit --> proxy_unresolved_src_lib_Err
+    src_lib_write_str -.-> proxy_unresolved_out_extend_from_slice
+    src_lib_write_str -.-> proxy_unresolved_out_extend_from_slice
+%% pruned 100->55 nodes for mmdc

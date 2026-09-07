@@ -1,0 +1,113 @@
+hash-market — Trailmark focus
+
+summary: {'total_nodes': 2766, 'functions': 444, 'classes': 0, 'proxies': 2131, 'call_edges': 3948, 'dependencies': ['serde', 'std', 'oracle', 'corridor_deposits', 'client', 've', 'content', 'axum', 'cw721_nips', 'tokio', 'store', 'transport', 'anyhow', 'sha2', 'clap', 'hash_market', 'AddressFunding', 'serde_json', 'address', 'bitcoind_rpc', 'electrum', 'esplora', 'reporter', 'hashmerchant', 'minio_ipfs', 'fields', 'msg', 'EthClient', 'custody', 'calendar_egress', 'marketplace_egress', 'marketplace_ingress', 'commonware_abci', 'tendermint', 'tokio_util', 'base64', 'hmac', 'cid', 'auth', 'calendar', 'ipfs', 'registry', 'webhook', 'Custody', 'async_trait', 'tiny_keccak', 'tree', 'k256', 'config', 'notes_auth', 'anybuf', 'server', 'feeder', 'hash', 'nostr'], 'entrypoints': 4}
+
+Target: crates/terp-rs/tools/hash-market/src
+Language: rust
+Entrypoints (CLI): bin.client:main, bin.corridor_btc_reporter:main, bin.relay:main, bin.server:main
+
+Complexity hotspots (top):
+  - bin.server:main  name=main  CC=23
+  - client.nostr.calendar_egress:metadata_to_nip52_event  name=metadata_to_nip52_event  CC=19
+  - client.nostr.marketplace_ingress:parse_purchase_intent_value  name=parse_purchase_intent_value  CC=19
+  - oracle.mod:aggregate_bounds  name=aggregate_bounds  CC=17
+  - client.minio_ipfs:MinioIpfsClient.on_root_confirmed  name=on_root_confirmed  CC=15
+  - client.nostr.marketplace_egress:parse_marketplace_action  name=parse_marketplace_action  CC=15
+  - oracle.mod:parse_decimal_str  name=parse_decimal_str  CC=13
+  - transport.grpc:run  name=run  CC=13
+  - btc_index.reporter:poll_once  name=poll_once  CC=12
+  - server:content_get  name=content_get  CC=11
+  - content.auth:verify_service_jwt  name=verify_service_jwt  CC=11
+  - oracle.feeder:run_price_bound_feeder  name=run_price_bound_feeder  CC=11
+
+## focus: report_observation
+  callers (0):
+  callees (22):
+    -> corridor_deposits:now_secs [function] cc=1
+    -> proxy.unresolved:_amount_sats_must_be___0__dust_rejected_.into [proxy] cc=None
+    -> proxy.unresolved:_btc_deposit_addr_does_not_match_open_watch_.into [proxy] cc=None
+    -> proxy.unresolved:_domain_bind_mismatch_.into [proxy] cc=None
+    -> proxy.unresolved:_no_watch_for_intent_id__open_from_webapp_first_.to_string [proxy] cc=None
+    -> proxy.unresolved:_txid_and_btc_deposit_addr_required_.into [proxy] cc=None
+    -> proxy.unresolved:_watch_expired_.into [proxy] cc=None
+    -> proxy.unresolved:corridor_deposits:Err [proxy] cc=None
+    -> proxy.unresolved:corridor_deposits:Ok [proxy] cc=None
+    -> proxy.unresolved:corridor_deposits:Some [proxy] cc=None
+    -> proxy.unresolved:e.to_string [proxy] cc=None
+    -> proxy.unresolved:g.observations_.insert [proxy] cc=None
+    -> proxy.unresolved:g_.watches_.get [proxy] cc=None
+    -> proxy.unresolved:g_.watches_.get_obs.intent_id__.ok_or_else [proxy] cc=None
+    -> proxy.unresolved:obs.btc_deposit_addr.is_empty [proxy] cc=None
+    -> proxy.unresolved:obs.clone [proxy] cc=None
+    -> proxy.unresolved:obs.intent_id.clone [proxy] cc=None
+    -> proxy.unresolved:obs.txid.is_empty [proxy] cc=None
+    -> proxy.unresolved:self.inner.write [proxy] cc=None
+    -> proxy.unresolved:self.inner.write_.map_err [proxy] cc=None
+    -> proxy.unresolved:self.publish [proxy] cc=None
+    -> proxy.unresolved:watch.domain_bind.clone [proxy] cc=None
+
+## focus: open_watch
+  callers (0):
+  callees (25):
+    -> corridor_deposits:now_secs [function] cc=1
+    -> corridor_deposits:validate_id [function] cc=3
+    -> proxy.unresolved:_btc_deposit_addr_and_domain_bind_required_.into [proxy] cc=None
+    -> proxy.unresolved:_client_proof_digest_required__UI_client_proof_.into [proxy] cc=None
+    -> proxy.unresolved:_dest_owner_binding_required__preauth_dest_.into [proxy] cc=None
+    -> proxy.unresolved:_webapp_.into [proxy] cc=None
+    -> proxy.unresolved:corridor_deposits:Err [proxy] cc=None
+    -> proxy.unresolved:corridor_deposits:Ok [proxy] cc=None
+    -> proxy.unresolved:e.to_string [proxy] cc=None
+    -> proxy.unresolved:g.watches.insert [proxy] cc=None
+    -> proxy.unresolved:req.btc_deposit_addr.clone [proxy] cc=None
+    -> proxy.unresolved:req.btc_deposit_addr.is_empty [proxy] cc=None
+    -> proxy.unresolved:req.client_proof_digest.is_empty [proxy] cc=None
+    -> proxy.unresolved:req.dest_owner_binding.is_empty [proxy] cc=None
+    -> proxy.unresolved:req.domain_bind.is_empty [proxy] cc=None
+    -> proxy.unresolved:req.intent_id.clone [proxy] cc=None
+    -> proxy.unresolved:req.min_amount_sats.unwrap_or [proxy] cc=None
+    -> proxy.unresolved:req.ttl_secs.unwrap_or [proxy] cc=None
+    -> proxy.unresolved:req.ttl_secs.unwrap_or_86_400_.min [proxy] cc=None
+    -> proxy.unresolved:self.inner.write [proxy] cc=None
+    -> proxy.unresolved:self.inner.write_.map_err [proxy] cc=None
+    -> proxy.unresolved:self.publish [proxy] cc=None
+    -> proxy.unresolved:watch.btc_deposit_addr.clone [proxy] cc=None
+    -> proxy.unresolved:watch.clone [proxy] cc=None
+    -> proxy.unresolved:watch.intent_id.clone [proxy] cc=None
+
+## focus: put_automation
+  callers (0):
+  callees (17):
+    -> corridor_deposits:now_secs [function] cc=1
+    -> corridor_deposits:validate_id [function] cc=3
+    -> proxy.unresolved:_phase_required_.into [proxy] cc=None
+    -> proxy.unresolved:allowed.contains [proxy] cc=None
+    -> proxy.unresolved:corridor_deposits:Err [proxy] cc=None
+    -> proxy.unresolved:corridor_deposits:Ok [proxy] cc=None
+    -> proxy.unresolved:e.to_string [proxy] cc=None
+    -> proxy.unresolved:g.automation.insert [proxy] cc=None
+    -> proxy.unresolved:intent_id.to_string [proxy] cc=None
+    -> proxy.unresolved:phase.is_empty [proxy] cc=None
+    -> proxy.unresolved:phase.to_string [proxy] cc=None
+    -> proxy.unresolved:req.mock_verify.unwrap_or [proxy] cc=None
+    -> proxy.unresolved:req.oracle_bound_only.unwrap_or [proxy] cc=None
+    -> proxy.unresolved:req.phase.trim [proxy] cc=None
+    -> proxy.unresolved:self.inner.write [proxy] cc=None
+    -> proxy.unresolved:self.inner.write_.map_err [proxy] cc=None
+    -> proxy.unresolved:st.clone [proxy] cc=None
+
+## focus: main
+  callers (0):
+  callees (11):
+    -> proxy.unresolved:Cli::parse [proxy] cc=None
+    -> proxy.unresolved:EthClient::new [proxy] cc=None
+    -> proxy.unresolved:client::run_poll_loop [proxy] cc=None
+    -> proxy.unresolved:std::fs::read_to_string [proxy] cc=None
+    -> proxy.unresolved:std::fs::read_to_string_cli.config__.with_context [proxy] cc=None
+    -> proxy.unresolved:toml::from_str [proxy] cc=None
+    -> proxy.unresolved:toml::from_str_config_str_.context [proxy] cc=None
+    -> proxy.unresolved:tracing_subscriber::EnvFilter::from_default_env [proxy] cc=None
+    -> proxy.unresolved:tracing_subscriber::fmt [proxy] cc=None
+    -> proxy.unresolved:tracing_subscriber::fmt__.with_env_filter [proxy] cc=None
+    -> proxy.unresolved:tracing_subscriber::fmt__.with_env_filter_tracing_subscriber::EnvFilter::from_default_env__.init [proxy] cc=None
+

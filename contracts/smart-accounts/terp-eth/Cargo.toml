@@ -1,0 +1,31 @@
+[package]
+name = "terp-eth"
+description = "Ethereum personal_sign authenticator for x/smart-account"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+documentation = { workspace = true }
+authors = { workspace = true }
+rust-version = { workspace = true }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = []
+library = []
+
+[dependencies]
+cosmwasm-std = { workspace = true, features = ["std"] }
+cosmwasm-schema = { workspace = true }
+cw2 = { workspace = true }
+cw-storage-plus = { workspace = true }
+cw-ownable = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+sha3 = "0.10"
+hex = { workspace = true, features = ["alloc"] }
+terp-auth = { workspace = true }
+terp-account = { workspace = true }

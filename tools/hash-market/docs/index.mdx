@@ -1,0 +1,82 @@
+---
+title: Hashmerchant
+description: Cross-chain hash root attestation via ABCI++ vote extensions
+---
+
+# Hashmerchant
+
+Hashmerchant lets Terp validators collectively attest to foreign chain state roots. Once 2/3 voting power agrees on a root, it is stored on-chain and dispatched to subscribed CosmWasm contracts. A Pallas curve reduction makes the attested roots usable in ZK circuits at a fraction of the cost of proving raw Keccak256 or SHA256 in-circuit.
+
+## Documentation
+
+| Page | What it covers |
+|---|---|
+| [Architecture](./architecture) | System map, component relationships, data flow, wire format |
+| [Building Apps](./building-apps) | Patterns for consuming hash roots: sudo callbacks, direct queries, ZK credentials, private airdrops |
+| [Tree Types](./tree-types) | Supported and planned hash algorithms, how to add new chains, the Pallas reduction |
+| [Custody](./custody) | Signing backends — local keys, TKMS, custom (Cloud KMS, HSM, threshold) |
+| [Sidecar](./sidecar) | Running and configuring `hash-market-server` and `hash-market-client` |
+| [Headstash Server](./headstash) | Privacy note/key server, secp256k1 auth, PIR protocol, snap integration |
+| [Blob DA Design](./blob-da-design) | Future: EIP-4844-inspired temporary blob storage, sub-store mirroring, fee manifold |
+
+## Repository layout
+
+```
+tools/
+  hash-market/           ← Validator sidecar (Rust, feature-gated)
+    src/
+      msg/               ← Protobuf types (anybuf, no codegen)
+      custody/           ← Signing backends (local, TKMS)
+      ve/                ← Vote extension signing + verification
+      eth/               ← Ethereum JSON-RPC client
+      pallas/            ← Keccak256 → Pallas Fp reduction
+      transport/         ← gRPC / HTTP poll / WebSocket listeners
+      server/            ← Axum HTTP server (CometBFT callbacks)
+      client/            ← ETH proof polling loop
+      bin/
+        server.rs        ← hash-market-server binary
+        client.rs        ← hash-market-client binary
+    docs/                ← You are here
+
+  headstash-server/      ← Privacy note + key server (Rust)
+    src/
+      pir/               ← XOR-based Private Information Retrieval
+      store/             ← File-based KV storage
+      middleware/        ← secp256k1 + JWT auth dispatch
+      main.rs            ← Axum server with 11 API endpoints
+
+  snap-n-pull-js/        ← MetaMask snap (TypeScript)
+  merkle-server/         ← BLAKE3 Merkle proof server (Rust)
+
+terp-core/
+  x/hashmerchant/        ← On-chain Cosmos SDK module (Go)
+    keeper/
+      vote_ext.go        ← ABCI++ vote extension handlers
+      msg_server.go      ← gRPC transaction handlers
+    types/
+      types.proto        ← Canonical protobuf definitions
+```
+
+## At a glance
+
+```
+               Foreign Chain                    Terp Chain
+            ┌──────────────────┐           ┌───────────────────┐
+            │  State Root      │           │  x/hashmerchant   │
+            │  (Keccak/SHA)    │           │                   │
+            └────────┬─────────┘           │  RegisteredChain  │
+                     │                     │  HashRoot         │
+                     ▼                     │  HashPairTicket   │
+            ┌──────────────────┐           │  EscrowRecord     │
+            │  hash-market     │           │                   │
+            │  client          │           │  sudo callbacks   │──► CosmWasm
+            │  (polls + proves)│           │  to funded        │    contracts
+            └────────┬─────────┘           │  contracts        │
+                     │                     └────────▲──────────┘
+                     ▼                              │
+            ┌──────────────────┐           vote extensions
+            │  hash-market     │──────────────────┘
+            │  server          │
+            │  (signs + serves)│
+            └──────────────────┘
+```

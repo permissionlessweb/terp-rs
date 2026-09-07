@@ -1,0 +1,53 @@
+{
+  "installed": true,
+  "binary_path": "$HOME/.bun/bin/qmd",
+  "version": "qmd 2.5.1",
+  "index_path": "$HOME/.cache/qmd/index.sqlite",
+  "install_methods": [
+    {
+      "name": "PATH",
+      "command": "$HOME/.bun/bin/qmd",
+      "detected": true
+    },
+    {
+      "name": "bun",
+      "command": "bun install -g @terpnetwork/qmd",
+      "detected": true
+    },
+    {
+      "name": "npm",
+      "command": "npm install -g @terpnetwork/qmd",
+      "detected": true
+    },
+    {
+      "name": "cargo",
+      "command": "cargo install qmd",
+      "detected": true
+    },
+    {
+      "name": "go-install",
+      "command": "go install github.com/terpnetwork/qmd@latest",
+      "detected": true
+    }
+  ],
+  "collections": [
+    "content",
+    "llm_cache",
+    "content_vectors",
+    "store_collections",
+    "documents",
+    "store_config",
+    "documents_fts",
+    "vectors_vec",
+    "documents_fts_config",
+    "vectors_vec_chunks",
+    "documents_fts_content",
+    "vectors_vec_info",
+    "documents_fts_data",
+    "vectors_vec_rowids",
+    "documents_fts_docsize",
+    "vectors_vec_vector_chunks00",
+    "documents_fts_idx"
+  ],
+  "error": null
+}

@@ -1,0 +1,146 @@
+{
+  "akash": {
+    "ibc/A59970786FD461637D5A6D33CCB6B89D3DE769A8656FFC95EF67868B0A9BC600": {
+      "hop_count": 1,
+      "origin_chain": "terp",
+      "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+      "symbol": "SPICE",
+      "trace_path": "transfer/channel-139/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+    },
+    "ibc/DDA5EFDDA729FA6C48CFA7F1C69D97E69C2F8C90DC86D89D2ED843D64E818320": {
+      "hop_count": 1,
+      "origin_chain": "terp",
+      "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
+      "symbol": "WBTC",
+      "trace_path": "transfer/channel-139/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+    }
+  },
+  "atomone": {
+    "ibc/16F86E7E041C8D33FB0ABD6C94981B386877CDE7D945D6D5C742C34D089D1A53": {
+      "hop_count": 1,
+      "origin_chain": "terp",
+      "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+      "symbol": "SPICE",
+      "trace_path": "transfer/channel-13/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+    },
+    "ibc/B401AD86FA0A7658F9760E686A9F1CAD828EA33A7043407585BEEDF9F9AD9DCD": {
+      "hop_count": 1,
+      "origin_chain": "terp",
+      "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
+      "symbol": "WBTC",
+      "trace_path": "transfer/channel-13/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+    }
+  },
+  "evmos": {
+    "ibc/12015172A61A3ED85A082C917F28D87023B6DEFE84C44B99914C051B62427F93": {
+      "hop_count": 1,
+      "origin_chain": "terp",
+      "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
+      "symbol": "WBTC",
+      "trace_path": "transfer/channel-101/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+    },
+    "ibc/7F04948C1F3CDA862EEAE5364E194806686464854E1D3F023E89DEF945BC1551": {
+      "hop_count": 1,
+      "origin_chain": "terp",
+      "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+      "symbol": "SPICE",
+      "trace_path": "transfer/channel-101/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+    }
+  },
+  "gitopia": {
+    "ibc/ADD33E9703A911023E73181FCA39B022094A1832F0C2311152A927E580E28B5F": {
+      "hop_count": 1,
+      "origin_chain": "terp",
+      "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+      "symbol": "SPICE",
+      "trace_path": "transfer/channel-1/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+    },
+    "ibc/CF57A83CED6CEC7D706631B5DC53ABC21B7EDA7DF7490732B4361E6D5DD19C73": {
+      "hop_count": 1,
+      "origin_chain": "terp",
+      "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
+      "symbol": "WBTC",
+      "trace_path": "transfer/channel-1/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+    }
+  },
+  "juno": {
+    "ibc/2F57C5B45E550C3FE93975D8683B7731EFA3A094931241A347548740F89C6422": {
+      "hop_count": 1,
+      "origin_chain": "terp",
+      "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
+      "symbol": "WBTC",
+      "trace_path": "transfer/channel-393/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+    },
+    "ibc/9579E9609A560A57DB664E35665F293269CD3F625841A2EEE9478E1897AC00DF": {
+      "hop_count": 1,
+      "origin_chain": "terp",
+      "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+      "symbol": "SPICE",
+      "trace_path": "transfer/channel-393/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+    }
+  },
+  "omniflix": {
+    "ibc/6DE48C0AB3ED2A3AC54D87A2E73804B7DBA4033A40DEB732C37436E1F9286B8D": {
+      "hop_count": 1,
+      "origin_chain": "terp",
+      "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+      "symbol": "SPICE",
+      "trace_path": "transfer/channel-33/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+    },
+    "ibc/EE381F1B7AFA4C4688ECB68BC4EA6168DCB8D8E7754D030EED7FB0F99BD5E62E": {
+      "hop_count": 1,
+      "origin_chain": "terp",
+      "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
+      "symbol": "WBTC",
+      "trace_path": "transfer/channel-33/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+    }
+  },
+  "osmosis": {
+    "ibc/02DB0C7201ECC8B9753FE51145F91163AC72ECF7DF21F045B6B1BC6063D37222": {
+      "hop_count": 1,
+      "origin_chain": "terp",
+      "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
+      "symbol": "WBTC",
+      "trace_path": "transfer/channel-110258/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+    },
+    "ibc/B6B6B4518F28E2389375FEA0B1CA04F24135EBCC95F24F808E2EBB157AC84BFF": {
+      "hop_count": 1,
+      "origin_chain": "terp",
+      "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+      "symbol": "SPICE",
+      "trace_path": "transfer/channel-110258/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+    }
+  },
+  "secret": {
+    "ibc/98B4A0DF010C354724A8694CAB3C8F1BE47BD4DD40E31F2DF21157BBFE99D6EC": {
+      "hop_count": 1,
+      "origin_chain": "terp",
+      "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+      "symbol": "SPICE",
+      "trace_path": "transfer/channel-165/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+    },
+    "ibc/D55D1CDD0721C3F9978F1010B8CF34A171E54E1EA674BEAB4AD554AD3D67A9F1": {
+      "hop_count": 1,
+      "origin_chain": "terp",
+      "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
+      "symbol": "WBTC",
+      "trace_path": "transfer/channel-165/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+    }
+  },
+  "stargaze": {
+    "ibc/0C31604A03AFA348AE1021B6632E32B662733A4EA3EEB47643A22122E02006F4": {
+      "hop_count": 1,
+      "origin_chain": "terp",
+      "origin_denom": "factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice",
+      "symbol": "SPICE",
+      "trace_path": "transfer/channel-235/factory/osmo1n6asrjy9754q8y9jsxqf557zmsv3s3xa5m9eg5/uspice"
+    },
+    "ibc/D6535E2CABA69C038A97142E48F4D0B9A569DEC246B2966DB996613ADF5302C5": {
+      "hop_count": 1,
+      "origin_chain": "terp",
+      "origin_denom": "factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc",
+      "symbol": "WBTC",
+      "trace_path": "transfer/channel-235/factory/osmo1z0qrq605sjgcqpylfl4aa6s90x738j7m58wyatt0tdzflg2ha26q67k743/wbtc"
+    }
+  }
+}

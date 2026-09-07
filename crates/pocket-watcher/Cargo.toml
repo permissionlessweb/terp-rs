@@ -1,0 +1,13 @@
+[package]
+name = "pocket-watcher"
+version = "0.1.0"
+edition = "2021"
+description = "Generic pagination helpers for gRPC/Stargate module queries (bank, staking, etc.) — drop-in replacement for removed BankQuery::AllBalances in cosmwasm-std v3"
+license = "Apache-2.0"
+
+
+[dependencies]
+cosmwasm-std = { path = "../../../cosmwasm/packages/std", features = ["cosmwasm_2_0", "stargate"] }
+prost = { version = "0.14", default-features = false, features = ["std"] }
+thiserror = "2"
+terp-rs = { path = "../../../terp-rs/crates/sdk"}

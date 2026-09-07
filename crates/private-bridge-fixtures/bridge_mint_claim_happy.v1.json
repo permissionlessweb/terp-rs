@@ -1,0 +1,118 @@
+{
+  "schema": "bridge-mint-claim-public-v1",
+  "version": 1,
+  "description": "Golden BridgeMintClaimPublic + ReflectionSnapshot + BridgeCfg for cw-headstash BridgeMintNote (mock LC). Labels match bridge_auth_seams::hinge_happy_fixture and cw-headstash bridge unit fixture.",
+  "ssot": [
+    "docs/plans/spectrum/SPEC-tacit-bridge-mapping.md §9",
+    "docs/plans/spectrum/SEAM-NOTE-OUT.md",
+    "crates/headstash/contracts/cw-headstash/src/bridge.rs",
+    "docs/plans/spectrum/fixtures/bridge_auth_seams"
+  ],
+  "source": {
+    "kind": "golden-hinge-happy",
+    "labels": {
+      "dest_domain": "terp-chain-1",
+      "tacit_asset": "tacit-btc-etch-1",
+      "nullifier": "nu-hinge-happy",
+      "dest_commitment": "dest-commitment-A",
+      "pool_root": "pool-root-1",
+      "spent_root": "spent-root-1",
+      "burn_root": "burn-root-1",
+      "src_chain": "src-bitcoin-mainnet",
+      "lc_client": "lc-client-reflection-0",
+      "rcm": "rcm-hinge-happy",
+      "pool_domain": "terp-pool-0",
+      "cm_public": "cm-leaf-dest-1"
+    },
+    "hash_fn": "sha256(label_utf8) for label_hash; domain tags per bridge.rs",
+    "tacit_anvil": {
+      "ran": false,
+      "reason": "pre-baked golden; run emit_bridge_mint_fixture.sh --try-anvil to annotate"
+    }
+  },
+  "field_docs": {
+    "source_chain_tag": "Domain B §9 source_chain_tag (e.g. bitcoin-mainnet)",
+    "tacit_asset_id": "Foreign/Tacit asset id (32B); registry maps → terp asset_id",
+    "value_u64": "Opened burn value; conservation with mint",
+    "nullifier": "ν of burned source note; once-per-ν via BRIDGE_MINTED",
+    "dest_commitment": "Burn-bound destCommitment (A6)",
+    "dest_domain": "Terp destination domain bind",
+    "claim_id": "Re-derived H(terp-bridge-claim-v1 ‖ dest ‖ dest_cm ‖ ν ‖ asset ‖ value)",
+    "source_pool_root": "Pool membership pin (bitcoinPoolRoot)",
+    "source_burn_root": "Bridge-burn IMT root pin (bitcoinBurnRoot) — mint authority H-1",
+    "source_height": "Source inclusion height H",
+    "domain_binding": "C §3.1 domain bind digest",
+    "unit_scale": "Asset map unit scale pin",
+    "pool_domain": "Terp note-set / pool domain",
+    "cm_public": "Destination leaf fingerprint for SEAM-NOTE-OUT",
+    "rcm": "Optional Pedersen opening; non-zero → rcm_flag=1 (DEX-consumable)",
+    "in_burn_set": "Mock LC: ν ∈ bridge-burn set (NOT generic spent set)",
+    "in_pool_root": "Mock LC: note membership under pool root",
+    "spent_only": "H-1 test flag; spent_only && !in_burn_set → reject",
+    "src_chain_id": "Domain bind input (hash of source chain id label)",
+    "dst_chain_id": "Domain bind input (dest domain)",
+    "lc_client_id": "Domain bind input (reflection LC client id hash)",
+    "burn_dest_commitment": "Burn-set recorded destCommitment (must equal dest_commitment)",
+    "snapshot.pool_root": "Reflection snapshot bitcoinPoolRoot",
+    "snapshot.spent_root": "Reflection snapshot bitcoinSpentRoot (never mint alone)",
+    "snapshot.burn_root": "Reflection snapshot bitcoinBurnRoot (must match claim pin)",
+    "snapshot.tip_height": "LC tip (≥ source_height + K)",
+    "snapshot.confirmations_k": "Confirmation depth K",
+    "snapshot.max_lc_lag": "Freshness lag residual after K",
+    "snapshot.frozen": "Misbehaviour freeze — reject all mints",
+    "cfg.mock_verify": "Round-2 stub; real SP1/LC not wired"
+  },
+  "snapshot": {
+    "pool_root": "0xf4250ff1c5fbaa6064a3cd4a423b5b2890f7c53c54d052869ffebfe69f453d78",
+    "spent_root": "0xfe6a64b28ba06dce978d3e597956fab86bbbcffe86452db56b3bc528f9801bc9",
+    "burn_root": "0xe5c52afef622f1e91d5d759dad2b5535ed0f9703118774e36d47f0f568b16a71",
+    "source_height": 100,
+    "tip_height": 106,
+    "confirmations_k": 6,
+    "max_lc_lag": 64,
+    "frozen": false
+  },
+  "cfg": {
+    "dest_domain": "0xa4ab79c3ef7432bde5a51f088a230e78e375ff8c3ee4943b9c69fceba93f0ee3",
+    "confirmations_k": 6,
+    "max_lc_lag": 64,
+    "lc_client_id": "08-wasm-tacit-reflection-0",
+    "mock_verify": true
+  },
+  "asset": {
+    "asset_id": "0x7f9cc62f6d3aca3154c384aedbe7e11c14ecf42d005ab7a3eb570d65673d8355",
+    "local_denom": "ubtc",
+    "origin": "tacit:bitcoin-mainnet",
+    "status": "active"
+  },
+  "claim": {
+    "source_chain_tag": "bitcoin-mainnet",
+    "tacit_asset_id": "0x1de1994dc116782b84ca494b998bba2837b00865da2c29fafa4170701ffb5fbf",
+    "value_u64": 1000000,
+    "nullifier": "0x83a0e369e7a67b69812549ab777a41d2053a84aee953cf41b44f2c7b58fdb0e9",
+    "dest_commitment": "0x6ab297ffce11d3c1e0f12c5a1d9faf73c9a58ecd08ea09a4e19b7a16897f1ab6",
+    "dest_domain": "0xa4ab79c3ef7432bde5a51f088a230e78e375ff8c3ee4943b9c69fceba93f0ee3",
+    "claim_id": "0xd5b07b224da064f61d33439e541147a238ddd22c00cd7e4185954f58f87a6e6f",
+    "source_pool_root": "0xf4250ff1c5fbaa6064a3cd4a423b5b2890f7c53c54d052869ffebfe69f453d78",
+    "source_burn_root": "0xe5c52afef622f1e91d5d759dad2b5535ed0f9703118774e36d47f0f568b16a71",
+    "source_height": 100,
+    "domain_binding": "0x679adbb120df86dcaf30c54df092bd9811aa6e6c9d3e13d3f77547e66a97c74b",
+    "unit_scale": 1,
+    "pool_domain": "0xf831b5132cb74a4fbe73b8cc7d4d3c343209f630bb40475066fd18881cabbb7a",
+    "cm_public": "0x6f330037c32b45f7686c17ba9b2698424407672886033be192183172ed4a41f5",
+    "rcm": "0x8f6c5a6f68a0e27b33565413b608d1fa5b9dce9a1380e4993f64447f55f2b1a2",
+    "in_burn_set": true,
+    "in_pool_root": true,
+    "spent_only": false,
+    "src_chain_id": "0x930a7a963dcb735edc107e681d04506eb231e83c55b97a121046b56aea7bb95b",
+    "dst_chain_id": "0xa4ab79c3ef7432bde5a51f088a230e78e375ff8c3ee4943b9c69fceba93f0ee3",
+    "lc_client_id": "0xee21c17e759b774aca4a9ee2d2afac07e23b339295da7f4f561502bd982cc1e5",
+    "burn_dest_commitment": "0x6ab297ffce11d3c1e0f12c5a1d9faf73c9a58ecd08ea09a4e19b7a16897f1ab6"
+  },
+  "proof_hex": "0xdeadbeef",
+  "execute_sketch": {
+    "msg": "BridgeMintNote",
+    "claim_fields": "claim object above (Binary fields as 0x hex in this fixture)",
+    "proof": "proof_hex — mock only; mock_verify must be true"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "workspace": ".",
+  "project": "default",
+  "contracts": [
+    {
+      "name": "gen-tools",
+      "schema_dir": "./schema"
+    }
+  ],
+  "generated_dir": "./generated",
+  "qmd_installed": true,
+  "qmd_index": "$HOME/.cache/qmd/index.sqlite",
+  "tensorzero_output": null,
+  "steps": [
+    {
+      "id": "mermaid-diagrams",
+      "description": "Generate Mermaid sequence diagrams from contract schemas",
+      "input_sources": [
+        "generated/*/schema/*.json",
+        ".trailmark/structure/*.json"
+      ],
+      "output_path": "docs/diagrams/",
+      "llm_runtime": "tensorzero",
+      "function_ref": "generate_mermaid_diagram"
+    },
+    {
+      "id": "indexer-formulas",
+      "description": "Generate subgraph/GQL indexer formulas from schema types",
+      "input_sources": [
+        "generated/*/schema/*.json",
+        ".trailmark/githem/semantic_graph.json"
+      ],
+      "output_path": "indexer/",
+      "llm_runtime": "tensorzero",
+      "function_ref": "generate_indexer_formula"
+    },
+    {
+      "id": "tz-episodes",
+      "description": "Generate temporal zone episode definitions from time-aware schemas",
+      "input_sources": [
+        "generated/*/schema/*.json",
+        "generated/openapi/*.json"
+      ],
+      "output_path": "tz-episodes/",
+      "llm_runtime": "tensorzero",
+      "function_ref": "generate_tz_episode"
+    }
+  ]
+}

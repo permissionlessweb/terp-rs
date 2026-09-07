@@ -1,0 +1,33 @@
+# Private Bridge spectrum mdBook
+# From docs/plans/spectrum/book:
+#   just build
+#   just serve
+
+sync:
+        python3 scripts/sync_includes.py
+        python3 scripts/gen_from_registry.py
+
+# Render mmd → svg (requires npx / mermaid-cli)
+diagrams-svg:
+        #!/usr/bin/env bash
+        set -euo pipefail
+        for f in src/diagrams/mmd/workflow-*.mmd src/diagrams/mmd/trailmark-cashapp-core.mmd; do
+          [ -f "$f" ] || continue
+          base=$(basename "$f" .mmd)
+          out="src/diagrams/svg/${base}.svg"
+          # core call graph ships as trailmark-cashapp-call-graph.svg
+          if [ "$base" = "trailmark-cashapp-core" ]; then
+            out="src/diagrams/svg/trailmark-cashapp-call-graph.svg"
+          fi
+          echo "render $f -> $out"
+          npx --yes @mermaid-js/mermaid-cli@11 -i "$f" -o "$out" -b white
+        done
+
+build: sync
+        mdbook build
+
+serve: sync
+        mdbook serve --open
+
+clean:
+        rm -rf book src/_include

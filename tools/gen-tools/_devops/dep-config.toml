@@ -1,0 +1,25 @@
+# Stable dependency-control plane configuration (Phase 0/1).
+#
+# Tooling lives under gen-tools/_devops + gen-tools/_scripts.
+# Forked crates and consumer workspaces live under monorepo_root.
+
+[paths]
+# Relative to this file's directory (_devops/).
+# gen-tools/_devops → terp-rs/tools → terp-rs → crates
+monorepo_root = "../../../.."
+
+# Matrix + mode state stay next to this config.
+matrix = "dependency-matrix.toml"
+mode_state = ".dep-mode"
+
+[policy]
+# Refuse absolute local/zk_local paths in the matrix.
+forbid_absolute_paths = true
+# Refuse switch/verify when matrix path package name mismatches.
+strict_package_names = true
+# After switch, run cargo metadata source checks (can be slow).
+verify_after_switch = false
+
+# When multiple local packages share a name, prefer paths that do NOT match these prefixes.
+[policy.deprioritize_path_prefixes]
+prefixes = ["vancw/", "masp/vendor/", "build/"]

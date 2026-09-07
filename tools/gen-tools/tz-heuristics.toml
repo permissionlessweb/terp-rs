@@ -1,0 +1,85 @@
+# tz-heuristics.toml — Default heuristics for CosmWasm contract workspaces
+# Used by gen-tools tensorzero generator to categorize, tag, and template
+# functions derived from contract schema types.
+#
+# Each contract's ExecuteMsg / QueryMsg / InstantiateMsg variants become
+# TensorZero functions. This config drives their categorization, secret
+# detection, system prompts, and model routing.
+#
+# ─── Category keyword lists ──────────────────────────────────────────────────
+# Function names matching any keyword are tagged with that category.
+[categories]
+execute = ["execute", "exec", "action", "do_", "set_", "update_", "remove_", "delete_", "add_", "register_", "mint", "burn", "send", "transfer", "deposit", "withdraw", "claim", "stake", "unstake", "redelegate", "undelegate", "vote", "propose"]
+query = ["query", "get_", "list_", "fetch", "balance", "info", "state", "config", "metadata", "status", "total_supply", "owner", "all_", "reverse_", "historical"]
+instantiate = ["instantiate", "new", "create", "init", "setup", "constructor", "migrate", "update_config"]
+ibc = ["ibc", "packet", "channel", "transfer", "ack", "timeout", "recv_packet", "send_packet"]
+cw = ["cw20", "cw1", "cw721", "cw4", "cw3", "snip", "native", "allowance", "approve", "increase_allowance", "decrease_allowance"]
+admin = ["admin", "owner", "governance", "authorize", "revoke", "pause", "unpause", "freeze", "thaw", "set_admin", "transfer_ownership", "renounce"]
+dao = ["dao", "proposal", "vote", "stake", "toggle", "withdraw", "execute_proposal", "close_proposal", "member", "voting", "propose", "deposit", "veto", "early_execute"]
+
+# ─── Secrets detection ───────────────────────────────────────────────────────
+[secrets]
+patterns = ["key", "secret", "token", "password", "mnemonic", "seed", "private_key", "signing_key", "permit", "signature", "ciphertext"]
+action = "redact"  # mark matching args as writeOnly in JSON schema
+
+# ─── Template defaults ───────────────────────────────────────────────────────
+[templates]
+system_prefix = """\
+You are a smart contract interaction assistant for the TERP Network (Cosmos SDK / CosmWasm).
+You help developers and integrators construct correct contract messages and queries.
+
+GENERAL RULES:
+- Always validate message structure against the provided JSON Schema
+- Never fabricate or assume field values that aren't in the schema
+- Return type-safe, correctly-encoded messages
+- Use the `instantiate` tag for constructor-style functions on new contracts
+- Use the `execute` tag for state-modifying contract calls
+- Use the `query` tag for read-only contract queries
+- Contract addresses are bech32-encoded on Terp (terp1... prefix)"""
+user_format = """\
+Execute CosmWasm message: {{function_name}}
+Type: {{tags | join(", ") if tags else "unknown"}}
+
+CONTRACT SCHEMA:
+{{args_schema | tojson}}
+
+Construct a valid {{function_name}} message with appropriate parameters."""
+
+# ─── Function Hints ──────────────────────────────────────────────────────────
+# Semantic hints injected into system prompts for specific function names.
+[function_hints]
+instantiate.hint = "Constructor message. Returns contract_address on success."
+migrate.hint = "Migrate contract to new code_id. Requires admin authorization on the contract."
+update_admin.hint = "Transfer contract admin. Requires current admin authorization."
+execute_proposal.hint = "Execute an approved DAO proposal. Requires passed/executable status."
+vote.hint = "Cast a vote on an active proposal. Weight is determined by voter's staked balance."
+
+# ─── Extra functions ─────────────────────────────────────────────────────────
+# Synthetic functions not derived from schemas but useful for the TZ gateway.
+[extra_functions.instantiate_contract]
+description = "Instantiate a CosmWasm contract with a code_id, label, and init msg"
+args_schema = { type = "object", properties = { code_id = { type = "integer", description = "On-chain code ID" }, label = { type = "string", description = "Human-readable label" }, msg = { type = "object", description = "Instantiate message fields matching the contract schema" }, funds = { type = "array", items = { type = "object", properties = { denom = { type = "string" }, amount = { type = "string" } }, required = ["denom", "amount"] }, description = "Coins to send with instantiation" } }, required = ["code_id", "label", "msg"] }
+
+[extra_functions.query_contract]
+description = "Query a CosmWasm contract at a given address with a query message"
+args_schema = { type = "object", properties = { contract_addr = { type = "string", description = "Bech32 contract address" }, query_msg = { type = "object", description = "Query message fields" } }, required = ["contract_addr", "query_msg"] }
+
+# ─── Model config ────────────────────────────────────────────────────────────
+[model]
+name = "cosmwasm-default"
+routing = ["default"]
+provider_type = "openai"
+model_name = "gpt-4o"
+
+# ─── Targets ─────────────────────────────────────────────────────────────────
+# If a contract workspace has a matching target bin, gen-tools adds CLI-ref docs.
+[targets.terpd]
+bin_name = "terpd"
+cli_ref = "terpd tx wasm execute"
+cli_ref_cmd = "terpd tx wasm execute <contract_addr> <msg> --from <key> --chain-id morocco-1"
+tools_json = "tools/terp-cli-tools.json"
+
+[targets.terpcli]
+bin_name = "terpcli"
+cli_ref = "terpcli query wasm contract-state smart"
+cli_ref_cmd = "terpcli query wasm contract-state smart <contract_addr> <query_msg> --node <rpc_url>"

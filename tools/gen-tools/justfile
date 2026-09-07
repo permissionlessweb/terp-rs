@@ -1,0 +1,318 @@
+# ── Variables ──────────────────────────────────────────────────────────────
+repo_root      := `git rev-parse --show-toplevel 2>/dev/null || echo "."`
+arch           := `if [ "$(uname -m)" = "arm64" ] || [ "$(uname -m)" = "aarch64" ]; then echo "linux/arm64"; else echo "linux/amd64"; fi`
+bin            := "gen-tools"
+release_dir    := "target/release"
+cov_threshold  := env_var_or_default('COV_THRESHOLD', '80')
+
+# ── Build ──────────────────────────────────────────────────────────────────
+
+# Debug build
+build:
+    cargo build
+
+# Release build
+build-release:
+    cargo build --release
+
+# Full clean
+clean:
+    cargo clean
+
+# Check (fast validation, no codegen)
+check:
+    cargo check
+
+# ── Test ───────────────────────────────────────────────────────────────────
+
+# Run all lib tests
+test:
+    cargo test --lib
+
+# Run all tests (lib + integration)
+test-all:
+    cargo test
+
+# Test with output
+test-verbose:
+    cargo test --lib -- --nocapture
+
+# ── Lint ───────────────────────────────────────────────────────────────────
+
+# Run clippy (deny warnings)
+lint:
+    cargo clippy --all-targets -- -D warnings
+
+# Fix common warnings automatically
+fix:
+    cargo fix --lib -p gen-tools --allow-dirty
+    cargo fix --bin gen-tools -p gen-tools --allow-dirty
+
+# Format source code
+fmt:
+    cargo fmt
+
+# ── Install ────────────────────────────────────────────────────────────────
+
+# Install release binary to ~/.cargo/bin
+install: build-release
+    cp target/release/{{bin}} {{"$HOME"}}/.cargo/bin/
+
+# Install debug binary to a workspace-relative path
+install-local: build
+    mkdir -p {{repo_root}}/bin
+    cp target/debug/{{bin}} {{repo_root}}/bin/
+
+# ── Run (common workflows) ─────────────────────────────────────────────────
+
+# Run gen-tools from any directory in the repo
+run cmd="":
+    cargo run -- {{cmd}}
+
+# Show help
+help:
+    cargo run -- --help
+
+# List all generators
+list:
+    cargo run -- --steps list
+
+# ── Dep management (stable Python control plane: _scripts/dep.py) ──────────
+# Rust `gen-tools deps` remains experimental; prefer these recipes.
+
+dep := "python3 _scripts/dep.py"
+
+# Show resolved monorepo root + policy
+deps-config:
+    {{dep}} config
+
+# Strict matrix integrity (exit 1 on errors) — run in CI
+deps-validate:
+    {{dep}} validate -v
+
+# Heal matrix local/zk_local paths (package-name checked, relative only)
+deps-heal:
+    {{dep}} heal -v
+
+deps-heal-dry-run:
+    {{dep}} heal --dry-run -v
+
+# Show current dependency status
+deps-status:
+    {{dep}} status
+
+# Switch forked deps (fail-closed if matrix dirty)
+# modes: stable|local|git|zk_local|zk_git|dev|zk_dev
+deps-switch mode="local":
+    {{dep}} switch {{mode}}
+
+deps-local:
+    {{dep}} switch local
+
+deps-git:
+    {{dep}} switch git
+
+deps-stable:
+    {{dep}} switch stable
+
+deps-dev:
+    {{dep}} switch dev
+
+# Dry-run switch (preview changes without writing)
+deps-switch-dry-run mode="local":
+    {{dep}} switch {{mode}} --dry-run
+
+# cargo metadata source verification after a mode is applied
+deps-verify mode="local":
+    {{dep}} verify --mode {{mode}}
+
+# Switch + verify (slow; uses cargo metadata)
+deps-switch-verify mode="local":
+    {{dep}} switch {{mode}} --verify
+
+# Full scrape with diagnostics (legacy script)
+deps-scrape:
+    python3 _scripts/dep-scrape.py
+
+# Scrape with CI-style exit-on-warning
+deps-scrape-ci:
+    python3 _scripts/dep-scrape.py --check
+
+# Generate overview dashboard
+deps-overview:
+    python3 _scripts/dep-overview.py
+
+# Show topological dependency graph (DOT output)
+deps-graph:
+    python3 _scripts/dep-graph.py
+
+# Show ordered push/update order
+deps-order:
+    python3 _scripts/dep-graph.py --order
+
+# Experimental Rust CLI (parity incomplete — prefer dep.py)
+deps-rust-status:
+    cargo run -- deps status
+
+deps-snapshot:
+    cargo run -- deps snapshot
+
+deps-snapshot-check:
+    cargo run -- deps snapshot --check
+
+deps-baseline:
+    cargo run -- deps baseline
+
+deps-baseline-dry-run:
+    cargo run -- deps baseline --dry-run
+
+deps-drift:
+    cargo run -- deps drift
+
+# ── Type generation pipeline (direct) ──────────────────────────────────────
+
+# Run default codegen pipeline on current directory
+gen:
+    cargo run -- --steps all
+
+# Run codegen skipping schema generation
+gen-no-schema:
+    cargo run -- --steps all --skip-schema
+
+# Run only TS-codegen
+gen-ts:
+    cargo run -- --steps ts-codegen
+
+# Run only proto generation
+gen-proto:
+    cargo run -- --steps proto-gen
+
+# Run only Python client library
+gen-python:
+    cargo run -- --steps python-gen
+
+# Run only Zod types
+gen-zod:
+    cargo run -- --steps zod-gen
+
+# Run only Go types
+gen-go:
+    cargo run -- --steps go-gen
+
+# Run only README API docs
+gen-readme:
+    cargo run -- --steps readme-api
+
+# Run only OpenAPI spec
+gen-openapi:
+    cargo run -- --steps openapi
+
+# List available generators
+gen-list:
+    cargo run -- --steps list
+
+# ── Type generation pipeline (config mode: all contract workspaces) ────────
+
+# Run all configured contract workspaces (default pipeline)
+gen-all:
+    cargo run -- --config gen-tools.yaml --all
+
+# Run all, skip schema generation
+gen-all-no-schema:
+    cargo run -- --config gen-tools.yaml --all --skip-schema
+
+# Run all, trailmark only (opt-in)
+gen-all-trailmark:
+    cargo run -- --config gen-tools.yaml --all --steps trailmark
+
+# Run all, mermaid only (opt-in placeholder)
+gen-all-mermaid:
+    cargo run -- --config gen-tools.yaml --all --steps mermaid
+
+# ── Per-project generation ──────────────────────────────────────────
+
+# Generate types for a single project:  just gen-project <name>
+# Example: just gen-project dao-contracts
+gen-project project:
+    cargo run -- --config gen-tools.yaml --project {{project}} --skip-schema
+
+# Generate types for a single project with custom steps
+gen-project-steps project steps:
+    cargo run -- --config gen-tools.yaml --project {{project}} {{steps}}
+
+# Generate all ts-codegen across all projects
+gen-ts-all:
+    cargo run -- --config gen-tools.yaml --all --steps ts-codegen
+
+# Generate all proto across all projects
+gen-proto-all:
+    cargo run -- --config gen-tools.yaml --all --steps proto-gen
+
+# Generate all python across all projects
+gen-python-all:
+    cargo run -- --config gen-tools.yaml --all --steps python-gen
+
+# Generate all zod across all projects
+gen-zod-all:
+    cargo run -- --config gen-tools.yaml --all --steps zod-gen
+
+# Generate all go types across all projects
+gen-go-all:
+    cargo run -- --config gen-tools.yaml --all --steps go-gen-tools
+
+# ── Unified output mode (all artifacts → terp-api/<lang>/) ──────────────────
+
+# Run default pipeline on current dir, output to terp-api/<lang>/
+gen-unified:
+    cargo run -- --steps all --unified
+
+# Run all configured projects, output all to terp-api/<lang>/ under gen-tools root
+gen-unified-all:
+    cargo run -- --config gen-tools.yaml --all --unified --skip-schema
+
+# Unified, per-step variants
+gen-unified-schema:
+    cargo run -- --steps schema --unified
+
+gen-unified-ts:
+    cargo run -- --steps ts-codegen --unified
+
+gen-unified-proto:
+    cargo run -- --steps proto-gen --unified
+
+gen-unified-python:
+    cargo run -- --steps python-gen --unified
+
+gen-unified-zod:
+    cargo run -- --steps zod-gen --unified
+
+gen-unified-go:
+    cargo run -- --steps go-gen --unified
+
+gen-unified-readme:
+    cargo run -- --steps readme-api --unified
+
+gen-unified-openapi:
+    cargo run -- --steps openapi --unified
+
+gen-unified-trailmark:
+    cargo run -- --steps trailmark --unified
+
+gen-unified-tensorzero:
+    cargo run -- --steps tensorzero --unified
+
+gen-unified-all-trailmark:
+    cargo run -- --config gen-tools.yaml --all --unified --steps trailmark
+
+gen-unified-all-tensorzero:
+    cargo run -- --config gen-tools.yaml --all --unified --steps tensorzero
+
+# Full cycle: fmt -> check -> test -> lint -> build-release
+all: fmt check test lint build-release
+    @echo "✅ Full lifecycle complete"
+
+# Dev cycle: check -> test -> build
+dev: check test build
+    @echo "✅ Dev cycle complete"
+
+#end

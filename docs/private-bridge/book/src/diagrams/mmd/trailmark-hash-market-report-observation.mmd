@@ -1,0 +1,166 @@
+flowchart TB
+    corridor_deposits_DepositNotifyHub_report_observation["report_observation method CC=10"]
+    proxy_unresolved_obs_txid_is_empty["obs.txid.is_empty proxy"]
+    proxy_unresolved_obs_btc_deposit_addr_is_empty["obs.btc_deposit_addr.is_empty proxy"]
+    proxy_unresolved_corridor_deposits_Err["corridor_deposits:Err proxy"]
+    proxy_unresolved__txid_and_btc_deposit_addr_required__into["txid and btc_deposit_addr required.into proxy"]
+    proxy_unresolved__amount_sats_must_be___0__dust_rejected__into["amount_sats must be 0 dust rejected .into proxy"]
+    corridor_deposits_now_secs["now_secs function CC=1"]
+    proxy_unresolved_self_inner_write__map_err["self.inner.write .map_err proxy"]
+    proxy_unresolved_self_inner_write["self.inner.write proxy"]
+    proxy_unresolved_e_to_string["e.to_string proxy"]
+    proxy_unresolved_g__watches__get_obs_intent_id___ok_or_else["g .watches .get obs.intent_id .ok_or_else proxy"]
+    proxy_unresolved_g__watches__get["g .watches .get proxy"]
+    proxy_unresolved__no_watch_for_intent_id__open_from_webapp_first__to_string["no watch for intent_id open from webapp first .to_string proxy"]
+    proxy_unresolved__btc_deposit_addr_does_not_match_open_watch__into["btc_deposit_addr does not match open watch.into proxy"]
+    proxy_unresolved__domain_bind_mismatch__into["domain_bind mismatch.into proxy"]
+    proxy_unresolved_corridor_deposits_Some["corridor_deposits:Some proxy"]
+    proxy_unresolved_watch_domain_bind_clone["watch.domain_bind.clone proxy"]
+    proxy_unresolved__watch_expired__into["watch expired.into proxy"]
+    proxy_unresolved_g_observations__insert["g.observations .insert proxy"]
+    proxy_unresolved_obs_intent_id_clone["obs.intent_id.clone proxy"]
+    proxy_unresolved_obs_clone["obs.clone proxy"]
+    proxy_unresolved_self_publish["self.publish proxy"]
+    proxy_unresolved_corridor_deposits_Ok["corridor_deposits:Ok proxy"]
+    corridor_deposits_DepositNotifyHub_open_watch["open_watch method CC=4"]
+    corridor_deposits_DepositNotifyHub_subscribe["subscribe method CC=2"]
+    corridor_deposits_DepositNotifyHub_put_automation["put_automation method CC=3"]
+    corridor_deposits_validate_id["validate_id function CC=3"]
+    proxy_unresolved_SystemTime__now___duration_since_UNIX_EPOCH___map_d__d_as_secs___unwrap_or["SystemTime::now .duration_since UNIX_EPOCH .map d d.as_secs .unwrap_o..."]
+    proxy_unresolved_SystemTime__now___duration_since_UNIX_EPOCH___map["SystemTime::now .duration_since UNIX_EPOCH .map proxy"]
+    proxy_unresolved_SystemTime__now___duration_since["SystemTime::now .duration_since proxy"]
+    proxy_unresolved_SystemTime__now["SystemTime::now proxy"]
+    proxy_unresolved_d_as_secs["d.as_secs proxy"]
+    corridor_deposits_DepositNotifyHub_get_status["get_status method CC=5"]
+    corridor_deposits_DepositNotifyHub_list_open_watches["list_open_watches method CC=1"]
+    corridor_deposits_DepositNotifyHub_publish["publish method CC=4"]
+    corridor_deposits_DepositNotifyHub_already_observed["already_observed method CC=1"]
+    corridor_deposits_DepositNotifyHub_get_automation["get_automation method CC=1"]
+    store_TreeStore_put["put method CC=2"]
+    store_TreeStore_delete["delete method CC=3"]
+    btc_index_bitcoind_rpc_BitcoindRpcClient_call["call method CC=4"]
+    btc_index_electrum_ElectrumClient_call["call method CC=3"]
+    btc_index_esplora_EsploraClient_tip_height_one["tip_height_one method CC=2"]
+    btc_index_reporter_fetch_open_watches["fetch_open_watches function CC=5"]
+    btc_index_reporter_post_observation["post_observation function CC=3"]
+    client_nostr_marketplace_ingress_parse_purchase_intent["parse_purchase_intent function CC=1"]
+    client_nostr_marketplace_ingress_parse_purchase_intent_value["parse_purchase_intent_value function CC=19"]
+    client_nostr_mod_ClientError_from["from method CC=1"]
+    content_auth_sign_service_jwt["sign_service_jwt function CC=1"]
+    ve_server_verify_vote_extension["verify_vote_extension function CC=3"]
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved_obs_txid_is_empty
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved_obs_btc_deposit_addr_is_empty
+    corridor_deposits_DepositNotifyHub_report_observation --> proxy_unresolved_corridor_deposits_Err
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved__txid_and_btc_deposit_addr_required__into
+    corridor_deposits_DepositNotifyHub_report_observation --> proxy_unresolved_corridor_deposits_Err
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved__amount_sats_must_be___0__dust_rejected__into
+    corridor_deposits_DepositNotifyHub_report_observation --> corridor_deposits_now_secs
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved_self_inner_write__map_err
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved_self_inner_write
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved_e_to_string
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved_g__watches__get_obs_intent_id___ok_or_else
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved_g__watches__get
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved__no_watch_for_intent_id__open_from_webapp_first__to_string
+    corridor_deposits_DepositNotifyHub_report_observation --> proxy_unresolved_corridor_deposits_Err
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved__btc_deposit_addr_does_not_match_open_watch__into
+    corridor_deposits_DepositNotifyHub_report_observation --> proxy_unresolved_corridor_deposits_Err
+    corridor_deposits_DepositNotifyHub_report_observation --> proxy_unresolved_corridor_deposits_Err
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved__domain_bind_mismatch__into
+    corridor_deposits_DepositNotifyHub_report_observation --> proxy_unresolved_corridor_deposits_Some
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved_watch_domain_bind_clone
+    corridor_deposits_DepositNotifyHub_report_observation --> corridor_deposits_now_secs
+    corridor_deposits_DepositNotifyHub_report_observation --> proxy_unresolved_corridor_deposits_Err
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved__watch_expired__into
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved_g_observations__insert
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved_obs_intent_id_clone
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved_obs_clone
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved_self_publish
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved_obs_clone
+    corridor_deposits_DepositNotifyHub_report_observation --> proxy_unresolved_corridor_deposits_Ok
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved_obs_txid_is_empty
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved_obs_btc_deposit_addr_is_empty
+    corridor_deposits_DepositNotifyHub_open_watch --> proxy_unresolved_corridor_deposits_Err
+    corridor_deposits_DepositNotifyHub_open_watch --> proxy_unresolved_corridor_deposits_Err
+    corridor_deposits_DepositNotifyHub_open_watch --> proxy_unresolved_corridor_deposits_Err
+    corridor_deposits_DepositNotifyHub_report_observation --> proxy_unresolved_corridor_deposits_Err
+    corridor_deposits_DepositNotifyHub_report_observation --> proxy_unresolved_corridor_deposits_Err
+    corridor_deposits_DepositNotifyHub_report_observation --> proxy_unresolved_corridor_deposits_Err
+    corridor_deposits_DepositNotifyHub_report_observation --> proxy_unresolved_corridor_deposits_Err
+    corridor_deposits_DepositNotifyHub_report_observation --> proxy_unresolved_corridor_deposits_Err
+    corridor_deposits_DepositNotifyHub_report_observation --> proxy_unresolved_corridor_deposits_Err
+    corridor_deposits_DepositNotifyHub_subscribe --> proxy_unresolved_corridor_deposits_Err
+    corridor_deposits_DepositNotifyHub_put_automation --> proxy_unresolved_corridor_deposits_Err
+    corridor_deposits_DepositNotifyHub_put_automation --> proxy_unresolved_corridor_deposits_Err
+    corridor_deposits_validate_id --> proxy_unresolved_corridor_deposits_Err
+    corridor_deposits_validate_id --> proxy_unresolved_corridor_deposits_Err
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved__txid_and_btc_deposit_addr_required__into
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved__amount_sats_must_be___0__dust_rejected__into
+    corridor_deposits_now_secs -.-> proxy_unresolved_SystemTime__now___duration_since_UNIX_EPOCH___map_d__d_as_secs___unwrap_or
+    corridor_deposits_now_secs -.-> proxy_unresolved_SystemTime__now___duration_since_UNIX_EPOCH___map
+    corridor_deposits_now_secs -.-> proxy_unresolved_SystemTime__now___duration_since
+    corridor_deposits_now_secs -.-> proxy_unresolved_SystemTime__now
+    corridor_deposits_now_secs -.-> proxy_unresolved_d_as_secs
+    corridor_deposits_DepositNotifyHub_open_watch --> corridor_deposits_now_secs
+    corridor_deposits_DepositNotifyHub_get_status --> corridor_deposits_now_secs
+    corridor_deposits_DepositNotifyHub_list_open_watches --> corridor_deposits_now_secs
+    corridor_deposits_DepositNotifyHub_report_observation --> corridor_deposits_now_secs
+    corridor_deposits_DepositNotifyHub_report_observation --> corridor_deposits_now_secs
+    corridor_deposits_DepositNotifyHub_put_automation --> corridor_deposits_now_secs
+    corridor_deposits_DepositNotifyHub_open_watch -.-> proxy_unresolved_self_inner_write__map_err
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved_self_inner_write__map_err
+    corridor_deposits_DepositNotifyHub_subscribe -.-> proxy_unresolved_self_inner_write__map_err
+    corridor_deposits_DepositNotifyHub_put_automation -.-> proxy_unresolved_self_inner_write__map_err
+    corridor_deposits_DepositNotifyHub_open_watch -.-> proxy_unresolved_self_inner_write
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved_self_inner_write
+    corridor_deposits_DepositNotifyHub_subscribe -.-> proxy_unresolved_self_inner_write
+    corridor_deposits_DepositNotifyHub_publish -.-> proxy_unresolved_self_inner_write
+    corridor_deposits_DepositNotifyHub_put_automation -.-> proxy_unresolved_self_inner_write
+    corridor_deposits_DepositNotifyHub_open_watch -.-> proxy_unresolved_e_to_string
+    corridor_deposits_DepositNotifyHub_get_status -.-> proxy_unresolved_e_to_string
+    corridor_deposits_DepositNotifyHub_list_open_watches -.-> proxy_unresolved_e_to_string
+    corridor_deposits_DepositNotifyHub_already_observed -.-> proxy_unresolved_e_to_string
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved_e_to_string
+    corridor_deposits_DepositNotifyHub_subscribe -.-> proxy_unresolved_e_to_string
+    corridor_deposits_DepositNotifyHub_put_automation -.-> proxy_unresolved_e_to_string
+    corridor_deposits_DepositNotifyHub_get_automation -.-> proxy_unresolved_e_to_string
+    store_TreeStore_put -.-> proxy_unresolved_e_to_string
+    store_TreeStore_put -.-> proxy_unresolved_e_to_string
+    store_TreeStore_put -.-> proxy_unresolved_e_to_string
+    store_TreeStore_delete -.-> proxy_unresolved_e_to_string
+    btc_index_bitcoind_rpc_BitcoindRpcClient_call -.-> proxy_unresolved_e_to_string
+    btc_index_bitcoind_rpc_BitcoindRpcClient_call -.-> proxy_unresolved_e_to_string
+    btc_index_electrum_ElectrumClient_call -.-> proxy_unresolved_e_to_string
+    btc_index_esplora_EsploraClient_tip_height_one -.-> proxy_unresolved_e_to_string
+    btc_index_esplora_EsploraClient_tip_height_one -.-> proxy_unresolved_e_to_string
+    btc_index_reporter_fetch_open_watches -.-> proxy_unresolved_e_to_string
+    btc_index_reporter_fetch_open_watches -.-> proxy_unresolved_e_to_string
+    btc_index_reporter_post_observation -.-> proxy_unresolved_e_to_string
+    client_nostr_marketplace_ingress_parse_purchase_intent -.-> proxy_unresolved_e_to_string
+    client_nostr_marketplace_ingress_parse_purchase_intent_value -.-> proxy_unresolved_e_to_string
+    client_nostr_mod_ClientError_from -.-> proxy_unresolved_e_to_string
+    content_auth_sign_service_jwt -.-> proxy_unresolved_e_to_string
+    content_auth_sign_service_jwt -.-> proxy_unresolved_e_to_string
+    ve_server_verify_vote_extension -.-> proxy_unresolved_e_to_string
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved_g__watches__get_obs_intent_id___ok_or_else
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved_g__watches__get
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved__no_watch_for_intent_id__open_from_webapp_first__to_string
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved__btc_deposit_addr_does_not_match_open_watch__into
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved__domain_bind_mismatch__into
+    corridor_deposits_DepositNotifyHub_report_observation --> proxy_unresolved_corridor_deposits_Some
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved_watch_domain_bind_clone
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved__watch_expired__into
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved_g_observations__insert
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved_obs_intent_id_clone
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved_obs_clone
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved_obs_clone
+    corridor_deposits_DepositNotifyHub_open_watch -.-> proxy_unresolved_self_publish
+    corridor_deposits_DepositNotifyHub_report_observation -.-> proxy_unresolved_self_publish
+    corridor_deposits_DepositNotifyHub_open_watch --> proxy_unresolved_corridor_deposits_Ok
+    corridor_deposits_DepositNotifyHub_get_status --> proxy_unresolved_corridor_deposits_Ok
+    corridor_deposits_DepositNotifyHub_list_open_watches --> proxy_unresolved_corridor_deposits_Ok
+    corridor_deposits_DepositNotifyHub_already_observed --> proxy_unresolved_corridor_deposits_Ok
+    corridor_deposits_DepositNotifyHub_report_observation --> proxy_unresolved_corridor_deposits_Ok
+    corridor_deposits_DepositNotifyHub_subscribe --> proxy_unresolved_corridor_deposits_Ok
+    corridor_deposits_DepositNotifyHub_put_automation --> proxy_unresolved_corridor_deposits_Ok
+    corridor_deposits_DepositNotifyHub_get_automation --> proxy_unresolved_corridor_deposits_Ok
+    corridor_deposits_validate_id --> proxy_unresolved_corridor_deposits_Ok

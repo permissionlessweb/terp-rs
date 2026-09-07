@@ -1,0 +1,20 @@
+flowchart TB
+    new_preauth[DepositIntentV0.new_preauth]
+    domain_bind[compute_domain_bind]
+    validate[validate]
+    bind_dep[bind_deposit_id]
+    allows[intent_allows_swap]
+    mid[expected_out_from_mid]
+    floor[apply_slip_floor]
+    mint_auth[CorridorMintedSet.authorize_mint]
+    insert[CorridorMintedSet.insert]
+    oracle_forbid[oracle_mint_forbidden]
+
+    new_preauth --> domain_bind
+    new_preauth --> validate
+    validate --> domain_bind
+    bind_dep --> validate
+    allows --> mid
+    allows --> floor
+    allows --> oracle_forbid
+    mint_auth --> insert

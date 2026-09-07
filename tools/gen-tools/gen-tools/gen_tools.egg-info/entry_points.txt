@@ -1,2 +1,0 @@
-[console_scripts]
-gen-tools = gen_tools.cli:main

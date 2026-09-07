@@ -2,6 +2,8 @@
 //! in the ergors/ directory to build the required proto types for the ERGORS system.
 //! This is adapted from the proto-compiler code in github.com/informalsystems/ibc-rs
 
+// push to correct path: was ./src/gen/* from package root, needs to go ../crates/sdk/gen/* for the rust and ../crates/sdk/py/* for the py gen output
+// must
 use std::path::PathBuf;
 
 const SERDE_JSON: &str = "#[derive(serde::Serialize, serde::Deserialize)]";
@@ -10,7 +12,7 @@ fn main() -> anyhow::Result<()> {
     println!("root: {}", root.display());
 
     // Output directory for generated Rust source files.
-    let target_dir = root.join("src").join("gen");
+    let target_dir = root.join("../crates").join("sdk").join("src").join("gen");
     std::fs::create_dir_all(&target_dir)?;
     let target_dir = target_dir.canonicalize()?;
     println!("target_dir: {}", target_dir.display());
@@ -20,11 +22,10 @@ fn main() -> anyhow::Result<()> {
 
     // Proto source directories to compile: terp/, gaia/, osmosis/ (all non-vendor subdirs)
     let excluded_dirs = ["vendor", "src", "target", ".git"];
-    let proto_files: Vec<PathBuf> = walkdir::WalkDir::new(&root)
+    let chain_proto_files: Vec<PathBuf> = walkdir::WalkDir::new(&root)
         .min_depth(1)
         .into_iter()
         .filter_entry(|e| {
-            // Prune vendor/src/target/etc from traversal
             if e.depth() == 1 && e.file_type().is_dir() {
                 let name = e.file_name().to_string_lossy();
                 return !excluded_dirs.iter().any(|ex| name == *ex);
@@ -34,6 +35,54 @@ fn main() -> anyhow::Result<()> {
         .filter_map(|e| e.ok())
         .filter(|e| e.path().extension().is_some_and(|ext| ext == "proto"))
         .map(|e| e.path().to_path_buf())
+        .collect();
+    // Selectively collect ONLY the vendor protos you need generated types for.
+    // Skip problematic ones with missing transitive deps (e.g., google/api/servicemanagement)
+    let vendor_include_dirs = [
+        "cosmos/auth",
+        "cosmos/authz",
+        "cosmos/bank",
+        "cosmos/base/query/v1beta1",
+        "cosmos/base/v1beta1",
+        "cosmos/feegrant",
+        "cosmos/gov",
+        "cosmos/staking",
+        "cosmos/tx",
+        "cosmos/upgrade",
+        "cosmos/params",
+        "cosmos/crypto",
+        "cosmos/msg",
+        "ibc/applications",
+        "ibc/core",
+        "ibc/lightclients",
+        "tendermint/abci",
+        "tendermint/types",
+        "tendermint/p2p",
+        "tendermint/crypto",
+        "tendermint/version",
+        "cosmwasm/wasm",
+        "amino",
+        "cosmos_proto",
+    ];
+
+    let vendor_proto_files: Vec<PathBuf> = walkdir::WalkDir::new(&vendor_dir)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|e| {
+            e.path().extension().is_some_and(|ext| ext == "proto")
+                && vendor_include_dirs.iter().any(|dir| {
+                    e.path()
+                        .strip_prefix(&vendor_dir)
+                        .map(|p| p.starts_with(dir))
+                        .unwrap_or(false)
+                })
+        })
+        .map(|e| e.path().to_path_buf())
+        .collect();
+
+    let proto_files: Vec<PathBuf> = chain_proto_files
+        .into_iter()
+        .chain(vendor_proto_files.into_iter())
         .collect();
 
     if proto_files.is_empty() {
@@ -56,45 +105,11 @@ fn main() -> anyhow::Result<()> {
         include_paths.push(vendor_dir.clone());
     }
     include_paths.push(root.clone());
-
     // prost_build::Config isn't Clone, so we need to make two.
     let mut config = prost_build::Config::new();
-
     // DOWNLOAD AND ENSURE DEFAULT CHAIN PROTOS EXIST IN EXPECTED PATH
-
     // As recommended in pbjson_types docs.
-    config.extern_path(".google.protobuf", "::pbjson_types");
-
-    // Don't use extern_path for cosmos types - generate them locally
-    // The module paths will be akash_deploy_rs::gen::cosmos_base_v1beta1, etc.
-
-    // config.extern_path(".cosmos.bank", "::ibc_proto::cosmos::bank");
-    // config.extern_path(".cosmos.staking", "::ibc_proto::cosmos::staking");
-    // config.extern_path(".cosmos.tx", "::ibc_proto::cosmos::tx");
-    // config.extern_path(".cosmos.auth", "::ibc_proto::cosmos::auth");
-    // config.extern_path(".cosmos.app", "::ibc_proto::cosmos::app");
-    // config.extern_path(".cosmos.crisis", "::ibc_proto::cosmos::crisis");
-    // config.extern_path(".cosmos.distribution", "::ibc_proto::cosmos::distribution");
-    // config.extern_path(".cosmos.evidence", "::ibc_proto::cosmos::evidence");
-    // config.extern_path(".cosmos.feegrant", "::ibc_proto::cosmos::feegrant");
-    // config.extern_path(".cosmos.genutil", "::ibc_proto::cosmos::genutil");
-    // config.extern_path(".cosmos.gov", "::ibc_proto::cosmos::gov");
-    // config.extern_path(".cosmos.group", "::ibc_proto::cosmos::group");
-    // config.extern_path(".cosmos.mint", "::ibc_proto::cosmos::mint");
-    // config.extern_path(".cosmos.nft", "::ibc_proto::cosmos::nft");
-    // config.extern_path(".cosmos.orm", "::ibc_proto::cosmos::orm");
-    // config.extern_path(".cosmos.params", "::ibc_proto::cosmos::params");
-    // config.extern_path(".cosmos.slashing", "::ibc_proto::cosmos::slashing");
-    // config.extern_path(".cosmos.upgrade", "::ibc_proto::cosmos::upgrade");
-    // config.extern_path(".cosmos.vesting", "::ibc_proto::cosmos::vesting");
-    // config.extern_path(".cosmos.capability", "::ibc_proto::cosmos::capability");
-    // config.extern_path(".cosmos.consensus", "::ibc_proto::cosmos::consensus");
-    // config.extern_path(".cosmos.circuit", "::ibc_proto::cosmos::circuit");
-    // config.extern_path(".cosmos.reflection", "::ibc_proto::cosmos::reflection");
-    // config.extern_path(".cosmos.authz", "::ibc_proto::cosmos::authz");
-    // config.extern_path(".tendermint", "::tendermint_proto::tendermint");
-    // config.extern_path(".cosmos_proto", "::cosmos_proto");
-
+    config.extern_path(".google.protobuf", "crate");
     config.compile_well_known_types();
     config.type_attribute(".", SERDE_JSON);
 
@@ -112,17 +127,6 @@ fn main() -> anyhow::Result<()> {
         .server_mod_attribute(".", rpc_doc_attr)
         .client_mod_attribute(".", rpc_doc_attr)
         .compile_with_config(config, &proto_files, &include_paths)?;
-
-    // "./rust-vendored/cosmwasm/wasm/v1/authz.proto",
-    // "./rust-vendored/cosmwasm/wasm/v1/genesis.proto",
-    // "./rust-vendored/cosmwasm/wasm/v1/ibc.proto",
-    // "./rust-vendored/cosmwasm/wasm/v1/proposal_legacy.proto",
-    // "./rust-vendored/cosmwasm/wasm/v1/query.proto",
-    // "./rust-vendored/cosmwasm/wasm/v1/tx.proto",
-    // "./rust-vendored/cosmwasm/wasm/v1/types.proto",
-
-    // Finally, build pbjson Serialize, Deserialize impls:
-    // let descriptor_set = std::fs::read(target_dir.join(descriptor_file_name))?;
 
     pbjson_build::Builder::new()
         // .register_descriptors(&descriptor_set)?
@@ -290,14 +294,11 @@ fn main() -> anyhow::Result<()> {
                         for l in struct_start..=struct_end {
                             if lines[l].contains("ibc_proto::cosmos::base::v1beta1::Coin")
                                 || lines[l].contains("ibc_proto::cosmos::base::v1beta1::DecCoin")
-                                || lines[l]
-                                    .contains("ibc_proto::ibc::core::commitment::v1::MerkleProof")
-                                || lines[l].contains(
-                                    "ibc_proto::cosmos::base::query::v1beta1::PageRequest",
-                                )
-                                || lines[l].contains(
-                                    "ibc_proto::cosmos::base::query::v1beta1::PageResponse",
-                                )
+                                || lines[l].contains("ibc::core::commitment::v1::MerkleProof")
+                                || lines[l].contains("cosmos::base::query::v1beta1::PageRequest")
+                                || lines[l].contains("cosmos::base::query::v1beta1::PageResponse")
+                                || lines[l].contains("Option<ConsensusState>")
+                                || lines[l].contains("IdentifiedClientState")
                             {
                                 has_problematic_type = true;
                                 break;
@@ -326,6 +327,8 @@ fn main() -> anyhow::Result<()> {
             let new_content = new_lines.join("\n");
             if new_content != content {
                 fs::write(entry.path(), new_content)?;
+            } else {
+                fs::write(entry.path(), content)?;
             }
         }
     }

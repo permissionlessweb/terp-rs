@@ -1,0 +1,8 @@
+# TensorZero Functions
+
+Generated 2 functions for TensorZero gateway.
+
+## Available Functions
+
+- `instantiate_contract`: Instantiate a CosmWasm contract with a code_id, label, and init msg [tags: instantiate]
+- `query_contract`: Query a CosmWasm contract at a given address with a query message [tags: query]

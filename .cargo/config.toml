@@ -1,0 +1,5 @@
+# Local wasm32 checks only. **Published CosmWasm artifacts MUST use the Docker
+# optimizer (Rust 1.86 MSRV)** — see scripts/build-crosslink-wasm.sh.
+# Host imports (db_*, ed25519_*, …) are provided by wasmvm at runtime.
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "link-arg=--allow-undefined"]

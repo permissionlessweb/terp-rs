@@ -1,0 +1,34 @@
+[package]
+name = "cw-ics08-wasm-crosslink"
+version = "0.1.0"
+edition = { workspace = true }
+repository = { workspace = true }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+interface = ["dep:cw-orch"]
+
+[dependencies]
+ibc-proto = { workspace = true }
+crosslink-light-client = { workspace = true }
+
+cosmwasm-std = { workspace = true, features = ["std", "cosmwasm_3_0"] }
+cosmwasm-schema = { workspace = true }
+cw2 = { workspace = true }
+prost = { workspace = true, features = ["std"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+hex = { workspace = true }
+
+# cw-orch interface (optional)
+cw-orch = { workspace = true, optional = true }
+
+[dev-dependencies]
+crosslink-light-client = { workspace = true }
+
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.2", features = ["js"] }

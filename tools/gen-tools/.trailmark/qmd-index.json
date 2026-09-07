@@ -1,0 +1,24 @@
+{
+  "index_path": "$HOME/.cache/qmd/index.sqlite",
+  "exists": true,
+  "total_files": 136630,
+  "collections": [
+    "content",
+    "documents",
+    "llm_cache",
+    "content_vectors",
+    "store_collections",
+    "store_config",
+    "documents_fts",
+    "documents_fts_data",
+    "documents_fts_idx",
+    "documents_fts_content",
+    "documents_fts_docsize",
+    "documents_fts_config",
+    "vectors_vec",
+    "vectors_vec_info",
+    "vectors_vec_chunks",
+    "vectors_vec_rowids",
+    "vectors_vec_vector_chunks00"
+  ]
+}

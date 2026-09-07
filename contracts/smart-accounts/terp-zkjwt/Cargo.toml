@@ -1,0 +1,34 @@
+[package]
+name = "terp-zkjwt"
+description = "ZK-JWT authenticator using CosmWasm host proof_instance_verify (zkid)"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+documentation = { workspace = true }
+authors = { workspace = true }
+rust-version = { workspace = true }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = []
+library = []
+# Wire deps.api.proof_instance_verify — requires cosmwasm-std/zk
+zk-host = ["cosmwasm-std/zk"]
+
+[dependencies]
+cosmwasm-std = { workspace = true, features = ["std"] }
+cosmwasm-schema = { workspace = true }
+cw2 = { workspace = true }
+cw-storage-plus = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+terp-auth = { workspace = true }
+terp-account = { workspace = true }
+sha2 = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

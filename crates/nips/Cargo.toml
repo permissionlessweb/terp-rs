@@ -1,0 +1,41 @@
+[package]
+name = "cw721-nips"
+version = "0.1.0"
+edition = "2021"
+description = "Nostr NIP library with cw721-trait-based metadata system"
+license = "MIT"
+
+[features]
+default = ["full"]
+nip01 = []
+nip15 = []
+nip52 = []
+nip77 = []
+nip44 = [
+    "dep:rand_core",
+    "dep:hmac",
+    "dep:hkdf",
+    "dep:constant_time_eq",
+    "dep:chacha20",
+    "dep:base64",
+]
+cw = ["dep:cosmwasm-std", "dep:cw721"]
+full = ["cw", "nip01", "nip15", "nip52", "nip77"]
+
+[dependencies]
+axum = { version = "0.7", default-features = false, features = ["json"] }
+# NIP-44 v2
+base64 = { version = "0.22", optional = true }
+chacha20 = { version = "0.9", optional = true }
+constant_time_eq = { version = "0.3", optional = true }
+cosmwasm-std = { path = "../../../cosmwasm/packages/std", optional = true }
+cw721 = { path = "../../../cw-nfts/packages/cw721", optional = true }
+hex = "0.4"
+hkdf = { version = "0.12", optional = true }
+hmac = { version = "0.12", optional = true }
+rand_core = { version = "0.6", features = ["getrandom"], optional = true }
+schemars = "0.8.22"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sha2 = "0.11.0-pre.4"
+thiserror = "1.0"

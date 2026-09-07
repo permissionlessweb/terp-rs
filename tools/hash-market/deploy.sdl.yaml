@@ -1,0 +1,64 @@
+# Reference Akash SDL for hash-market-server.
+# Prefer o-line template: crates/o-line/templates/sdls/oline/hashmerchant.yml
+# (variable substitution, accept domains, SSH secret delivery).
+#
+# CRITICAL: Do NOT put signing_key in env. Use SSH_PUBKEY + post-deploy SFTP
+# (oline hashmerchant upload) or mount config.toml as a secret volume.
+
+version: "2.0"
+
+services:
+  hash-market:
+    image: ghcr.io/terpnetwork/hash-market:latest
+    expose:
+      - port: 9090
+        as: 80
+        to:
+          - global: true
+        accept:
+          - hash.example.com
+      - port: 22
+        as: 22
+        to:
+          - global: true
+    env:
+      # Non-sensitive only
+      - SSH_PUBKEY=<your_ed25519_pubkey_here>
+      - SSH_P=22
+      - HM_CONFIG=/etc/hash-market/config.toml
+      - HM_DATA=/var/lib/hash-market
+      - HASHMERCHANT_DOMAIN=hash.example.com
+      - HASHMERCHANT_CHAIN_ID=morocco-1
+    params:
+      storage:
+        data:
+          mount: /var/lib/hash-market
+          readOnly: false
+
+profiles:
+  compute:
+    hash-market:
+      resources:
+        cpu:
+          units: 1
+        memory:
+          size: 1Gi
+        storage:
+          - size: 1Gi
+          - name: data
+            size: 10Gi
+            attributes:
+              persistent: true
+              class: beta2
+  placement:
+    akash:
+      pricing:
+        hash-market:
+          denom: uakt
+          amount: 1000
+
+deployment:
+  hash-market:
+    akash:
+      profile: hash-market
+      count: 1

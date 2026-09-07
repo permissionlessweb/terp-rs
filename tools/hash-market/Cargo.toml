@@ -1,0 +1,89 @@
+[package]
+name = "hash-market"
+version = "0.1.0"
+edition = "2021"
+
+
+[[bin]]
+name = "hash-market-relay"
+path = "src/bin/relay.rs"
+required-features = ["nostr"]
+
+[[bin]]
+name = "hash-market-server"
+path = "src/bin/server.rs"
+required-features = ["server"]
+
+[[bin]]
+name = "hash-market-client"
+path = "src/bin/client.rs"
+required-features = ["client"]
+
+[features]
+# Default: Nostr + Blossom/BUD + Merkle trees (NFT whitelist host).
+# Vote extensions are OFF by default — enable with --features ve for validator sidecar.
+default = ["nostr", "blossom"]
+custody  = [ "k256", "ed25519-dalek", "rand_core", "async-trait", "tokio", ]
+# ABCI++ vote extension sidecar (optional; not required for mint/whitelist hosting)
+ve       = ["custody", "sha2", "client", "server"]
+eth      = [ "reqwest" ]
+pallas   = [ "tiny-keccak"]
+transport = [ "tokio/rt", "tokio/sync", "tokio/net", "tokio/io-util", "tokio/time", "tokio/signal", "tokio/macros"]
+# HTTP server core: BUD blobs + merkle trees + headstash (no VE dependency)
+server   = ["transport", "custody", "axum", "tower", "clap", "tracing", "tracing-subscriber", "toml", "tokio/full", "sha2", "reqwest"]
+client   = ["eth", "pallas", "reqwest", "clap", "tracing", "tracing-subscriber", "toml", "tokio/full", "sha2", "async-trait"]
+nostr    = ["client", "custody", "tokio/full", "tokio-tungstenite", "futures-util", "sha2", "async-trait"]
+blossom  = ["server", "clap"]
+commonware = ["server"]
+# msg module uses sha2 for transport_merkle_root — always compiled in lib.rs
+msg = ["sha2"]
+# Convenience: full validator sidecar = server + ve + blossom + nostr
+full-sidecar = ["server", "ve", "blossom", "nostr", "client"]
+
+[dependencies]
+anyhow = "1"
+anybuf = { version = "0.5" }
+hex = "0.4"
+thiserror = "1"
+
+# commonware integration (optional - enable commonware feature to use)
+# commonware-abci = { path = "../../commonware-abci", optional = true }
+# commonware-storage = { path = "../../monorepo/storage", default-features = false, optional = true }
+
+# custody
+k256 = { version = "0.13", features = ["ecdsa", "sha256"], optional = true }
+ed25519-dalek = { version = "2", features = ["rand_core"], optional = true }
+rand_core = { version = "0.6", features = ["getrandom"], optional = true }
+async-trait = { version = "0.1", optional = true }
+
+# sha2 — required by msg (transport merkle root), ve (domain_hash), store (blob hashing)
+# Always enabled via default feature chain: default → nostr → sha2
+sha2 = { version = "0.10", optional = true }
+
+# eth
+reqwest = { version = "0.12", features = ["json", "multipart", "rustls-tls"], default-features = false, optional = true }
+serde = { version = "1", features = ["derive"]  }
+serde_json = { version = "1" }
+# Service JWT (plane HS256) for distribution ingest — pure open tooling
+hmac = "0.12"
+base64 = "0.22"
+
+# pallas
+tiny-keccak = { version = "2", features = ["keccak"], optional = true }
+
+# transport + server
+tokio = { version = "1", features = ["net", "io-util"], optional = true }
+axum = { version = "0.7", optional = true }
+# tower util (ServiceExt::oneshot) for L1 note HTTP tests; pulled by axum, listed for direct use
+tower = { version = "0.5", optional = true, default-features = false, features = ["util"] }
+clap = { version = "4", features = ["derive"], optional = true }
+tracing = { version = "0.1", optional = true }
+tracing-subscriber = { version = "0.3", features = ["env-filter"], optional = true }
+toml = { version = "0.8", optional = true }
+
+# nostr
+tokio-tungstenite = { version = "0.24", features = ["native-tls"], optional = true }
+futures-util = { version = "0.3", optional = true, default-features = false, features = ["sink", "std"] }
+cw721-nips = { path = "../../crates/nips" }
+
+blake3 = "1"
